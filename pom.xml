@@ -5,7 +5,7 @@
 
     <groupId>de.gematik</groupId>
     <artifactId>testhub</artifactId>
-    <version>2.4.0</version>
+    <version>2.5.0</version>
     <packaging>pom</packaging>
     <name>Parent Project for the gematik TI 2.0 Testhub</name>
     <inceptionYear>2025</inceptionYear>
@@ -28,14 +28,14 @@
         <maven.compiler.target>21</maven.compiler.target>
         <maven.compiler.release>21</maven.compiler.release>
 
-        <zeta-sdk-jvm.version>0.5.1</zeta-sdk-jvm.version>
+        <zeta-sdk-jvm.version>1.0.1</zeta-sdk-jvm.version>
 
         <version.maven-antrun-plugin>3.2.0</version.maven-antrun-plugin>
         <version.maven.surefire>3.5.4</version.maven.surefire>
         <version.maven.failsafe>3.5.5</version.maven.failsafe>
         <version.maven.jacoco>0.8.14</version.maven.jacoco>
-        <version.tiger>4.2.6</version.tiger>
-        <version.tiger-cloud-extension>10.0.18</version.tiger-cloud-extension>
+        <version.tiger>4.2.7</version.tiger>
+        <version.tiger-cloud-extension>4.1.17</version.tiger-cloud-extension>
         <version.serenity>5.3.10</version.serenity>
         <version.gem.testdata>1.0.10</version.gem.testdata>
         <version.springdoc>2.8.13</version.springdoc>
@@ -197,6 +197,11 @@
                 <artifactId>json-schema-validator</artifactId>
                 <version>${version.json-schema-validator}</version>
             </dependency>
+            <dependency>
+                <groupId>org.bouncycastle</groupId>
+                <artifactId>bcprov-jdk18on</artifactId>
+                <version>1.84</version>
+            </dependency>
         </dependencies>
     </dependencyManagement>
 
@@ -210,6 +215,7 @@
             <groupId>org.slf4j</groupId>
             <artifactId>slf4j-api</artifactId>
         </dependency>
+
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-test</artifactId>

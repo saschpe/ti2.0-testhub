@@ -2,12 +2,27 @@
 
 # Release Notes TI 2.0 TestHub
 
+## Release 2.5.0
+
+### Changes
+
+- TESTHUB-136: Integrate Zeta Guard 1.0.1 (MS4)
+- TESTHUB-129: Remove mock-popp profiles because it is similar to the perf profile
+- TESTHUB-122: Profiles documentation
+- TESTHUB-121: Update to latest version 2.3.0 of the Popp Sample Implementation
+- TKK-3899: Read popp server url from env-file, refactor jwt-validation
+- TKK-3877: Added Testcases for EntityStatement and JWKS
+- TKK-3791: Enable integration of Real-World Popp-servers via tiger-proxy
+- PTVSDM-1585: Introduce an endpoint supporting FHIR profile versions
+- ZTI-4059: Add asl Tests to Zeta Testsuite
+
 ## Release 2.4.0
 
 ### Changes
 
 - TESTHUB-126: Update VsdmBackgroundLoadSimulation to send load directly to the Zeta guard using access and dpop tokens.
 - TESTHUB-127: Update project dependencies to latest versions.
+- PTVSDM-1585: update VSDM2 server implementation with required profileVersion parameter
 
 ## Release 2.3.0
 

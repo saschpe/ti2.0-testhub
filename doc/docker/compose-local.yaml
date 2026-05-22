@@ -83,7 +83,7 @@ services:
       ZETASDK_SMCB_PRIVATE_KEY_PATH: /tmp/zeta/smcb_private.p12
 
   docker-tiger-proxy:
-    image: gematik1/tiger-proxy-image:4.2.1
+    image: gematik1/tiger-proxy-image:4.2.7
     env_file:
       - path: .env
         required: true
@@ -93,18 +93,13 @@ services:
     networks:
       testhub_client:
         aliases:
+          - popp-ru-dev-interim.int.epa.rise-link.de
           - popp-zeta-ingress
           - popp-zeta-pep
           - popp-zeta-pdp
           - popp-token-generator
           - vsdm-zeta-ingress
-          - popp-client
       testhub_backend:
-    healthcheck:
-      test: [ "CMD", "wget", "--spider", "-q", "http://127.0.0.1:8080/actuator/health" ]
-      interval: 10s
-      timeout: 10s
-      retries: 3
     ports:
       - "${PORT_BACKEND_TIGER_PROXY:?PORT_BACKEND_TIGER_PROXY missing – set it in doc/docker/.env}:8080"
       - "${PORT_BACKEND_TIGER_PROXY_ADMIN:?PORT_BACKEND_TIGER_PROXY_ADMIN missing – set it in doc/docker/.env}:9090"
@@ -113,21 +108,16 @@ services:
       - ./remoteTigerProxy/tigerProxy.p12:/app/tigerProxy.p12:ro
 
   ti-connect-tiger-proxy:
-    image: gematik1/tiger-proxy-image:4.2.1
+    image: gematik1/tiger-proxy-image:4.2.7
     env_file:
       - path: .env
         required: true
-    profiles: [ "full", "mock-popp" ]
+    profiles: [ "full" ]
     platform: linux/amd64
     container_name: ti-connect-tiger-proxy
     environment: *no-proxy-env
     networks:
-      - testhub_backend
-    healthcheck:
-      test: [ "CMD", "curl", "-f", "http://127.0.0.1:8080/actuator/health" ]
-      interval: 10s
-      timeout: 10s
-      retries: 3
+      testhub_backend:
     ports:
       - "${PORT_TI_CONNECT_TIGER_PROXY:?PORT_TI_CONNECT_TIGER_PROXY missing – set it in doc/docker/.env}:8080"
       - "${PORT_TI_CONNECT_TIGER_PROXY_ADMIN:?PORT_TI_CONNECT_TIGER_PROXY_ADMIN missing – set it in doc/docker/.env}:9090"
@@ -140,7 +130,7 @@ services:
   card-terminal-client:
     extends:
       service: card-terminal-client-base
-    profiles: [ "full", "mock-popp" ]
+    profiles: [ "full" ]
     networks:
       - testhub_client
 
@@ -150,15 +140,6 @@ services:
     profiles: [ "full" ]
     environment:
       - VSDM_USE_MOCK_POPP_TOKEN=false
-    networks:
-      - testhub_client
-
-  # ==================== mock-popp Profile (using popp-token-generator) ====================
-
-  vsdm-client-mock-popp:
-    extends:
-      service: vsdm-client-base
-    profiles: [ "mock-popp" ]
     networks:
       - testhub_client
 

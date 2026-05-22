@@ -9,12 +9,6 @@ PoPP Tokens have to be generated and validated. Validation is commonly done by t
 
 The VSDM client can be configured to use the Mock PoPP Token Generator or an arbitrary endpoint that implements the PoPP specification.
 
-=== How To Enable The Mock PoPP Token Generator
-
-Start the application using docker compose with the mock-popp Profile. This will automatically set the required environment variable and start the mock PoPP Token Generator service only.
-
-Rebuild and restart services to ensure all configuration values are applied correctly.
-
 === How to enable the Gematik Sample POPP Implementation
 
 This is the default scenario where the Testhub uses the Gematik sample implementation of PoPP Client and PoPP Server.

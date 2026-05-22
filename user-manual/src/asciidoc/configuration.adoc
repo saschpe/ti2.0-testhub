@@ -101,14 +101,83 @@ The Testhub supports different startup profiles for various use cases:
 | `full`
 | Backend + Tiger-Proxies + Clients via proxy. Use this for normal development and testing.
 
-| `mock-popp`
-| Backend + Tiger-Proxies + Clients via proxy. Use this for normal development and testing using mocked PoPP tokens instead of the Gematik sample implementation.
-
 | `perf`
 | Backend + Tiger-Proxies + Clients with direct backend access. Use this for performance testing as it bypasses the Tiger-Proxy.
 
 | `backend-only`
 | Backend services only (no Tiger-Proxies, no clients). Use this when you want to run your own client implementation against the backend.
+|===
+
+==== The `full` Profile – Requests via Tiger Proxy
+
+The `full` profile represents the standard development and testing setup.
+All traffic between the clients (VSDM Client, Card Terminal Client) and the
+backend services is routed through the **Tiger Proxy**, which records every
+HTTP request and response for later analysis (see <<_traffic>>).
+A second proxy instance – the **TI-Connect Tiger Proxy** – handles the
+simulated TI-Connect path.
+
+.Architecture of the `full` profile
+image::diagrams/full_profile.png[Architecture diagram showing clients routing traffic through Tiger Proxy to the backend, width=900]
+
+Key characteristics of the `full` profile:
+
+* The Tiger Proxy acts as a man-in-the-middle recorder – requests are visible
+  in the Tiger UI and stored in the `.tgr` traffic files.
+* All Tiger Proxy instances (frontend, backend, TI-Connect) are started.
+* The OpenTelemetry Collector, Prometheus, and Grafana are included for
+  observability.
+* Suitable for functional feature-testing, debugging, and contract (Pact) verification.
+
+==== The `perf` Profile – Direct Backend Access
+
+The `perf` profile is optimised for **performance and load testing**.
+Clients connect **directly** to the backend services, bypassing all Tiger Proxy
+instances.  This eliminates the overhead of request recording and proxy
+hop latency.
+
+.Architecture of the `perf` profile
+image::diagrams/perf_profile.png[Architecture diagram showing clients connecting directly to the backend without Tiger Proxy, width=900]
+
+Key characteristics of the `perf` profile:
+
+* No backend Tiger Proxy is started – traffic is *not* recorded.
+* Lower latency and higher throughput than the `full` profile.
+* Suitable for measuring baseline performance, stress tests, and benchmarks.
+
+==== Comparison: `full` vs. `perf`
+
+[cols="1,2,2", options="header"]
+|===
+| Aspect | `full` profile | `perf` profile
+
+| Tiger Proxy
+| ✅ Started – records all traffic
+| ❌ Not started
+
+| Popp Service
+| ✅ Started – all components (Token Generator, Client, Server) are included
+| ❌ Not started - only popp-token-generator is included for token generation
+
+| Traffic recording
+| ✅ `.tgr` and `.html` files written
+| ❌ No recording
+
+| Observability (OTEL / Prometheus / Grafana)
+| ✅ Included
+| ✅ Included
+
+| Client routing
+| Via Tiger Proxy (extra hop)
+| Direct to backend
+
+| Latency overhead
+| Higher (proxy hop)
+| Lower (direct)
+
+| Recommended for
+| Feature tests, debugging, Pact verification
+| Performance tests, load tests, benchmarks
 |===
 
 ==== Starting with Profiles
@@ -121,10 +190,8 @@ Use Docker Compose with the appropriate profile:
 ./mvnw clean install -Pdocker -DskipTests
 
 # Start full stack
-docker compose -f doc/docker/compose-local.yaml --profile perf up -d
+docker compose -f doc/docker/compose-local.yaml --profile full up -d
 
-# Start with mocked popp components
-docker compose -f doc/docker/compose-local.yaml --profile mock-popp up -d
 
 # Start with performance profile (clients bypass Tiger-Proxy)
 docker compose -f doc/docker/compose-local.yaml --profile perf up -d
@@ -133,7 +200,7 @@ docker compose -f doc/docker/compose-local.yaml --profile perf up -d
 docker compose -f doc/docker/compose-local.yaml --profile backend-only up -d
 
 # Stop all containers (all profiles)
-docker compose -f doc/docker/compose-local.yaml --profile perf --profile backend-only down -v
+docker compose -f doc/docker/compose-local.yaml --profile full --profile perf --profile backend-only down -v
 ----
 
 === Custom Configuration

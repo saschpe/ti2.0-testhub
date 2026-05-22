@@ -31,7 +31,7 @@ import de.gematik.test.tiger.lib.rbel.RbelValidator;
 import de.gematik.test.tiger.lib.rbel.RequestParameter;
 
 public class BaseValidator {
-  private final RbelMessageRetriever rbelMessageRetriever;
+  final RbelMessageRetriever rbelMessageRetriever;
   private final RbelValidator rbelValidator;
 
   public BaseValidator(final RbelMessageRetriever rbelMessageRetriever) {
@@ -43,17 +43,17 @@ public class BaseValidator {
     this(RbelMessageRetriever.getInstance());
   }
 
-  void findNextRequestToPathContainingNode(String s, String value) {
+  void findNextRequestToPathContainingNode(final String path, final String value) {
     this.rbelMessageRetriever.filterRequestsAndStoreInContext(
         RequestParameter.builder()
-            .rbelPath(s)
+            .rbelPath(path)
             .value(value)
             .requireRequestMessage(false)
             .build()
             .resolvePlaceholders());
   }
 
-  void currentRequestAtMatchesAsJsonTheFile(String rbelPath, String validationFile) {
+  void currentResponseAtMatchesAsJsonTheFile(final String rbelPath, final String validationFile) {
     this.rbelValidator.assertAttributeOfCurrentResponseMatchesAs(
         rbelPath,
         ModeType.JSON,
@@ -62,8 +62,13 @@ public class BaseValidator {
         this.rbelMessageRetriever);
   }
 
-  void findRequestWithEndpoint(String path) {
+  void findRequestForPath(final String path) {
     this.rbelMessageRetriever.filterRequestsAndStoreInContext(
         RequestParameter.builder().path(path).build().resolvePlaceholders());
+  }
+
+  void currentResponseAtMatches(final String rbelPath, final String validation) {
+    rbelValidator.assertAttributeOfCurrentResponseMatches(
+        rbelPath, validation, true, this.rbelMessageRetriever);
   }
 }

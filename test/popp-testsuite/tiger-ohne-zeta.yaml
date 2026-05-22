@@ -16,10 +16,10 @@ tigerProxy:
   proxyRoutes:
     # route to Popp-server
     - from: /ws
-      to: https://localhost:8443/ws
+      to: https://127.0.0.1:8443/ws
     # route to Popp-client
     - from: /token
-      to: http://localhost:8081/token
+      to: http://127.0.0.1:8081/token
   tls:
     serverIdentity: src/test/resources/certificates/mykeystore.p12;popp-store
     masterSecretsFile: wireshark.txt

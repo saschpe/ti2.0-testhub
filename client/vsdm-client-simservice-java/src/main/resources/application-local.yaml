@@ -10,7 +10,7 @@ popp:
     # Port must match PORT_POPP_CLIENT in doc/docker/.env (default: 8081)
     url: http://localhost:${PORT_POPP_CLIENT:8081}/token
   ws:
-    url: ws://localhost:9110
+    url: ws://127.0.0.1:9110
 
 vsdm:
   # Port must match PORT_VSDM_ZETA_PEP in doc/docker/.env (default: 9120)

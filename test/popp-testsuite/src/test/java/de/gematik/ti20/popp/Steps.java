@@ -24,6 +24,8 @@
  */
 package de.gematik.ti20.popp;
 
+import static de.gematik.ti20.popp.data.TestConstants.POPP_ENTITY_STATEMENT;
+
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import de.gematik.test.tiger.glue.HttpGlueCode;
@@ -31,6 +33,8 @@ import de.gematik.test.tiger.lib.rbel.RbelMessageRetriever;
 import de.gematik.test.tiger.lib.rbel.RbelValidator;
 import de.gematik.test.tiger.lib.rbel.RequestParameter;
 import de.gematik.ti20.popp.validation.ApduValidator;
+import de.gematik.ti20.popp.validation.EntityStatementValidator;
+import de.gematik.ti20.popp.validation.JwksValidator;
 import de.gematik.ti20.popp.validation.PoppTokenValidator;
 import io.cucumber.java.de.Angenommen;
 import io.cucumber.java.de.Dann;
@@ -52,10 +56,10 @@ public class Steps {
   private PoppTokenValidator poppTokenValidator;
 
   public Steps(
-      RbelMessageRetriever rbelMessageRetriever,
-      RbelValidator rbelValidator,
-      ApduValidator apduValidator,
-      PoppTokenValidator poppTokenValidator) {
+      final RbelMessageRetriever rbelMessageRetriever,
+      final RbelValidator rbelValidator,
+      final ApduValidator apduValidator,
+      final PoppTokenValidator poppTokenValidator) {
     this.rbelMessageRetriever = rbelMessageRetriever;
     this.rbelValidator = new RbelValidator();
     this.apduValidator = new ApduValidator();
@@ -69,7 +73,7 @@ public class Steps {
     this.poppTokenValidator = new PoppTokenValidator();
   }
 
-  public Steps(RbelMessageRetriever instance) {}
+  public Steps(final RbelMessageRetriever instance) {}
 
   @Angenommen("das Primärsystem hat einen gültigen Access- und Refresh-Token vom ZETA Guard")
   public void primaersystem_hat_token() {
@@ -121,7 +125,7 @@ public class Steps {
   }
 
   @Und("die empfangenen APDUs sind korrekt {string}")
-  public void dieEmpfangenenAPDUsSindKorrekt(String readerType) {
+  public void dieEmpfangenenAPDUsSindKorrekt(final String readerType) {
     if (Objects.equals(readerType, "Standardleser") || Objects.equals(readerType, "virtuell")) {
       apduValidator.validateApdusforStdKT();
     } else if (Objects.equals(readerType, "eH-KT")) {
@@ -132,5 +136,48 @@ public class Steps {
               + readerType
               + ". Expected 'Standardleser', 'virtuell', or 'eH-KT'.");
     }
+  }
+
+  @Wenn("das Primärsystem den PoPP-Token vom PoPP-Service abfragt und erwarte einen Fehler")
+  public void requestPoPPTokenWithError() {
+    requestPoppToken();
+    poppTokenValidator.validatePoppTokenforBasicErrorResponse();
+  }
+
+  @Dann(
+      "erhält der Fachdienst eine gültige Antwort mit einem spezifikationskonformen EntityStatement vom PoPP-Service")
+  public void fachdienstErhaeltGueltigeAntwort() {
+    // EntityStatement ist ein JWT und enthält die folgenden Claims:
+    // iss == URL des PoPP-Service
+    // sub == iss
+    // jwks == Federation Entity Key für die Signatur des Entity Statement [OpenID Federation 1.0]
+    // iat == aktuelle Zeit
+    // exp == aktuelle Zeit + 24h in sekunden seit 1970
+    // authority_hints == "https://app.federationmaster.de" (iss Bezeichnung des Federation Master)
+    // Metadatenblock oauth_resource im well-known document muss signed_jwks_uri enthalten
+    // siehe
+    // https://gemspec.gematik.de/prereleases/Draft_PoPP1_26_1/gemSpec_PoPP_Service_V1.1.0_CC/#9.6.1
+  }
+
+  @Angenommen("hole das EntityStatement vom Endpunkt")
+  public void getEntityStatement() {
+    httpGlueCode.sendEmptyRequest(Method.GET, URI.create(POPP_ENTITY_STATEMENT));
+  }
+
+  @Und("die Anfrage liefert ein gültiges EntityStatement mit einem gültigen JWKS-Link")
+  public void checkValidEntityStatement() {
+    final EntityStatementValidator entityStatementValidator = new EntityStatementValidator();
+    entityStatementValidator.validateEntityStatement();
+  }
+
+  @Wenn("frage das JWKS über den JWKS Link {tigerResolvedUrl} aus dem EntityStatement ab")
+  public void getJwks(final URI adress) {
+    httpGlueCode.sendEmptyRequest(Method.GET, adress);
+  }
+
+  @Und("validiere das JWKS")
+  public void validateJwks() {
+    final JwksValidator jwksValidator = new JwksValidator();
+    jwksValidator.validateSignedJwks();
   }
 }

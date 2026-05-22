@@ -24,6 +24,7 @@
  */
 package de.gematik.ti20.simsvc.server.config;
 
+import java.util.List;
 import lombok.Getter;
 import lombok.Setter;
 import org.springframework.boot.context.properties.ConfigurationProperties;
@@ -40,4 +41,6 @@ public class VsdmConfig {
   private String validKvnrPrefix;
   private String invalidKvnrPrefix;
   private String unknownKvnrPrefix;
+
+  private List<String> validProfileVersions;
 }

@@ -1,7 +1,7 @@
 #language: de
 #noinspection NonAsciiCharacters,SpellCheckingInspection
 
-@PRODUKT:PoPP
+@PRODUKT:PoPP_Service
 @TYPE:E2E
 @HashDbInvalid
 Funktionalität: Fehlerfälle beim TLS-Aufbau der Verbindung

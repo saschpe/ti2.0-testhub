@@ -25,17 +25,15 @@
 package de.gematik.ti20.simsvc.client.service;
 
 import com.google.common.base.Strings;
-import de.gematik.ti20.simsvc.client.config.VsdmClientConfig;
 import de.gematik.zeta.sdk.ZetaSdkClient;
+import de.gematik.zeta.sdk.network.http.client.HttpClientExtension;
 import de.gematik.zeta.sdk.network.http.client.ZetaHttpClient;
 import de.gematik.zeta.sdk.network.http.client.ZetaHttpResponse;
-import io.ktor.client.request.HttpRequestBuilder;
-import io.ktor.client.request.HttpRequestKt;
+import java.util.HashMap;
 import java.util.Map;
 import javax.annotation.CheckForNull;
 import javax.annotation.Nonnull;
 import kotlin.Unit;
-import kotlin.coroutines.EmptyCoroutineContext;
 import lombok.RequiredArgsConstructor;
 import lombok.Setter;
 import org.springframework.http.HttpStatus;
@@ -48,7 +46,6 @@ import org.springframework.stereotype.Service;
 public class ZetaSdkClientAdapter {
 
   @Nonnull private final ZetaSdkClient zetaClient;
-  @Nonnull private final VsdmClientConfig vsdmConfig;
 
   public record RequestParameters(
       @Nonnull String traceId,
@@ -79,42 +76,20 @@ public class ZetaSdkClientAdapter {
               return Unit.INSTANCE;
             })) {
 
-      ZetaHttpResponse response =
-          kotlinx.coroutines.BuildersKt.runBlocking(
-              EmptyCoroutineContext.INSTANCE,
-              (scope, cont) ->
-                  httpClient.get(url, req -> executeRequest(url, parameters, req), cont));
+      Map<String, String> headers = new HashMap<>();
+      headers.put("x-trace-id", parameters.traceId());
+      headers.put("PoPP", parameters.poppToken());
+      headers.put(
+          "Accept", (parameters.isFhirXml) ? "application/fhir+xml" : "application/fhir+json");
+      if (!Strings.isNullOrEmpty(parameters.ifNoneMatch())) {
+        headers.put("If-None-Match", parameters.ifNoneMatch());
+      }
+      ZetaHttpResponse response = HttpClientExtension.getAsync(httpClient, url, headers).join();
 
       final HttpStatus httpStatusCode = HttpStatus.valueOf(response.getStatus().getValue());
       final Map<String, String> responseHeaders = response.getHeaders();
-      final String bodyAsString = getBodyAsString(response);
+      final String bodyAsString = HttpClientExtension.bodyAsText(response).join();
       return new Response(httpStatusCode, responseHeaders, bodyAsString);
     }
-  }
-
-  @Nonnull
-  private Unit executeRequest(
-      @Nonnull String urlPath, @Nonnull RequestParameters parameters, HttpRequestBuilder req) {
-    HttpRequestKt.url(req, vsdmConfig.getResourceServerUrl() + "/" + urlPath);
-    HttpRequestKt.headers(
-        req,
-        headers -> {
-          headers.set("x-trace-id", parameters.traceId());
-          headers.set("PoPP", parameters.poppToken());
-          headers.set(
-              "Accept", (parameters.isFhirXml) ? "application/fhir+xml" : "application/fhir+json");
-          if (!Strings.isNullOrEmpty(parameters.ifNoneMatch())) {
-            headers.set("If-None-Match", parameters.ifNoneMatch());
-          }
-          return Unit.INSTANCE;
-        });
-    return Unit.INSTANCE;
-  }
-
-  @Nonnull
-  private String getBodyAsString(@Nonnull final ZetaHttpResponse response)
-      throws InterruptedException {
-    return kotlinx.coroutines.BuildersKt.runBlocking(
-        EmptyCoroutineContext.INSTANCE, (scope, cont) -> response.bodyAsText(cont));
   }
 }

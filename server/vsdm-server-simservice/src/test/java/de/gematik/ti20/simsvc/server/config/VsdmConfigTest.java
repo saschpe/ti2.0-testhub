@@ -26,6 +26,7 @@ package de.gematik.ti20.simsvc.server.config;
 
 import static org.junit.jupiter.api.Assertions.*;
 
+import java.util.List;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
@@ -46,17 +47,25 @@ class VsdmConfigTest {
   @Test
   void testSetAndGetIknr() {
     String testIknr = "123456789";
-
     vsdmConfig.setIknr(testIknr);
-
     assertEquals(testIknr, vsdmConfig.getIknr());
   }
 
   @Test
   void testSetIknrToNull() {
     vsdmConfig.setIknr("123456789");
-    vsdmConfig.setIknr(null);
+    assertEquals("123456789", vsdmConfig.getIknr());
 
+    vsdmConfig.setIknr(null);
     assertNull(vsdmConfig.getIknr());
+  }
+
+  @Test
+  void testSetValidProfileVersions() {
+    vsdmConfig.setValidProfileVersions(null);
+    assertNull(vsdmConfig.getValidProfileVersions());
+
+    vsdmConfig.setValidProfileVersions(List.of("v1", "v2"));
+    assertEquals(List.of("v1", "v2"), vsdmConfig.getValidProfileVersions());
   }
 }

@@ -50,6 +50,7 @@ class VsdmClientIT {
   private static final Integer TERMINAL_ID = 1;
   private static final Integer EGK_SLOT = 1;
   private static final Integer SMCB_SLOT = 2;
+  private static final String PROFILE_VERSION = "1.0.0";
 
   private static final String VSDM_ENDPOINT =
       VSDM_CLIENT_URL
@@ -90,7 +91,7 @@ class VsdmClientIT {
   @Test
   @Order(1)
   void testReadVsdReturnsExpectedDataJson() throws Exception {
-    final Result result = readVsdOnce("0", false);
+    final Result result = readVsdOnce("0", false, PROFILE_VERSION);
     assertEquals(200, result.response.code());
     assertNotNull(result.resource);
 
@@ -121,7 +122,7 @@ class VsdmClientIT {
             .findFirst()
             .orElse(null);
     assertNotNull(payorOrganization);
-    assertEquals("Test GKV Krankenkasse", ((Organization) payorOrganization).getName());
+    assertEquals("Test GKV Krankenkasse", payorOrganization.getName());
 
     final Coverage coverage =
         resources.stream()
@@ -141,7 +142,7 @@ class VsdmClientIT {
   @Test
   @Order(2)
   void testReadVsdReturnsExpectedDataXML() throws Exception {
-    final Result result = readVsdOnce("0", true);
+    final Result result = readVsdOnce("0", true, PROFILE_VERSION);
     assertEquals(200, result.response.code());
     assertNotNull(result.resource);
 
@@ -172,7 +173,7 @@ class VsdmClientIT {
             .findFirst()
             .orElse(null);
     assertNotNull(payorOrganization);
-    assertEquals("Test GKV Krankenkasse", ((Organization) payorOrganization).getName());
+    assertEquals("Test GKV Krankenkasse", payorOrganization.getName());
 
     final Coverage coverage =
         resources.stream()
@@ -192,7 +193,7 @@ class VsdmClientIT {
   @Test
   @Order(3)
   void testPruefzifferHasCorrectLength() throws Exception {
-    final Result result = readVsdOnce("0", false);
+    final Result result = readVsdOnce("0", false, PROFILE_VERSION);
     assertEquals(200, result.response.code());
 
     final String pruefzifferEncoded = result.response.header("vsdm-pz");
@@ -210,7 +211,7 @@ class VsdmClientIT {
   @Test
   @Order(4)
   void testEtagIsConsistent() throws Exception {
-    final Result result1 = readVsdOnce("0", false);
+    final Result result1 = readVsdOnce("0", false, PROFILE_VERSION);
     assertEquals(200, result1.response.code());
     assertNotNull(result1.resource);
 
@@ -218,7 +219,7 @@ class VsdmClientIT {
     log.info("ETag1: " + etag1);
     assertNotNull(etag1);
 
-    final Result result2 = readVsdOnce(etag1, false);
+    final Result result2 = readVsdOnce(etag1, false, PROFILE_VERSION);
     assertEquals(304, result2.response.code());
     assertNull(result2.resource);
 
@@ -231,7 +232,7 @@ class VsdmClientIT {
   @Test
   @Order(5)
   void testResponseContentType() throws Exception {
-    final Result result1 = readVsdOnce("0", false);
+    final Result result1 = readVsdOnce("0", false, PROFILE_VERSION);
     assertTrue(result1.response.isSuccessful());
 
     assertTrue(
@@ -242,31 +243,16 @@ class VsdmClientIT {
   @Test
   @Order(6)
   void testHttpVersion() throws Exception {
-    final Result result1 = readVsdOnce("0", false);
+    final Result result1 = readVsdOnce("0", false, PROFILE_VERSION);
     assertTrue(result1.response.isSuccessful());
 
     assertEquals("http/1.1", result1.response.protocol().toString());
   }
 
-  private static void removeCardFromSlot(final int slot) throws Exception {
-    Request removeCard =
-        new Request.Builder()
-            .url(resolvePlaceholders(CARD_CLIENT_URL + "/slots/" + slot))
-            .delete()
-            .build();
-    Response removeCardResponse = httpClient.newCall(removeCard).execute();
-
-    log.info("removeCard: " + removeCardResponse.code());
-    log.info(removeCardResponse.body().string());
-
-    assertTrue(
-        removeCardResponse.isSuccessful() || removeCardResponse.code() == 404, "Remove Card");
-  }
-
   @Test
   @Order(7)
   void testPoppTokenIsCached() throws Exception {
-    final Result result1 = readVsdOnce("0", false);
+    final Result result1 = readVsdOnce("0", false, PROFILE_VERSION);
     assertTrue(result1.response.isSuccessful());
 
     final String CARD_HANDLE_URL = resolvePlaceholders(CARD_CLIENT_URL + "/slots/" + EGK_SLOT);
@@ -300,7 +286,7 @@ class VsdmClientIT {
   @Test
   @Order(8)
   void testVsdmDataIsCached() throws Exception {
-    final Result result1 = readVsdOnce("0", false);
+    final Result result1 = readVsdOnce("0", false, PROFILE_VERSION);
     assertTrue(result1.response.isSuccessful());
 
     final String CARD_HANDLE_URL = CARD_CLIENT_URL + "/slots/" + EGK_SLOT;
@@ -363,6 +349,21 @@ class VsdmClientIT {
     assertFalse(readTruncatedDataBody.isEmpty());
   }
 
+  private static void removeCardFromSlot(final int slot) throws Exception {
+    Request removeCard =
+        new Request.Builder()
+            .url(resolvePlaceholders(CARD_CLIENT_URL + "/slots/" + slot))
+            .delete()
+            .build();
+    Response removeCardResponse = httpClient.newCall(removeCard).execute();
+
+    log.info("removeCard: " + removeCardResponse.code());
+    log.info(removeCardResponse.body().string());
+
+    assertTrue(
+        removeCardResponse.isSuccessful() || removeCardResponse.code() == 404, "Remove Card");
+  }
+
   private static void insertCard(final String filename, final int slot) throws Exception {
     final String cardImage = loadClasspathRessourceWithTigerResolving(filename);
 
@@ -422,11 +423,17 @@ class VsdmClientIT {
     }
   }
 
-  private static Result readVsdOnce(final String ifNoneMatch, final Boolean isFhirXml)
+  private static Result readVsdOnce(
+      final String ifNoneMatch, final Boolean isFhirXml, final String profileVersion)
       throws Exception {
     final Request readVsd =
         new Request.Builder()
-            .url(resolvePlaceholders(VSDM_ENDPOINT) + "&isFhirXml=" + isFhirXml)
+            .url(
+                resolvePlaceholders(VSDM_ENDPOINT)
+                    + "&isFhirXml="
+                    + isFhirXml
+                    + "&profileVersion="
+                    + profileVersion)
             .header("If-None-Match", ifNoneMatch)
             // For some reason, VSDM client produces the error
             // 'o.a.coyote.http11.Http11Processor - Error state [CLOSE_CONNECTION_NOW] reported
@@ -438,9 +445,6 @@ class VsdmClientIT {
             .build();
 
     final Response readVsdResponse = httpClient.newCall(readVsd).execute();
-
-    System.out.println("readVsd: " + readVsdResponse.code());
-    System.out.println("readVsd: " + readVsdResponse.body());
 
     final String readVsdBody = readVsdResponse.body().string();
 

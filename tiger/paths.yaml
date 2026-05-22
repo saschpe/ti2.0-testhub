@@ -14,7 +14,7 @@ zeta:
       vsdRequest: http://localhost:${ports.vsdmClientPort}/client/vsdm/vsd?terminalId=1&egkSlotId=1&smcBSlotId=1
       vsdRequestPath: /client/vsdm/vsd
       # Status-Anfrage geht direkt zum ZeTA Client (VSDM Client) ohne TigerProxy
-      status: http://localhost:${ports.vsdmClientPort}/service/status
+      status: http://127.0.0.1:${ports.vsdmClientPort}/service/status
       statusPath: /service/status
     tigerProxy:
       # TigerProxy Admin API (siehe ports.yaml: localTigerProxyAdminPort)

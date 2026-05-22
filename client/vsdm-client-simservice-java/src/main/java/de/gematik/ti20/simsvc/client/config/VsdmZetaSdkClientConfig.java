@@ -26,7 +26,6 @@ package de.gematik.ti20.simsvc.client.config;
 
 import de.gematik.ti20.simsvc.client.util.StorageInterceptor;
 import de.gematik.zeta.sdk.BuildConfig;
-import de.gematik.zeta.sdk.StorageConfig;
 import de.gematik.zeta.sdk.TpmConfig;
 import de.gematik.zeta.sdk.ZetaSdk;
 import de.gematik.zeta.sdk.ZetaSdkClient;
@@ -36,6 +35,7 @@ import de.gematik.zeta.sdk.authentication.AuthConfig;
 import de.gematik.zeta.sdk.authentication.SubjectTokenProvider;
 import de.gematik.zeta.sdk.authentication.smb.SmbTokenProvider;
 import de.gematik.zeta.sdk.network.http.client.ZetaHttpClientBuilder;
+import de.gematik.zeta.sdk.storage.StorageConfig;
 import io.ktor.client.plugins.logging.LogLevel;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -72,9 +72,9 @@ public class VsdmZetaSdkClientConfig {
   @Bean
   public StorageConfig storageConfig(final StorageInterceptor storageInterceptor) {
     if (interceptStorage) {
-      return new StorageConfig(storageInterceptor, "7aae7xXr8rnzVqjpYbosS0CFMrlprkD7jbVotm0fd+w=");
+      return new StorageConfig.Custom(storageInterceptor);
     } else {
-      return new StorageConfig();
+      return new StorageConfig.Default("7aae7xXr8rnzVqjpYbosS0CFMrlprkD7jbVotm0fd+w=", null);
     }
   }
 
@@ -93,15 +93,17 @@ public class VsdmZetaSdkClientConfig {
             new TpmConfig() {},
             new AuthConfig(
                 List.of("zero:audience"),
-                30,
+                30L,
                 false,
                 getTokenProvider(),
-                AttestationConfig.software()),
+                AttestationConfig.software(),
+                ""),
             new PlatformProductId.LinuxProductId(
                 PlatformProductId.PLATFORM_LINUX, "jar", "testhub", "latest"),
             new ZetaHttpClientBuilder("")
                 .disableServerValidation(disableServerValidation)
-                .logging(LogLevel.ALL, message -> log.debug("Ktor HttpClient: {}", message)),
+                .logging(LogLevel.ALL),
+            null,
             null,
             null));
   }

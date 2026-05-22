@@ -78,6 +78,7 @@ class VsdmClientServiceTest {
   private final int smcBSlotId = 2;
   private final String cardId = "card1";
   private final String poppToken = "token123";
+  private final String profileVersion = "1.0.0";
 
   @BeforeEach
   void setUp() throws Exception {
@@ -239,7 +240,7 @@ class VsdmClientServiceTest {
 
         ResponseEntity<String> response =
             vsdmClientService.requestVsd(
-                terminalId, egkSlotId, mockEgkCard, poppToken, null, false);
+                terminalId, egkSlotId, mockEgkCard, poppToken, null, false, profileVersion);
 
         assertEquals(HttpStatus.OK, response.getStatusCode());
         assertEquals("encoded response", response.getBody());
@@ -269,7 +270,8 @@ class VsdmClientServiceTest {
             .thenReturn("encoded xml response");
 
         ResponseEntity<String> response =
-            vsdmClientService.requestVsd(terminalId, egkSlotId, mockEgkCard, poppToken, null, true);
+            vsdmClientService.requestVsd(
+                terminalId, egkSlotId, mockEgkCard, poppToken, null, true, profileVersion);
 
         assertEquals(HttpStatus.OK, response.getStatusCode());
         assertEquals("encoded xml response", response.getBody());
@@ -308,7 +310,7 @@ class VsdmClientServiceTest {
 
         ResponseEntity<String> response =
             vsdmClientService.requestVsd(
-                terminalId, egkSlotId, mockEgkCard, poppToken, null, false);
+                terminalId, egkSlotId, mockEgkCard, poppToken, null, false, profileVersion);
 
         assertEquals(HttpStatus.INTERNAL_SERVER_ERROR, response.getStatusCode());
         assertTrue(response.hasBody());
@@ -337,7 +339,7 @@ class VsdmClientServiceTest {
 
         ResponseEntity<String> response =
             vsdmClientService.requestVsd(
-                terminalId, egkSlotId, mockEgkCard, "token123", "etag123", false);
+                terminalId, egkSlotId, mockEgkCard, "token123", "etag123", false, profileVersion);
 
         assertNotNull(response);
         assertEquals(HttpStatus.OK, response.getStatusCode());
@@ -354,7 +356,7 @@ class VsdmClientServiceTest {
 
         ResponseEntity<String> response =
             vsdmClientService.requestVsd(
-                "terminalId", egkSlotId, mockEgkCard, "token123", "etag123", false);
+                "terminalId", egkSlotId, mockEgkCard, "token123", "etag123", false, profileVersion);
 
         assertNotNull(response);
         assertEquals(HttpStatus.UNAUTHORIZED, response.getStatusCode());
@@ -369,7 +371,8 @@ class VsdmClientServiceTest {
 
         // WHEN the client requests data from cache
         final ResponseEntity<String> response =
-            vsdmClientService.requestVsd("terminal", 1, mockEgkCard, poppToken, "", false);
+            vsdmClientService.requestVsd(
+                "terminal", 1, mockEgkCard, poppToken, "", false, profileVersion);
 
         // THEN the repository was accessed
         verify(mockVsdmDataRepository, times(1)).get("terminal", 1, mockEgkCard.getId());
@@ -395,7 +398,8 @@ class VsdmClientServiceTest {
             .thenReturn("encoded response");
 
         // WHEN the client requests data from cache
-        vsdmClientService.requestVsd("terminal", 1, mockEgkCard, poppToken, null, false);
+        vsdmClientService.requestVsd(
+            "terminal", 1, mockEgkCard, poppToken, null, false, profileVersion);
 
         // AND a request to the VSDM backend sent without header
         ArgumentCaptor<ZetaSdkClientAdapter.RequestParameters> parametersCaptor =
@@ -422,7 +426,7 @@ class VsdmClientServiceTest {
         // WHEN we request data
         final ResponseEntity<String> response =
             vsdmClientService.requestVsd(
-                terminalId, egkSlotId, mockEgkCard, poppToken, "etag", false);
+                terminalId, egkSlotId, mockEgkCard, poppToken, "etag", false, profileVersion);
 
         // THEN we update the cache with expected values
         final VsdmCachedValue expectedCacheValue = new VsdmCachedValue("etag", "ziffer-1", "");

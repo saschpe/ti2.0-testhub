@@ -47,16 +47,18 @@ public class VsdmClientController {
       @RequestParam final int egkSlotId,
       @RequestParam final int smcBSlotId,
       @RequestParam(defaultValue = "false") final boolean isFhirXml,
+      @RequestParam final String profileVersion,
       @RequestHeader(name = "poppToken", required = false) final String poppToken,
       @RequestHeader(name = "If-None-Match", required = false) final String ifNoneMatch) {
     log.info(
-        "readVsd initiated with terminalId = {}, egkSlotId={}, smcBSlotId = {}, if-none-match={}",
+        "readVsd initiated with terminalId = {}, egkSlotId={}, smcBSlotId = {}, if-none-match={}, profileVersion={}",
         terminalId,
         egkSlotId,
         smcBSlotId,
-        ifNoneMatch);
+        ifNoneMatch,
+        profileVersion);
 
     return vsdmClientService.read(
-        terminalId, egkSlotId, smcBSlotId, isFhirXml, poppToken, ifNoneMatch);
+        terminalId, egkSlotId, smcBSlotId, isFhirXml, poppToken, ifNoneMatch, profileVersion);
   }
 }

@@ -79,6 +79,7 @@ final class VsdmClientJourneyModule extends BaseSimulation {
                 .queryParam("egkSlotId", "#{egk_slot}")
                 .queryParam("smcBSlotId", "#{smcb_slot}")
                 .queryParam("isFhirXml", false)
+                .queryParam("profileVersion", FHIR_PROFILE_VERSION)
                 .check(HttpCheckBuilders.status().is(200)));
   }
 }
