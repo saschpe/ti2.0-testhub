@@ -34,20 +34,20 @@ public class PoppTokenValidator extends BaseValidator {
 
   public void validatePoppTokenforEHealthKT() {
 
-    findRequestWithEndpoint(".*/token");
-    currentRequestAtMatchesAsJsonTheFile("$.body", VALID_POPP_TOKEN_JSON_RESPONSE_FILE);
-    currentRequestAtMatchesAsJsonTheFile(
+    findRequestForPath(".*/token");
+    currentResponseAtMatchesAsJsonTheFile("$.body", VALID_POPP_TOKEN_JSON_RESPONSE_FILE);
+    currentResponseAtMatchesAsJsonTheFile(
         "$.body.token.content.body", VALID_POPP_TOKEN_BODY_CLAIMS_FILE);
-    currentRequestAtMatchesAsJsonTheFile(
+    currentResponseAtMatchesAsJsonTheFile(
         "$.body.token.content.header", VALID_POPP_TOKEN_HEADER_CLAIMS_FILE);
   }
 
   public void validatePoppTokenforStandardKt() {
-    findRequestWithEndpoint(".*/token");
-    currentRequestAtMatchesAsJsonTheFile("$.body", VALID_POPP_TOKEN_JSON_RESPONSE_FILE);
-    currentRequestAtMatchesAsJsonTheFile(
+    findRequestForPath(".*/token");
+    currentResponseAtMatchesAsJsonTheFile("$.body", VALID_POPP_TOKEN_JSON_RESPONSE_FILE);
+    currentResponseAtMatchesAsJsonTheFile(
         "$.body.token.content.body", VALID_POPP_TOKEN_BODY_CLAIMS_FILE);
-    currentRequestAtMatchesAsJsonTheFile(
+    currentResponseAtMatchesAsJsonTheFile(
         "$.body.token.content.header", VALID_POPP_TOKEN_HEADER_CLAIMS_FILE);
 
     /*
@@ -86,5 +86,10 @@ public class PoppTokenValidator extends BaseValidator {
                  .as("patientProofTime must be recent enough")
                  .isAfter(ZonedDateTime.now().minusSeconds(MAX_AGE_POPP_TOKEN_IN_SECONDS));
      */
+  }
+
+  public void validatePoppTokenforBasicErrorResponse() {
+    findRequestForPath(".*/token");
+    currentResponseAtMatches("$.body.status", "ERROR");
   }
 }

@@ -61,7 +61,7 @@ ZETA requires an SMC-B certificate to work. Follow these steps:
 Host ports are defined in [`doc/docker/.env`](./doc/docker/.env).
 Docker Compose loads this file automatically. You can customize these to fit your environment. For more information
 refer to the
-[user manual configuration section](https://gematik.github.io/ti20-testhub/#_port_configuration_via_env_file).
+[user manual configuration section](https://gematik.github.io/ti2.0-testhub/#_port_configuration_via_env_file).
 
 ```bash
 # Example: remap VSDM server from 9130 to 19130
@@ -69,10 +69,10 @@ PORT_VSDM_SERVER=19130 docker compose -f ./doc/docker/compose-local.yaml --profi
 ```
 
 A full list of available port variables and their defaults is documented in the
-[user manual configuration section](https://gematik.github.io/ti20-testhub/#_port_configuration_via_env_file).
+[user manual configuration section](https://gematik.github.io/ti2.0-testhub/#_port_configuration_via_env_file).
 
 To learn about additional scenarios and available `docker compose` profiles refer to
-the [Docker Compose Profiles section in the user manual](https://gematik.github.io/ti20-testhub/#_docker_compose_profiles).
+the [Docker Compose Profiles section in the user manual](https://gematik.github.io/ti2.0-testhub/#_docker_compose_profiles).
 
 # Usage
 
@@ -104,7 +104,7 @@ See [ReleaseNotes.md](./ReleaseNotes.md) for all information regarding the (late
 
 The [Testhub user manual](https://gematik.github.io/ti2.0-testhub/) is available
 online. Make sure to check [the Troubleshooting
-section](https://gematik.github.io/ti2.0-testhub/#_troubleshooting) if you run
+section](https://gematik.github.io/ti2.0-testhub/#_faq_troubleshooting) if you run
 into any issues.
 
 # Getting Help

@@ -55,6 +55,7 @@ public class PoppVsdmServerSimulation extends BaseSimulation {
           .exec(
               http("ReadVSD")
                   .get(URL_SERVER_VSDM + "/vsdservice/v1/vsdmbundle")
+                  .queryParam("profileVersion", FHIR_PROFILE_VERSION)
                   .header("zeta-popp-token-content", "#{poppTokenContent}")
                   .header("zeta-user-info", session -> getZetaUserInfo())
                   .header("if-none-match", "0")

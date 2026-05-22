@@ -41,11 +41,11 @@ den folgenden Komponenten:
 Sämtliche Tests der VSDM-Testsuite setzen diese simulierten Dienste voraus. Diese können mit folgenden Befehlen als
 Docker-Container gestartet werden: (Die Befehle sollten im Projekt-Root-Verzeichnis ausgeführt werden.)
 
-```bash
+```
 # Build Docker images
 ./mvnw clean install -Pdocker -DskipTests
 ```
-```bash
+```
 # Start containers
 docker compose -f ./doc/docker/compose-local.yaml --profile full up -d --remove-orphans
 ```
@@ -75,7 +75,7 @@ und somit deren Funktionsweise demonstrieren. Die Tests verwenden das Jupiter-Fr
 
 Die Integrationstests können mit folgender Kommandozeile im Projekt-Root-Verzeichnis gestartet werden:
 
-```bash
+```
 ./mvnw -pl test/vsdm-testsuite/ -Dit.test="Vsdm*IT" -Dskip.inttests=false verify
 ```
 
@@ -97,7 +97,7 @@ antwortet. In diesem Fall liest das PS die wichtigsten VSD von der eGK direkt. T
 
 Die E2E-Tests können mit folgender Kommandozeile im Projekt-Root-Verzeichnis gestartet werden:
 
-```bash
+```
 ./mvnw -pl test/vsdm-testsuite/ clean verify -Dcucumber.filter.tags="@TYPE:E2E" -Dskip.inttests=false
 ```
 
@@ -121,7 +121,7 @@ Testfälle:
 
 Die Lasttests können mit folgender Kommandozeile im Projekt-Root-Verzeichnis gestartet werden:
 
-```bash
+```
 ./mvnw -pl test/vsdm-testsuite/ clean verify -Dcucumber.filter.tags="@TYPE:LOAD" -Dvsdm.loadtesting.active=true -Dskip.inttests=false
 ```
 
@@ -134,7 +134,7 @@ und für unterschiedliche Zwecke einsetzbar sind.
 > Für Performance-Tests empfiehlt sich das `perf` Profil, da hierbei die Clients direkt mit dem Backend kommunizieren
 > und der Tiger-Proxy umgangen wird:
 
-> ```bash
+> ```
 > docker compose -f doc/docker/compose-local.yaml --profile perf up -d
 > ```
 
@@ -144,9 +144,33 @@ Diese Simulation liest eine Liste von IK- und KVNR ein und generiert dann mithil
 aus Popp-Token. Diese Liste kann dann später als Feeder für die Simulation der Hintergrundlast verwendet werden. Die
 Simulation kann mittels Maven und folgender Kommandozeile im Projekt-Root-Verzeichnis gestartet werden:
 
-```bash
+```
 ./mvnw -pl test/vsdm-testsuite/ gatling:test -Dgatling.simulationClass=de.gematik.ti20.vsdm.test.load.GeneratePoppTokenSimulation
 ```
+
+### PoppVsdmServerSimulation.java
+
+Diese Simulation ruft zuerst den PoppTokenGenerator mit einer Kombination aus IK- und KVNR auf, welcher einen gültigen
+Popp-Token zurückliefert. Danach wird dieser Popp-Token während der Abfrage der VSD vom VsdmServerSimulator verwendet.
+Die Simulation kann mittels Maven und folgender Kommandozeile im Projekt-Root-Verzeichnis gestartet werden:
+
+```
+./mvnw -pl test/vsdm-testsuite/ gatling:test -Dgatling.simulationClass=de.gematik.ti20.vsdm.test.load.PoppVsdmServerSimulation
+```
+
+### VsdmClientJourneySimulation.java
+
+Diese Simulation simuliert den kompletten Ablauf vom Einstecken der Karten, über die Erlangung des Versorgungskontextes
+bis hin zur Abfrage der VSD vom Fachdienst VSDM 2.0 und kann im Projekt-Root-Verzeichnis wie folgt gestartet werden:
+
+```
+./mvnw -pl test/vsdm-testsuite/ gatling:test -Dgatling.simulationClass=de.gematik.ti20.vsdm.test.load.VsdmClientJourneySimulation
+```
+
+> [!NOTE]
+> Durch die aktuelle Integration weiterer Tiger-Komponenten, welche die Client-Simulationen starten und mehrere
+> Proxies in den Datenverkehr einschleusen, ist die Lauffähigkeit der Lastsimulation "VsdmClientJourneySimulation"
+> beeinträchtigt. Es wird empfohlen, die Last entsprechend zu reduzieren. Siehe "Konfiguration der Simulation".
 
 ### VsdmBackgroundLoadSimulation.java
 
@@ -154,7 +178,7 @@ Diese Simulation verwendet die, von der GeneratePoppTokenSimulation erzeugte, Li
 VsdmServerSimulator ab und wird in Verbindung mit den Lasttests zur Generierung der Hintergrundlast eingesetzt.
 Die Simulation kann mittels Maven und folgender Kommandozeile im Projekt-Root-Verzeichnis gestartet werden:
 
-```bash
+```
 ./mvnw -pl test/vsdm-testsuite/ gatling:test -Dgatling.simulationClass=de.gematik.ti20.vsdm.test.load.VsdmBackgroundLoadSimulation
 ```
 

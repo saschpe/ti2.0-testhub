@@ -79,6 +79,15 @@
         "tags": [
           "Vsdm"
         ],
+        "parameters": [
+          {
+            "in": "query",
+            "name": "profileVersion",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
         "summary": "Returns a VSDMBundle for the specified patient.",
         "description": "Returns a VSDMBundle with VSD about a specific patient that is addressed within the PoPP-Token in the request header.",
         "operationId": "getVSDMBundle",

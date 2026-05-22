@@ -37,10 +37,10 @@ class VsdmClientControllerTest {
   private VsdmClientService mockVsdmClientService;
   private VsdmClientController vsdmClientController;
 
-  private final String traceId = "traceId";
   private final String terminalId = "terminalId";
   private final Integer egkSlotId = 1;
   private final Integer smcbSlotId = 2;
+  private final String profileVersion = "1.0.0";
 
   @BeforeEach
   void setUp() {
@@ -50,7 +50,6 @@ class VsdmClientControllerTest {
 
   @Test
   void testReadVsd_Success() {
-
     String ifNoneMatch = "etag123";
     boolean isFhirXml = true;
 
@@ -61,12 +60,13 @@ class VsdmClientControllerTest {
             eq(smcbSlotId),
             eq(isFhirXml),
             eq(null),
-            eq(ifNoneMatch)))
+            eq(ifNoneMatch),
+            eq(profileVersion)))
         .thenReturn(mockResponse);
 
     ResponseEntity<?> response =
         vsdmClientController.readVsd(
-            terminalId, egkSlotId, smcbSlotId, isFhirXml, null, ifNoneMatch);
+            terminalId, egkSlotId, smcbSlotId, isFhirXml, profileVersion, null, ifNoneMatch);
 
     assertNotNull(response);
     assertEquals(200, response.getStatusCode().value());
@@ -80,11 +80,18 @@ class VsdmClientControllerTest {
 
     ResponseEntity<String> mockResponse = ResponseEntity.ok("Success");
     when(mockVsdmClientService.read(
-            eq(terminalId), eq(egkSlotId), eq(smcbSlotId), eq(false), eq(null), eq(ifNoneMatch)))
+            eq(terminalId),
+            eq(egkSlotId),
+            eq(smcbSlotId),
+            eq(false),
+            eq(null),
+            eq(ifNoneMatch),
+            eq(profileVersion)))
         .thenReturn(mockResponse);
 
     ResponseEntity<?> response =
-        vsdmClientController.readVsd(terminalId, egkSlotId, smcbSlotId, false, null, ifNoneMatch);
+        vsdmClientController.readVsd(
+            terminalId, egkSlotId, smcbSlotId, false, profileVersion, null, ifNoneMatch);
 
     assertNotNull(response);
     assertEquals(200, response.getStatusCode().value());

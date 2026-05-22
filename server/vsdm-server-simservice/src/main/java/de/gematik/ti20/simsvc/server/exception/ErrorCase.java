@@ -47,6 +47,16 @@ public enum ErrorCase {
       428,
       "VSDSERVICE_MISSING_PATIENT_RECORD_VERSION",
       "Der erforderliche Änderungsindikator [etag_value] fehlt in der Anfrage."),
+  VSDSERVICE_INVALID_PROFILE_VERSION(
+      "79015",
+      400,
+      "VSDSERVICE_INVALID_PROFILE_VERSION",
+      "Die vom Clientsystem angefragte Profilversion [version] wird nicht unterstützt."),
+  VSDSERVICE_MISSING_PROFILE_VERSION(
+      "79016",
+      400,
+      "VSDSERVICE_MISSING_PROFILE_VERSION",
+      "Der erforderliche Query-Parameter 'profileVersion' fehlt."),
   SERVICE_MISSING_OR_INVALID_HEADER(
       "79030",
       400,

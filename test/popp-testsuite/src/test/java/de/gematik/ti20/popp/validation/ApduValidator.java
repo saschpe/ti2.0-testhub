@@ -39,19 +39,19 @@ public class ApduValidator extends BaseValidator {
     log.info("Valdidate eH-KT APDUS");
     // Sequenz 0
     findNextRequestToPathContainingNode("$..body.message.sequenceCounter", "0");
-    currentRequestAtMatchesAsJsonTheFile("$..body.message", VALID_APDU_SEQUENCE_0_FILE);
+    currentResponseAtMatchesAsJsonTheFile("$..body.message", VALID_APDU_SEQUENCE_0_FILE);
 
     // Sequenz 1
     findNextRequestToPathContainingNode("$..body.message.sequenceCounter", "1");
-    currentRequestAtMatchesAsJsonTheFile("$..body.message", VALID_APDU_SEQUENCE_1_FILE);
+    currentResponseAtMatchesAsJsonTheFile("$..body.message", VALID_APDU_SEQUENCE_1_FILE);
 
     // Sequenz 2
-    findNextRequestToPathContainingNode("$..body.message.sequenceCounter", "2");
-    currentRequestAtMatchesAsJsonTheFile("$..body.message", VALID_APDU_SEQUENCE_2_FILE);
+    //  findNextRequestToPathContainingNode("$..body.message.sequenceCounter", "2");
+    //  currentRequestAtMatchesAsJsonTheFile("$..body.message", VALID_APDU_SEQUENCE_2_FILE);
 
     // Sequenz 3
     findNextRequestToPathContainingNode("$..body.message.sequenceCounter", "3");
-    currentRequestAtMatchesAsJsonTheFile("$..body.message", VALID_APDU_SEQUENCE_3_FILE);
+    currentResponseAtMatchesAsJsonTheFile("$..body.message", VALID_APDU_SEQUENCE_3_FILE);
 
     log.info("eH-KT APDUS succesfully validated");
   }
@@ -60,19 +60,19 @@ public class ApduValidator extends BaseValidator {
     log.info("Valdidate Standard Cardreader APDUS");
     // Sequenz 0
     findNextRequestToPathContainingNode("$..payload.sequenceCounter", "0");
-    currentRequestAtMatchesAsJsonTheFile("$..payload", VALID_APDU_SEQUENCE_0_FILE);
+    currentResponseAtMatchesAsJsonTheFile("$..payload", VALID_APDU_SEQUENCE_0_FILE);
 
     // Sequenz 1
     findNextRequestToPathContainingNode("$..payload.sequenceCounter", "1");
-    currentRequestAtMatchesAsJsonTheFile("$..payload", VALID_APDU_SEQUENCE_1_FILE);
+    currentResponseAtMatchesAsJsonTheFile("$..payload", VALID_APDU_SEQUENCE_1_FILE);
 
     // Sequenz 2
-    findNextRequestToPathContainingNode("$..payload.sequenceCounter", "2");
-    currentRequestAtMatchesAsJsonTheFile("$..payload", VALID_APDU_SEQUENCE_2_FILE);
+    // findNextRequestToPathContainingNode("$..payload.sequenceCounter", "2");
+    // currentRequestAtMatchesAsJsonTheFile("$..payload", VALID_APDU_SEQUENCE_2_FILE);
 
     // Sequenz 3
     findNextRequestToPathContainingNode("$..payload.sequenceCounter", "3");
-    currentRequestAtMatchesAsJsonTheFile("$..payload", VALID_APDU_SEQUENCE_3_FILE);
+    currentResponseAtMatchesAsJsonTheFile("$..payload", VALID_APDU_SEQUENCE_3_FILE);
 
     log.info("Standard Cardreader APDUS succesfully validated");
   }

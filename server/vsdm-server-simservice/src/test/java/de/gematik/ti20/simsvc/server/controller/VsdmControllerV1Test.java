@@ -31,6 +31,7 @@ import de.gematik.ti20.simsvc.server.config.VsdmConfig;
 import de.gematik.ti20.simsvc.server.service.*;
 import jakarta.servlet.http.HttpServletRequest;
 import java.util.Base64;
+import java.util.List;
 import org.hl7.fhir.r4.model.Bundle;
 import org.hl7.fhir.r4.model.Resource;
 import org.junit.jupiter.api.BeforeEach;
@@ -76,6 +77,7 @@ class VsdmControllerV1Test {
     vsdmConfig.setValidKvnrPrefix("X1234");
     vsdmConfig.setInvalidKvnrPrefix("X4321");
     vsdmConfig.setUnknownKvnrPrefix("X9");
+    vsdmConfig.setValidProfileVersions(List.of("1.0.0"));
 
     userInfoValidationService = new UserInfoValidationService();
     userInfoValidationService.init();
@@ -100,7 +102,7 @@ class VsdmControllerV1Test {
         String.format(
             """
                 {
-                    "actorId": "883110000168650",
+                    "actorId": "1-20014060625",
                     "actorProfessionOid": "1.2.276.0.76.4.32",
                     "at": 1773397230,
                     "insurerId": "%1$s",
@@ -126,6 +128,7 @@ class VsdmControllerV1Test {
     Resource mockResource = new Bundle();
     String userInfo = VALID_USER_INFO;
     String etag = "0";
+    String profileVersion = "1.0.0";
 
     when(etagService.checkEtag(kvnr, etag)).thenReturn(false);
     when(vsdmService.readVsd(kvnr)).thenReturn(mockResource);
@@ -133,7 +136,7 @@ class VsdmControllerV1Test {
         .thenReturn(responseBody);
 
     ResponseEntity<?> response =
-        vsdmController.vsdmbundle(poppTokenContentCoded, userInfo, etag, request);
+        vsdmController.vsdmbundle(poppTokenContentCoded, userInfo, etag, profileVersion, request);
 
     assertEquals(HttpStatus.OK, response.getStatusCode());
     assertEquals(responseBody, response.getBody());
@@ -155,6 +158,7 @@ class VsdmControllerV1Test {
     Resource mockResource = new Bundle();
     String userInfo = VALID_USER_INFO;
     String etag = "0";
+    String profileVersion = "1.0.0";
 
     // Mock request headers to contain specific content-type
     when(etagService.checkEtag(kvnr, etag)).thenReturn(false);
@@ -163,7 +167,7 @@ class VsdmControllerV1Test {
         .thenReturn(responseBody);
 
     ResponseEntity<?> response =
-        vsdmController.vsdmbundle(poppTokenContentCoded, userInfo, etag, request);
+        vsdmController.vsdmbundle(poppTokenContentCoded, userInfo, etag, profileVersion, request);
 
     assertEquals(HttpStatus.OK, response.getStatusCode());
     assertEquals(responseBody, response.getBody());
@@ -185,6 +189,7 @@ class VsdmControllerV1Test {
     Resource mockResource = new Bundle();
     String userInfo = VALID_USER_INFO;
     String etag = "0";
+    String profileVersion = "1.0.0";
 
     when(etagService.checkEtag(kvnr, etag)).thenReturn(false);
     when(vsdmService.readVsd(kvnr)).thenReturn(mockResource);
@@ -192,7 +197,7 @@ class VsdmControllerV1Test {
         .thenReturn(responseBodyWithUmlaut);
 
     ResponseEntity<?> response =
-        vsdmController.vsdmbundle(poppTokenContentCoded, userInfo, etag, request);
+        vsdmController.vsdmbundle(poppTokenContentCoded, userInfo, etag, profileVersion, request);
 
     assertEquals(HttpStatus.OK, response.getStatusCode());
     assertEquals(responseBodyWithUmlaut, response.getBody());
@@ -214,12 +219,13 @@ class VsdmControllerV1Test {
 
     String userInfo = VALID_USER_INFO;
     String etag = "123456789";
+    String profileVersion = "1.0.0";
 
     when(etagService.checkEtag(kvnr, etag)).thenReturn(true);
     when(checksumService.calculateChecksum(kvnr)).thenReturn("PZ");
 
     ResponseEntity<?> response =
-        vsdmController.vsdmbundle(poppTokenContentCoded, userInfo, etag, request);
+        vsdmController.vsdmbundle(poppTokenContentCoded, userInfo, etag, profileVersion, request);
 
     assertEquals(HttpStatus.NOT_MODIFIED, response.getStatusCode());
 
@@ -246,11 +252,14 @@ class VsdmControllerV1Test {
 
     String userInfo = "mock-user-info";
     String etag = "123456789";
+    String profileVersion = "1.0.0";
 
     ResponseStatusException exception =
         assertThrows(
             ResponseStatusException.class,
-            () -> vsdmController.vsdmbundle(poppTokenContentCoded, userInfo, etag, request));
+            () ->
+                vsdmController.vsdmbundle(
+                    poppTokenContentCoded, userInfo, etag, profileVersion, request));
 
     assertEquals(HttpStatus.BAD_REQUEST, exception.getStatusCode());
     assertEquals("SERVICE_MISSING_OR_INVALID_HEADER", exception.getReason());
@@ -261,7 +270,7 @@ class VsdmControllerV1Test {
     String poppTokenContentMissingFields =
         """
       {
-          "actorId": "883110000168650",
+          "actorId": "1-20014060625",
           "actorProfessionOid": "1.2.276."
         }
       """;
@@ -270,11 +279,14 @@ class VsdmControllerV1Test {
 
     String userInfo = "mock-user-info";
     String etag = "123456789";
+    String profileVersion = "1.0.0";
 
     ResponseStatusException exception =
         assertThrows(
             ResponseStatusException.class,
-            () -> vsdmController.vsdmbundle(poppTokenContentCoded, userInfo, etag, request));
+            () ->
+                vsdmController.vsdmbundle(
+                    poppTokenContentCoded, userInfo, etag, profileVersion, request));
 
     assertEquals(HttpStatus.BAD_REQUEST, exception.getStatusCode());
     assertEquals("SERVICE_MISSING_OR_INVALID_HEADER", exception.getReason());
@@ -286,11 +298,14 @@ class VsdmControllerV1Test {
 
     String userInfo = "mock-user-info";
     String etag = "123456789";
+    String profileVersion = "1.0.0";
 
     ResponseStatusException exception =
         assertThrows(
             ResponseStatusException.class,
-            () -> vsdmController.vsdmbundle(poppTokenContentCoded, userInfo, etag, request));
+            () ->
+                vsdmController.vsdmbundle(
+                    poppTokenContentCoded, userInfo, etag, profileVersion, request));
 
     assertEquals(HttpStatus.BAD_REQUEST, exception.getStatusCode());
     assertEquals("SERVICE_MISSING_OR_INVALID_HEADER", exception.getReason());
@@ -303,11 +318,14 @@ class VsdmControllerV1Test {
     String poppTokenContentCoded = makePoppTokenContentCoded(kvnr, iknr);
     String userInfo = "INVALID";
     String etag = "123456789";
+    String profileVersion = "1.0.0";
 
     ResponseStatusException exception =
         assertThrows(
             ResponseStatusException.class,
-            () -> vsdmController.vsdmbundle(poppTokenContentCoded, userInfo, etag, request));
+            () ->
+                vsdmController.vsdmbundle(
+                    poppTokenContentCoded, userInfo, etag, profileVersion, request));
 
     assertEquals(HttpStatus.BAD_REQUEST, exception.getStatusCode());
     assertEquals("SERVICE_MISSING_OR_INVALID_HEADER", exception.getReason());
@@ -328,11 +346,14 @@ class VsdmControllerV1Test {
     String userInfo = Base64.getEncoder().encodeToString(userInfoMissingFields.getBytes());
 
     String etag = "123456789";
+    String profileVersion = "1.0.0";
 
     ResponseStatusException exception =
         assertThrows(
             ResponseStatusException.class,
-            () -> vsdmController.vsdmbundle(poppTokenContentCoded, userInfo, etag, request));
+            () ->
+                vsdmController.vsdmbundle(
+                    poppTokenContentCoded, userInfo, etag, profileVersion, request));
 
     assertEquals(HttpStatus.BAD_REQUEST, exception.getStatusCode());
     assertEquals("SERVICE_MISSING_OR_INVALID_HEADER", exception.getReason());
@@ -341,15 +362,18 @@ class VsdmControllerV1Test {
   @Test
   void testVsdmbundle_MissingUserInfo() {
     String kvnr = "X123456789";
-    String iknr = "109500969";
+    String iknr = "9876543210";
     String poppTokenContentCoded = makePoppTokenContentCoded(kvnr, iknr);
 
     String etag = "123456789";
+    String profileVersion = "1.0.0";
 
     ResponseStatusException exception =
         assertThrows(
             ResponseStatusException.class,
-            () -> vsdmController.vsdmbundle(poppTokenContentCoded, null, etag, request));
+            () ->
+                vsdmController.vsdmbundle(
+                    poppTokenContentCoded, null, etag, profileVersion, request));
 
     assertEquals(HttpStatus.BAD_REQUEST, exception.getStatusCode());
     assertEquals("SERVICE_MISSING_OR_INVALID_HEADER", exception.getReason());
@@ -363,11 +387,14 @@ class VsdmControllerV1Test {
 
     String userInfo = VALID_USER_INFO;
     String etag = "123456789";
+    String profileVersion = "1.0.0";
 
     ResponseStatusException exception =
         assertThrows(
             ResponseStatusException.class,
-            () -> vsdmController.vsdmbundle(poppTokenContentCoded, userInfo, etag, request));
+            () ->
+                vsdmController.vsdmbundle(
+                    poppTokenContentCoded, userInfo, etag, profileVersion, request));
 
     assertEquals(HttpStatus.BAD_REQUEST, exception.getStatusCode());
     assertEquals("VSDSERVICE_UNKNOWN_IK", exception.getReason());
@@ -381,13 +408,54 @@ class VsdmControllerV1Test {
 
     String userInfo = VALID_USER_INFO;
     String etag = "123456789";
+    String profileVersion = "1.0.0";
 
     ResponseStatusException exception =
         assertThrows(
             ResponseStatusException.class,
-            () -> vsdmController.vsdmbundle(poppTokenContentCoded, userInfo, etag, request));
+            () ->
+                vsdmController.vsdmbundle(
+                    poppTokenContentCoded, userInfo, etag, profileVersion, request));
 
     assertEquals(HttpStatus.BAD_REQUEST, exception.getStatusCode());
     assertEquals("VSDSERVICE_INVALID_IK", exception.getReason());
+  }
+
+  @Test
+  void testVsdmbundle_MissingProfileVersion() {
+    String kvnr = "X123456789";
+    String iknr = "109500969";
+    String poppTokenContentCoded = makePoppTokenContentCoded(kvnr, iknr);
+
+    String userInfo = VALID_USER_INFO;
+    String etag = "123456789";
+
+    ResponseStatusException exception =
+        assertThrows(
+            ResponseStatusException.class,
+            () -> vsdmController.vsdmbundle(poppTokenContentCoded, userInfo, etag, null, request));
+
+    assertEquals(HttpStatus.BAD_REQUEST, exception.getStatusCode());
+    assertEquals("VSDSERVICE_MISSING_PROFILE_VERSION", exception.getReason());
+  }
+
+  @Test
+  void testVsdmbundle_InvalidProfileVersion() {
+    String kvnr = "X123456789";
+    String iknr = "109500969";
+    String poppTokenContentCoded = makePoppTokenContentCoded(kvnr, iknr);
+
+    String userInfo = VALID_USER_INFO;
+    String etag = "123456789";
+
+    ResponseStatusException exception =
+        assertThrows(
+            ResponseStatusException.class,
+            () ->
+                vsdmController.vsdmbundle(
+                    poppTokenContentCoded, userInfo, etag, "unknown", request));
+
+    assertEquals(HttpStatus.BAD_REQUEST, exception.getStatusCode());
+    assertEquals("VSDSERVICE_INVALID_PROFILE_VERSION", exception.getReason());
   }
 }

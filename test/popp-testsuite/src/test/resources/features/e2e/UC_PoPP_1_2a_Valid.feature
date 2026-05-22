@@ -1,7 +1,7 @@
 #language: de
 #noinspection NonAsciiCharacters,SpellCheckingInspection
 
-@PRODUKT:PoPP
+@PRODUKT:PoPP_Service
 @TYPE:E2E
 Funktionalität: PoPP-Token erzeugen mit eGK bei physischer Anwesenheit
   Hintergrund:
@@ -41,6 +41,6 @@ Funktionalität: PoPP-Token erzeugen mit eGK bei physischer Anwesenheit
     Beispiele:
       | readerType      | commType          |
       | "eH-KT"         | "kontaktbehaftet" |
-   #   | "Standardleser" | "kontaktbehaftet" |
-   #   | "Standardleser" | "kontaktlos"      |
-   #   | "virtuell"      | "kontaktbehaftet" |
+      | "Standardleser" | "kontaktbehaftet" |
+      | "Standardleser" | "kontaktlos"      |
+      | "virtuell"      | "kontaktbehaftet" |

@@ -26,11 +26,7 @@ package de.gematik.ti20.popp;
 
 import static de.gematik.test.tiger.lib.TigerHttpClient.executeCommandWithContingentWait;
 import static de.gematik.test.tiger.lib.TigerHttpClient.givenDefaultSpec;
-import static de.gematik.ti20.popp.data.TestConstants.FOLDER_FOR_SIGNED_HASHDB_PAYLOADS;
-import static de.gematik.ti20.popp.data.TestConstants.HASH_DB_SUCCESSFUL_IMPORT_RESULT_RESPONSE_FILE;
-import static de.gematik.ti20.popp.data.TestConstants.URL_HASH_DB_IMPORT_RU;
-import static de.gematik.ti20.popp.data.TestConstants.VALID_HASH_DB_IMPORT_RESPONSE_FILE;
-import static de.gematik.ti20.popp.data.TestConstants.VALID_HASH_DB_JOB_STATUS_RESPONSE_FILE;
+import static de.gematik.ti20.popp.data.TestConstants.*;
 
 import de.gematik.test.tiger.common.config.TigerGlobalConfiguration;
 import de.gematik.test.tiger.glue.TigerProxyGlue;

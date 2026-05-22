@@ -34,7 +34,11 @@ public enum Error {
   VSDSERVICE_UNKNOWN_KVNR("[kvnr] aus dem PoPP-Token ist dem Fachdienst nicht bekannt."),
   VSDSERVICE_MISSING_PATIENT_RECORD_VERSION(
       "Der erforderliche Änderungsindikator [etag_value] fehlt in der Anfrage."),
-  SERVICE_INTERNAL_SERVER_ERROR("Ein unerwarteter interner Fehler ist aufgetreten.");
+  VSDSERVICE_INVALID_PROFILE_VERSION(
+      "Die vom Clientsystem angefragte Profilversion [version] wird nicht unterstützt."),
+  VSDSERVICE_MISSING_PROFILE_VERSION("Der erforderliche Query-Parameter 'profileVersion' fehlt."),
+  SERVICE_INTERNAL_SERVER_ERROR("Ein unerwarteter interner Fehler ist aufgetreten."),
+  ;
 
   private final String value;
 

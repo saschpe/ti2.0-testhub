@@ -80,6 +80,8 @@ public class BaseSimulation extends Simulation {
   protected static final FeederBuilder.FileBased<String> EGK_FEEDER =
       csv("feeder/egk_slots.csv").circular();
 
+  protected static final String FHIR_PROFILE_VERSION = "1.0.0";
+
   @NotNull
   protected static List<OpenInjectionStep> getRandomReadVsdSteps() {
     List<OpenInjectionStep> steps = new ArrayList<>();
@@ -100,7 +102,7 @@ public class BaseSimulation extends Simulation {
     return steps;
   }
 
-  protected static String getPoppTokenJsonBody(String iknr, String kvnr) {
+  protected static String getPoppTokenJsonBody(final String iknr, final String kvnr) {
     Map<String, List<Map<String, String>>> tokenArgs =
         Map.of(
             "tokenParamsList",
@@ -117,7 +119,7 @@ public class BaseSimulation extends Simulation {
                     "insurerId",
                     iknr,
                     "actorId",
-                    "883110000168650",
+                    "1-20014060625",
                     "actorProfessionOid",
                     OID_PRAXIS_ARZT)));
 

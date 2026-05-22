@@ -1,0 +1,76 @@
+/*-
+ * #%L
+ * PoPP Testsuite
+ * %%
+ * Copyright (C) 2025 - 2026 gematik GmbH
+ * %%
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ *
+ * *******
+ *
+ * For additional notes and disclaimer from gematik and in case of changes
+ * by gematik, find details in the "Readme" file.
+ * #L%
+ */
+package de.gematik.ti20.popp.validation;
+
+import static de.gematik.ti20.popp.data.TestConstants.ENTITY_STATEMENT_PATH;
+import static de.gematik.ti20.popp.data.TestConstants.POPP_SERVICE_BASE_URL_RU;
+import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
+
+import de.gematik.rbellogger.data.RbelElement;
+import java.time.Instant;
+import java.time.ZoneOffset;
+import java.time.ZonedDateTime;
+import org.assertj.core.api.InstanceOfAssertFactories;
+
+public class EntityStatementValidator extends BaseValidator {
+
+  public EntityStatementValidator() {
+    super();
+  }
+
+  public void validateEntityStatement() {
+    findRequestForPath(ENTITY_STATEMENT_PATH);
+    currentResponseAtMatches("$.body.body.iss", POPP_SERVICE_BASE_URL_RU.getValueOrDefault());
+    currentResponseAtMatches("$.body.body.sub", POPP_SERVICE_BASE_URL_RU.getValueOrDefault());
+    currentResponseAtMatches("$.body.signature.isValid", "true");
+    currentResponseAtMatches("$.body.body.metadata.oauth_resource.signed_jwks_uri", "https.*");
+    assertThat(this.rbelMessageRetriever.findElementInCurrentResponse("$.body.body.iat"))
+        .as("iat element should exist")
+        .isNotNull()
+        .extracting(RbelElement::getRawStringContent)
+        .as("raw iat should not be null")
+        .isNotNull()
+        .extracting(Long::parseLong)
+        .extracting(
+            epochSeconds ->
+                ZonedDateTime.ofInstant(Instant.ofEpochSecond(epochSeconds), ZoneOffset.UTC))
+        .asInstanceOf(InstanceOfAssertFactories.ZONED_DATE_TIME)
+        .as("iat must be recent enough")
+        .isAfter(ZonedDateTime.now().minusSeconds(30));
+    assertThat(this.rbelMessageRetriever.findElementInCurrentResponse("$.body.body.exp"))
+        .as("exp element should exist")
+        .isNotNull()
+        .extracting(RbelElement::getRawStringContent)
+        .as("raw exp should not be null")
+        .isNotNull()
+        .extracting(Long::parseLong)
+        .extracting(
+            epochSeconds ->
+                ZonedDateTime.ofInstant(Instant.ofEpochSecond(epochSeconds), ZoneOffset.UTC))
+        .asInstanceOf(InstanceOfAssertFactories.ZONED_DATE_TIME)
+        .as("exp must be within the next 24 hours")
+        .isBefore(ZonedDateTime.now().plusHours(24));
+  }
+}

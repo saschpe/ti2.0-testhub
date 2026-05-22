@@ -15,35 +15,36 @@ services:
 
   popp-client:
     profiles: [ "full" ]
-    image: gematik1/popp-client:2.2.0
+    image: gematik1/popp-client:2.4.1
     env_file:
       - path: ../.env
         required: true
     platform: linux/amd64
     container_name: popp-client
     environment:
-      - SPRING_PROFILES_ACTIVE=dev-local
+      - SPRING_PROFILES_ACTIVE=dev
       - ZETA_AUTHENTICATION_SMB_KEYFILE=/app/smcb_private.p12
       - POPP_SERVER_URL=wss://popp-zeta-ingress:443/ws
+      # URL für echten POPP-Server:
+      #      - POPP_SERVER_URL=wss://popp-ru-dev-interim.int.epa.rise-link.de:8443/popp/practitioner/api/v1/token-generation-ehc
       - OTEL_EXPORTER_OTLP_ENDPOINT=http://otel-collector:4318
       #      - JAVA_TOOL_OPTIONS="-agentlib:jdwp=transport=dt_socket,server=y,suspend=n,address=*:5013"
       - VIRTUAL_CARD_IMAGE_FILE=/data/cards/egkCardImage.xml
     networks:
-      - testhub_backend
+      - testhub_client
     ports:
       - "${PORT_POPP_CLIENT:?PORT_POPP_CLIENT missing – set it in doc/docker/.env}:8081"
       - "${PORT_POPP_CLIENT_MGMT:?PORT_POPP_CLIENT_MGMT missing – set it in doc/docker/.env}:9001"
     volumes:
       - ./zeta/smcb-private/smcb_private.p12:/app/smcb_private.p12:ro
       - ../../../test/vsdm-testsuite/src/test/resources/data/cards:/data/cards
-
     depends_on:
       - popp-server
       - otel-collector
 
   popp-server:
     profiles: [ "full" ]
-    image: gematik1/popp-server:2.2.0
+    image: gematik1/popp-server:2.4.1
     env_file:
       - path: ../.env
         required: true
@@ -101,7 +102,7 @@ services:
 
   popp-zeta-pep:
     profiles: [ "full" ]
-    image: europe-west3-docker.pkg.dev/gematik-pt-zeta-prod/zeta-dcr/ngx_pep:0.5.1
+    image: europe-west3-docker.pkg.dev/gematik-pt-zeta-prod/zeta-dcr/ngx_pep:1.0.1
     env_file:
       - path: ../.env
         required: true
@@ -132,7 +133,7 @@ services:
 
   popp-zeta-pdp:
     profiles: [ "full" ]
-    image: europe-west3-docker.pkg.dev/gematik-pt-zeta-prod/zeta-dcr/keycloak-zeta:0.5.1
+    image: europe-west3-docker.pkg.dev/gematik-pt-zeta-prod/zeta-dcr/keycloak-zeta:1.0.1
     env_file:
       - path: ../.env
         required: true
@@ -219,7 +220,7 @@ services:
   popp-zeta-pdp-opa:
     profiles: [ "full" ]
     container_name: popp-zeta-pdp-opa
-    image: openpolicyagent/opa:1.15.2-static
+    image: europe-west3-docker.pkg.dev/gematik-pt-zeta-prod/zeta-dcr/opa:1.14.1-static
     env_file:
       - path: ../.env
         required: true

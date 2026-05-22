@@ -62,6 +62,8 @@ public class VsdmSteps {
   private static final TigerTypedConfigurationKey<Boolean> VSDM_LOAD_TESTING_ACTIVE =
       new TigerTypedConfigurationKey<>("vsdm.loadTesting.active", Boolean.class, Boolean.FALSE);
 
+  private static String VALID_PROFILE_VERSION = "1.0.0";
+
   private Actor hccs() {
     return OnStage.theActorInTheSpotlight();
   }
@@ -92,7 +94,9 @@ public class VsdmSteps {
 
   @Angenommen("das Primärsystem hat die VSD bereits einmal im Quartal abgefragt")
   public void givenVsdmClientHasAlreadyRequestVsdBefore() {
-    hccs().attemptsTo(RequestVsdFromServer.withEtagAndPoppToken("0", null, true));
+    hccs()
+        .attemptsTo(
+            RequestVsdFromServer.withEtagAndPoppToken("0", null, true, VALID_PROFILE_VERSION));
     hccs().remember("etag", LastEtag.value().answeredBy(hccs()));
   }
 
@@ -115,7 +119,9 @@ public class VsdmSteps {
   public void whenClientSystemIsRequestingVsdWithAccessAndPoppToken() {
     String etag = Optional.ofNullable(hccs().recall("etag")).orElse("0").toString();
     hccs().attemptsTo(DeleteVsdmDataFromCache.deleteCache());
-    hccs().attemptsTo(RequestVsdFromServer.withEtagAndPoppToken(etag, null, false));
+    hccs()
+        .attemptsTo(
+            RequestVsdFromServer.withEtagAndPoppToken(etag, null, false, VALID_PROFILE_VERSION));
   }
 
   @Und("der VSDM Ressource Server beim E-Tag-Vergleich einen Unterschied feststellt")
@@ -292,7 +298,8 @@ public class VsdmSteps {
     hccs().attemptsTo(GeneratePoppToken.now());
     hccs()
         .attemptsTo(
-            RequestVsdFromServer.withEtagAndPoppToken("0", hccs().recall("poppToken"), false));
+            RequestVsdFromServer.withEtagAndPoppToken(
+                "0", hccs().recall("poppToken"), false, VALID_PROFILE_VERSION));
   }
 
   @Wenn(
@@ -303,7 +310,30 @@ public class VsdmSteps {
     hccs().attemptsTo(GeneratePoppToken.now());
     hccs()
         .attemptsTo(
-            RequestVsdFromServer.withEtagAndPoppToken("0", hccs().recall("poppToken"), false));
+            RequestVsdFromServer.withEtagAndPoppToken(
+                "0", hccs().recall("poppToken"), false, VALID_PROFILE_VERSION));
+  }
+
+  @Wenn("das Primärsystem die VSD mit einer unbekannten FHIR Profile Version {string} abfragt")
+  public void whenClientSystemIsRequestingVsdWithUnknownProfileVersion(String profileVersion) {
+    EgkCardInfo egk = hccs().recall("egkCardInfo");
+    egk.setIknr("109500969");
+    hccs().attemptsTo(GeneratePoppToken.now());
+    hccs()
+        .attemptsTo(
+            RequestVsdFromServer.withEtagAndPoppToken(
+                "0", hccs().recall("poppToken"), false, profileVersion));
+  }
+
+  @Wenn("das Primärsystem die VSD mit einer fehlenen FHIR Profile Version abfragt")
+  public void whenClientSystemIsRequestingVsdWithMissingProfileVersion() {
+    EgkCardInfo egk = hccs().recall("egkCardInfo");
+    egk.setIknr("109500969");
+    hccs().attemptsTo(GeneratePoppToken.now());
+    hccs()
+        .attemptsTo(
+            RequestVsdFromServer.withEtagAndPoppToken(
+                "0", hccs().recall("poppToken"), false, null));
   }
 
   @Wenn("das Primärsystem die VSD mit einer ungültigen KV-Nummer vom VSDM Ressource Server abfragt")
@@ -313,7 +343,8 @@ public class VsdmSteps {
     hccs().attemptsTo(GeneratePoppToken.now());
     hccs()
         .attemptsTo(
-            RequestVsdFromServer.withEtagAndPoppToken("0", hccs().recall("poppToken"), false));
+            RequestVsdFromServer.withEtagAndPoppToken(
+                "0", hccs().recall("poppToken"), false, VALID_PROFILE_VERSION));
   }
 
   @Wenn(
@@ -324,19 +355,25 @@ public class VsdmSteps {
     hccs().attemptsTo(GeneratePoppToken.now());
     hccs()
         .attemptsTo(
-            RequestVsdFromServer.withEtagAndPoppToken("0", hccs().recall("poppToken"), false));
+            RequestVsdFromServer.withEtagAndPoppToken(
+                "0", hccs().recall("poppToken"), false, VALID_PROFILE_VERSION));
   }
 
   @Wenn("das Primärsystem die VSD mit einem fehlenden E-Tag vom VSDM Ressource Server abfragt")
   public void whenClientSystemIsRequestingVsdWithWrongEtag() {
     hccs().attemptsTo(DeleteVsdmDataFromCache.deleteCache());
-    hccs().attemptsTo(RequestVsdFromServer.withEtagAndPoppToken(null, null, true));
+    hccs()
+        .attemptsTo(
+            RequestVsdFromServer.withEtagAndPoppToken(null, null, true, VALID_PROFILE_VERSION));
   }
 
   @Wenn(
       "das Primärsystem die VSD mit einem ungültigen PoPP-Token vom VSDM Ressource Server abfragt")
   public void whenClientSystemIsRequestingVsdWithInvalidPoppToken() {
-    hccs().attemptsTo(RequestVsdFromServer.withEtagAndPoppToken("0", "INVALID_POPP_TOKEN", true));
+    hccs()
+        .attemptsTo(
+            RequestVsdFromServer.withEtagAndPoppToken(
+                "0", "INVALID_POPP_TOKEN", true, VALID_PROFILE_VERSION));
   }
 
   @Dann("antwortet der VSDM Ressource Server mit dem Fehlercode {int} und dem Text {string}")
@@ -362,10 +399,16 @@ public class VsdmSteps {
       hccs().attemptsTo(DeleteVsdmDataFromCache.deleteCache());
 
       if (withUpdateVsd) { // Return code 200.
-        hccs().attemptsTo(RequestVsdFromServer.withEtagAndPoppToken(etag, poppToken, false));
+        hccs()
+            .attemptsTo(
+                RequestVsdFromServer.withEtagAndPoppToken(
+                    etag, poppToken, false, VALID_PROFILE_VERSION));
         andRessourceServerIsFindingDifferentEtag();
       } else { // Return code 304.
-        hccs().attemptsTo(RequestVsdFromServer.withEtagAndPoppToken(etag, null, false));
+        hccs()
+            .attemptsTo(
+                RequestVsdFromServer.withEtagAndPoppToken(
+                    etag, null, false, VALID_PROFILE_VERSION));
         andRessourceServerIsFindingEqualEtag();
       }
       answerTimes.add(LastResponseTime.value().answeredBy(hccs()));

@@ -1,7 +1,7 @@
 #language: de
 #noinspection NonAsciiCharacters,SpellCheckingInspection
 
-@PRODUKT:PoPP
+@PRODUKT:PoPP_Service
 @TYPE:E2E
 Funktionalität: Import von Daten in eGK-Hash-Datenbank
 

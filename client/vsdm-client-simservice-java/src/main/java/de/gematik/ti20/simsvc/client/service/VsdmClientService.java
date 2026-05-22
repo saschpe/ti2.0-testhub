@@ -108,14 +108,16 @@ public class VsdmClientService {
       final int smcbSlotId,
       final boolean isFhirXml,
       final String poppTokenInjected,
-      final String ifNoneMatch) {
+      final String ifNoneMatch,
+      final String profileVersion) {
     log.info(
-        "read initiated with terminalId = {}, egkSlotId={}, smcBSlotId = {}, if-none-match={}, poppTokenInjected={}",
+        "read initiated with terminalId = {}, egkSlotId={}, smcBSlotId = {}, if-none-match={}, poppTokenInjected={}, profileVersion={}",
         terminalId,
         egkSlotId,
         smcbSlotId,
         ifNoneMatch,
-        poppTokenInjected != null);
+        poppTokenInjected != null,
+        profileVersion);
 
     final AttachedCard attachedCard;
 
@@ -132,7 +134,8 @@ public class VsdmClientService {
     log.debug("Received PoPP token: {}", poppToken);
 
     final ResponseEntity<String> vsd =
-        requestVsd(terminalId, egkSlotId, attachedCard, poppToken, ifNoneMatch, isFhirXml);
+        requestVsd(
+            terminalId, egkSlotId, attachedCard, poppToken, ifNoneMatch, isFhirXml, profileVersion);
     log.debug("Received VSD: {}", vsd);
 
     return vsd;
@@ -207,7 +210,8 @@ public class VsdmClientService {
       final AttachedCard attachedCard,
       final String poppToken,
       final String ifNoneMatch,
-      final boolean isFhirXml) {
+      final boolean isFhirXml,
+      final String profileVersion) {
 
     if (attachedCard != null) {
       final VsdmCachedValue vsdmCachedValue =
@@ -226,7 +230,8 @@ public class VsdmClientService {
       final ZetaSdkClientAdapter.RequestParameters requestParameters =
           new ZetaSdkClientAdapter.RequestParameters(traceId, poppToken, isFhirXml, ifNoneMatch);
       final ZetaSdkClientAdapter.Response responseFromServer =
-          vsdmZetaClient.httpGet("vsdservice/v1/vsdmbundle", requestParameters);
+          vsdmZetaClient.httpGet(
+              "vsdservice/v1/vsdmbundle?profileVersion=" + profileVersion, requestParameters);
 
       final boolean isNotModified =
           responseFromServer.statusCode().isSameCodeAs(HttpStatus.NOT_MODIFIED);

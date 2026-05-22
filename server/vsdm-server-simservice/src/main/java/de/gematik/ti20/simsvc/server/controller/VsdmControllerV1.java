@@ -26,6 +26,7 @@ package de.gematik.ti20.simsvc.server.controller;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.google.common.base.Strings;
 import de.gematik.ti20.simsvc.server.config.VsdmConfig;
 import de.gematik.ti20.simsvc.server.exception.ErrorCase;
 import de.gematik.ti20.simsvc.server.model.PoppTokenContent;
@@ -44,10 +45,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.RequestHeader;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 import org.springframework.web.server.ResponseStatusException;
 
 @Slf4j
@@ -91,8 +89,13 @@ public class VsdmControllerV1 {
       @RequestHeader(value = "zeta-user-info", required = false) final String userInfo,
       @RequestHeader(value = "if-none-match", required = false, defaultValue = "0")
           final String ifNoneMatch,
+      @RequestParam(value = "profileVersion", required = false) final String profileVersion,
       final HttpServletRequest request) {
-    log.info("Received request for readVsd");
+    log.info(
+        "Received request for readVsd zeta-popp-token-content: {}, zeta-user-info: {}, if-none-match: {}",
+        poppTokenContentCoded,
+        userInfo,
+        ifNoneMatch);
     validateHeaders(request);
     userInfoValidationService.validateUserInfo(userInfo);
 
@@ -100,6 +103,16 @@ public class VsdmControllerV1 {
 
     final PoppTokenContent poppTokenContent = parsePoppTokenContent(poppTokenContentCoded);
     final String kvnr = poppTokenContent.getPatientId();
+
+    if (Strings.isNullOrEmpty(profileVersion)) {
+      throw new ResponseStatusException(
+          HttpStatus.BAD_REQUEST, "VSDSERVICE_MISSING_PROFILE_VERSION");
+    }
+
+    if (!vsdmConfig.getValidProfileVersions().contains(profileVersion)) {
+      throw new ResponseStatusException(
+          HttpStatus.BAD_REQUEST, "VSDSERVICE_INVALID_PROFILE_VERSION");
+    }
 
     if (etagService.checkEtag(kvnr, ifNoneMatch)) {
       responseHeaders.set(HttpHeaders.ETAG, ifNoneMatch);

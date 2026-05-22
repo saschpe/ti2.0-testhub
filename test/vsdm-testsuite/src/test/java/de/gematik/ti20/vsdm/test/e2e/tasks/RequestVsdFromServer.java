@@ -36,11 +36,14 @@ public class RequestVsdFromServer implements Task {
   private final String etag;
   private final String poppToken;
   private final boolean isFhirXml;
+  private final String profileVersion;
 
-  public RequestVsdFromServer(String etag, String poppToken, boolean isFhirXml) {
+  public RequestVsdFromServer(
+      String etag, String poppToken, boolean isFhirXml, String profileVersion) {
     this.etag = etag;
     this.poppToken = poppToken;
     this.isFhirXml = isFhirXml;
+    this.profileVersion = profileVersion;
   }
 
   /*
@@ -65,8 +68,8 @@ public class RequestVsdFromServer implements Task {
     - Or, VsdmClientSimulator is requesting new PoPP-Token from PoppServerMockService.
   */
   public static RequestVsdFromServer withEtagAndPoppToken(
-      String etag, String poppToken, boolean isFhirXml) {
-    return instrumented(RequestVsdFromServer.class, etag, poppToken, isFhirXml);
+      String etag, String poppToken, boolean isFhirXml, String profileVersion) {
+    return instrumented(RequestVsdFromServer.class, etag, poppToken, isFhirXml, profileVersion);
   }
 
   @Override
@@ -82,7 +85,8 @@ public class RequestVsdFromServer implements Task {
             .queryParam("terminalId", "0")
             .queryParam("isFhirXml", isFhirXml)
             .queryParam("smcBSlotId", smcbSlot)
-            .queryParam("egkSlotId", egkSlot);
+            .queryParam("egkSlotId", egkSlot)
+            .queryParam("profileVersion", profileVersion);
 
     if (etag != null) {
       request.header("If-None-Match", etag);
