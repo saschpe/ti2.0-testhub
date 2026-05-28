@@ -29,14 +29,34 @@ import static org.assertj.core.api.Assertions.assertThat;
 import de.gematik.ti20.vsdm.fhir.def.VsdmPatient;
 import java.util.Optional;
 import java.util.Set;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.boot.test.util.TestPropertyValues;
+import org.springframework.context.annotation.AnnotationConfigApplicationContext;
 
-@SpringBootTest(properties = {"vsdm.path-to-test-data=src/test/resources/vsdmservice/patient"})
 class TestDataRepositoryTest {
 
-  @Autowired private TestDataRepository testDataRepository;
+  private AnnotationConfigApplicationContext context;
+  private TestDataRepository testDataRepository;
+
+  @BeforeEach
+  void setUp() {
+    context = new AnnotationConfigApplicationContext();
+    TestPropertyValues.of("vsdm.path-to-test-data=src/test/resources/vsdmservice/patient")
+        .applyTo(context);
+    context.register(
+        de.gematik.ti20.simsvc.server.config.TestDataConfiguration.class, TestDataRepository.class);
+    context.refresh();
+    testDataRepository = context.getBean(TestDataRepository.class);
+  }
+
+  @AfterEach
+  void tearDown() {
+    if (context != null) {
+      context.close();
+    }
+  }
 
   @Test
   void thatAPatientIsReturned() {

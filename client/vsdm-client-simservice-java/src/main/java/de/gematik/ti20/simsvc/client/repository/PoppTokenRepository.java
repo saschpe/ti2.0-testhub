@@ -57,4 +57,8 @@ public class PoppTokenRepository {
     return patientProofTime != null
         && System.currentTimeMillis() / 1000 - patientProofTime > (3 * 30 * 24 * 60 * 60);
   }
+
+  public void clear() {
+    cache.clear();
+  }
 }

@@ -24,10 +24,10 @@
  */
 package de.gematik.ti20.client.card.terminal.connector;
 
+import jakarta.xml.soap.SOAPMessage;
+import jakarta.xml.ws.Dispatch;
+import jakarta.xml.ws.Service;
 import javax.xml.namespace.QName;
-import javax.xml.soap.SOAPMessage;
-import javax.xml.ws.Dispatch;
-import javax.xml.ws.Service;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

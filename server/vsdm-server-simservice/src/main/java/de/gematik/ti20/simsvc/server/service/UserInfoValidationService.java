@@ -24,8 +24,6 @@
  */
 package de.gematik.ti20.simsvc.server.service;
 
-import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.networknt.schema.Error;
 import com.networknt.schema.InputFormat;
 import com.networknt.schema.Schema;
@@ -52,7 +50,6 @@ import org.springframework.web.server.ResponseStatusException;
 public class UserInfoValidationService {
 
   private static final String SCHEMA_PATH = "/schemas/user-info-vsdm2.json";
-  private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
 
   private Schema userInfoSchema;
 
@@ -78,37 +75,40 @@ public class UserInfoValidationService {
    *     conform to the schema
    */
   public void validateUserInfo(final String userInfoBase64) {
-    final JsonNode jsonNode = decodeAndParse(userInfoBase64);
-    final List<Error> errors = userInfoSchema.validate(jsonNode);
+    if (userInfoBase64 == null || userInfoBase64.isBlank()) {
+      throw badRequest();
+    }
 
-    if (!errors.isEmpty()) {
-      throw new ResponseStatusException(
-          HttpStatus.BAD_REQUEST,
-          ErrorCase.SERVICE_MISSING_OR_INVALID_HEADER
-              .getBdeReference()
-              .replaceAll("<header>", "zeta-user-info"));
+    final String json = decodeBase64(userInfoBase64);
+
+    try {
+      final List<Error> errors = userInfoSchema.validate(json, InputFormat.JSON);
+      if (!errors.isEmpty()) {
+        throw badRequest();
+      }
+    } catch (final ResponseStatusException e) {
+      throw e;
+    } catch (final Exception e) {
+      log.warn("zeta-user-info JSON-Validierung fehlgeschlagen: {}", e.getMessage());
+      throw badRequest();
     }
   }
 
-  private JsonNode decodeAndParse(final String userInfoBase64) {
+  private static ResponseStatusException badRequest() {
+    return new ResponseStatusException(
+        HttpStatus.BAD_REQUEST,
+        ErrorCase.SERVICE_MISSING_OR_INVALID_HEADER
+            .getBdeReference()
+            .replace("<header>", "zeta-user-info"));
+  }
+
+  private String decodeBase64(final String userInfoBase64) {
     try {
       final byte[] decoded = Base64.getDecoder().decode(userInfoBase64);
-      final String json = new String(decoded, StandardCharsets.UTF_8);
-      return OBJECT_MAPPER.readTree(json);
+      return new String(decoded, StandardCharsets.UTF_8);
     } catch (final IllegalArgumentException e) {
       log.warn("zeta-user-info ist kein gültiges Base64: {}", e.getMessage());
-      throw new ResponseStatusException(
-          HttpStatus.BAD_REQUEST,
-          ErrorCase.SERVICE_MISSING_OR_INVALID_HEADER
-              .getBdeReference()
-              .replaceAll("<header>", "zeta-user-info"));
-    } catch (final Exception e) {
-      log.warn("zeta-user-info JSON-Parsing fehlgeschlagen: {}", e.getMessage());
-      throw new ResponseStatusException(
-          HttpStatus.BAD_REQUEST,
-          ErrorCase.SERVICE_MISSING_OR_INVALID_HEADER
-              .getBdeReference()
-              .replaceAll("<header>", "zeta-user-info"));
+      throw badRequest();
     }
   }
 }

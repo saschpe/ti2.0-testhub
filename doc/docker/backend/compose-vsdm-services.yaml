@@ -122,6 +122,7 @@ services:
       - ./zeta/tpm/:/opt/keycloak/conf/tpm
     healthcheck:
       test: [ "CMD-SHELL", "exec 3<>/dev/tcp/127.0.0.1/9000;echo -e \"GET /auth/health/live HTTP/1.1\r\nhost: localhost:9000\r\nConnection: close\r\n\r\n\" >&3;grep \"status.*UP\" <&3" ]
+      start_period: 120s
       interval: 5s
       timeout: 5s
       retries: 30

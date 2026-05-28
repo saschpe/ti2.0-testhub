@@ -55,6 +55,8 @@ import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
+import org.springframework.web.reactive.function.client.WebClientRequestException;
+import org.springframework.web.reactive.function.client.WebClientResponseException;
 import org.springframework.web.server.ResponseStatusException;
 
 @Slf4j
@@ -63,6 +65,10 @@ public class VsdmClientService {
 
   public static final String HEADER_VSDM_PZ = "vsdm-pz";
   public static final String HEADER_ETAG = "etag";
+  private static final int POPP_TOKEN_MAX_ATTEMPTS = 3;
+  private static final String POPP_WEBSOCKET_NOT_CONNECTED = "Websocket client is not connected";
+  private static final String POPP_PREMATURE_CLOSE =
+      "Connection prematurely closed BEFORE response";
 
   private final PoppClientAdapter poppClientAdapter;
   private final VsdmClientConfig vsdmClientConfig;
@@ -130,7 +136,7 @@ public class VsdmClientService {
 
     final String poppToken =
         Optional.ofNullable(poppTokenInjected)
-            .orElseGet(() -> requestPoppToken(terminalId, egkSlotId, smcbSlotId, attachedCard));
+            .orElseGet(() -> requestPoppToken(terminalId, egkSlotId, attachedCard));
     log.debug("Received PoPP token: {}", poppToken);
 
     final ResponseEntity<String> vsd =
@@ -168,10 +174,7 @@ public class VsdmClientService {
   }
 
   protected String requestPoppToken(
-      final String terminalId,
-      final int egkSlotId,
-      final int smcbSlotId,
-      final AttachedCard attachedCard) {
+      final String terminalId, final int egkSlotId, final AttachedCard attachedCard) {
     log.info("Requesting PoPP token for attached card: {}", attachedCard.getId());
 
     if (vsdmClientConfig.isUseMockPoppToken()) {
@@ -189,19 +192,60 @@ public class VsdmClientService {
       return poppTokenFromRepository;
     }
 
-    try {
-      final String poppTokenFromService = poppClientAdapter.getPoppToken(attachedCard);
-      log.debug("Received PoPP token from popp service: {}", poppTokenFromService);
-      poppTokenRepository.put(terminalId, egkSlotId, attachedCard.getId(), poppTokenFromService);
+    for (int attempt = 1; attempt <= POPP_TOKEN_MAX_ATTEMPTS; attempt++) {
+      try {
+        final String poppTokenFromService = poppClientAdapter.getPoppToken(attachedCard);
+        log.debug("Received PoPP token from popp service: {}", poppTokenFromService);
+        poppTokenRepository.put(terminalId, egkSlotId, attachedCard.getId(), poppTokenFromService);
 
-      return poppTokenFromService;
-    } catch (final Exception e) {
-      log.error(
-          "Error on waiting for completing of PoppTokenSession with card {} ",
-          attachedCard.getId(),
-          e);
-      throw new ResponseStatusException(HttpURLConnection.HTTP_INTERNAL_ERROR, e.getMessage(), e);
+        return poppTokenFromService;
+      } catch (final Exception e) {
+        final boolean shouldRetry =
+            isRetryablePoppTokenException(e) && attempt < POPP_TOKEN_MAX_ATTEMPTS;
+        if (shouldRetry) {
+          log.warn(
+              "Transient PoPP token error for card {} on attempt {}/{}. Retrying immediately.",
+              attachedCard.getId(),
+              attempt,
+              POPP_TOKEN_MAX_ATTEMPTS,
+              e);
+          continue;
+        }
+
+        log.error(
+            "Error on waiting for completing of PoppTokenSession with card {} after {} attempt(s)",
+            attachedCard.getId(),
+            attempt,
+            e);
+        throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, e.getMessage(), e);
+      }
     }
+
+    throw new ResponseStatusException(
+        HttpStatus.INTERNAL_SERVER_ERROR, "Could not retrieve PoPP token");
+  }
+
+  private boolean isRetryablePoppTokenException(final Throwable throwable) {
+    Throwable current = throwable;
+    while (current != null) {
+      if (current instanceof WebClientRequestException) {
+        return true;
+      }
+      if (current instanceof WebClientResponseException responseException
+          && responseException.getStatusCode().is5xxServerError()) {
+        return true;
+      }
+
+      final String message = current.getMessage();
+      if (message != null
+          && (message.contains(POPP_WEBSOCKET_NOT_CONNECTED)
+              || message.contains(POPP_PREMATURE_CLOSE))) {
+        return true;
+      }
+
+      current = current.getCause();
+    }
+    return false;
   }
 
   protected ResponseEntity<String> requestVsd(

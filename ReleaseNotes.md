@@ -2,6 +2,12 @@
 
 # Release Notes TI 2.0 TestHub
 
+## Release 3.0.0
+
+### Changes
+- TESTHUB-132: Update Spring Boot to 4.0.6 and introduce spring-boot-dependencies (BOM), several more dependency updates
+- TESTHUB-137: Add Delete endpoint to clear PoppToken-Cache
+
 ## Release 2.5.0
 
 ### Changes

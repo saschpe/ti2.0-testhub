@@ -8,13 +8,12 @@
     <parent>
         <groupId>de.gematik</groupId>
         <artifactId>testhub</artifactId>
-        <version>2.5.0</version>
+        <version>3.0.0</version>
         <relativePath>../pom.xml</relativePath>
     </parent>
 
     <groupId>de.gematik.ti20</groupId>
     <artifactId>coverage-report</artifactId>
-    <version>2.5.0</version>
 
     <name>Coverage Report</name>
     <description>Helper module to aggregate Jacoco Reports</description>

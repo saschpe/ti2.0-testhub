@@ -31,16 +31,16 @@ import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+import jakarta.xml.soap.Node;
+import jakarta.xml.soap.SOAPBody;
+import jakarta.xml.soap.SOAPElement;
+import jakarta.xml.soap.SOAPMessage;
+import jakarta.xml.ws.Dispatch;
 import java.util.Collections;
+import java.util.HexFormat;
 import java.util.Iterator;
 import java.util.List;
-import javax.xml.bind.DatatypeConverter;
 import javax.xml.namespace.QName;
-import javax.xml.soap.Node;
-import javax.xml.soap.SOAPBody;
-import javax.xml.soap.SOAPElement;
-import javax.xml.soap.SOAPMessage;
-import javax.xml.ws.Dispatch;
 import org.jetbrains.annotations.NotNull;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -192,7 +192,7 @@ class ConnectorClientTest {
 
     // GIVEN a SOAP message to the connector
     final SOAPElement payloadElement = mock(SOAPElement.class);
-    when(payloadElement.getValue()).thenReturn(DatatypeConverter.printHexBinary(expectedResponse));
+    when(payloadElement.getValue()).thenReturn(HexFormat.of().formatHex(expectedResponse));
     final SOAPElement responseElement = mockSoapElement(iteratorOf(payloadElement));
 
     final SOAPBody mockBody = mock(SOAPBody.class);
@@ -223,7 +223,8 @@ class ConnectorClientTest {
             .getSOAPBody()
             .getChildElements(QName.valueOf("{http://ws.gematik.de/conn/CardService}Command"));
     final Node payloadHandle = payloadHandles.next();
-    assertThat(payloadHandle.getValue()).isEqualTo(DatatypeConverter.printHexBinary(requestData));
+    assertThat(payloadHandle.getValue())
+        .isEqualTo(HexFormat.of().formatHex(requestData).toUpperCase());
   }
 
   private static @NotNull SOAPElement mockSoapElement(final Iterator<Node> childElements) {

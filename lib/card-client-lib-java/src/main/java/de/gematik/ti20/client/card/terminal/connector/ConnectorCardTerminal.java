@@ -33,10 +33,10 @@ import de.gematik.ti20.client.card.terminal.CardTerminalException;
 import de.gematik.ti20.client.card.terminal.CardTerminalType;
 import de.gematik.ti20.client.card.terminal.connector.signature.ConnectorSignatureService;
 import de.gematik.ti20.client.card.terminal.connector.signature.SignatureService;
+import jakarta.xml.soap.SOAPMessage;
+import jakarta.xml.ws.Dispatch;
 import java.util.ArrayList;
 import java.util.List;
-import javax.xml.soap.SOAPMessage;
-import javax.xml.ws.Dispatch;
 
 /** Implementation of CardTerminal for Connector card terminals (TI 2.0). */
 public class ConnectorCardTerminal extends CardTerminal {

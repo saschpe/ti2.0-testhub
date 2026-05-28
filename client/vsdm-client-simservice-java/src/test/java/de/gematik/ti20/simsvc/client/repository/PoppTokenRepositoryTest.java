@@ -132,4 +132,15 @@ class PoppTokenRepositoryTest {
     repository.put(terminalId, slotId, cardId, poppToken);
     assertEquals(null, repository.get(terminalId, slotId, cardId));
   }
+
+  @Test
+  void testClearRemovesAllTokens() {
+    repository.put("terminal1", 1, "card1", "token1");
+    repository.put("terminal2", 2, "card2", "token2");
+
+    repository.clear();
+
+    assertNull(repository.get("terminal1", 1, "card1"));
+    assertNull(repository.get("terminal2", 2, "card2"));
+  }
 }

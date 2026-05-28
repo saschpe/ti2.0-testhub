@@ -28,6 +28,7 @@ Funktionalität: Import von Daten in eGK-Hash-Datenbank
     Und TGR set local variable "job_id_import" to "!{rbel:currentResponseAsString('$.body.jobId')}"
     Wenn der TSP fragt den Status seines Imports oder seiner Löschung ab
     Dann der TSP erhält Informationen über den Status seines Imports
+    Und warte für "30" Sekunden
     Und der TSP löscht den abgeschlossenen Auftrag mit der JobId "${job_id_import}"
 
 

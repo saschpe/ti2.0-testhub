@@ -58,7 +58,7 @@ class ConfigControllerTest {
     ResponseEntity<String> response = configController.setTerminalConnectionConfigs(configs);
 
     assertNotNull(response);
-    assertEquals(200, response.getStatusCodeValue());
+    assertEquals(200, response.getStatusCode().value());
   }
 
   @Test
@@ -90,7 +90,7 @@ class ConfigControllerTest {
         configController.getTerminalConnectionConfigs();
 
     assertNotNull(response);
-    assertEquals(200, response.getStatusCodeValue());
+    assertEquals(200, response.getStatusCode().value());
     assertEquals(configs, response.getBody());
   }
 

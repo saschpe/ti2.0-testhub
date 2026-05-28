@@ -32,7 +32,9 @@ x-no-proxy-env: &no-proxy-env
 services:
   card-terminal-client-base:
     profiles: [ "abstract" ]
-    build: ../../client/card-terminal-client-simservice
+    build:
+      context: ../../client/card-terminal-client-simservice
+      dockerfile: docker/Dockerfile
     env_file:
       - path: .env
         required: true
@@ -52,7 +54,9 @@ services:
 
   vsdm-client-base:
     profiles: [ "abstract" ]
-    build: ../../client/vsdm-client-simservice-java
+    build:
+      context: ../../client/vsdm-client-simservice-java
+      dockerfile: docker/Dockerfile
     env_file:
       - path: .env
         required: true

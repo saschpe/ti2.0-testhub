@@ -78,6 +78,11 @@ public class TestController {
     return poppTokenRepository.get(terminalId, slotId, cardId);
   }
 
+  @DeleteMapping("/poppToken")
+  public void clearPoppTokenCache() {
+    this.poppTokenRepository.clear();
+  }
+
   @GetMapping("/vsdmData")
   public VsdmCachedValue getVsdmData(
       @RequestParam final String terminalId,

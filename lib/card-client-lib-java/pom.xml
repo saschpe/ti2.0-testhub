@@ -7,13 +7,12 @@
     <parent>
         <groupId>de.gematik</groupId>
         <artifactId>testhub</artifactId>
-        <version>2.5.0</version>
+        <version>3.0.0</version>
         <relativePath>../../pom.xml</relativePath>
     </parent>
 
     <groupId>de.gematik.ti20.client</groupId>
     <artifactId>card-client-lib</artifactId>
-    <version>2.5.0</version>
 
     <name>Card Client Library</name>
     <description>Card Client Library for TI 2.0</description>
@@ -45,29 +44,26 @@
             <artifactId>okhttp-jvm</artifactId>
         </dependency>
         <dependency>
-            <groupId>javax.xml.ws</groupId>
-            <artifactId>jaxws-api</artifactId>
+            <groupId>jakarta.xml.ws</groupId>
+            <artifactId>jakarta.xml.ws-api</artifactId>
         </dependency>
         <dependency>
-            <groupId>javax.xml.soap</groupId>
-            <artifactId>javax.xml.soap-api</artifactId>
+            <groupId>jakarta.xml.soap</groupId>
+            <artifactId>jakarta.xml.soap-api</artifactId>
         </dependency>
         <dependency>
-            <groupId>javax.xml.bind</groupId>
-            <artifactId>jaxb-api</artifactId>
+            <groupId>jakarta.xml.bind</groupId>
+            <artifactId>jakarta.xml.bind-api</artifactId>
         </dependency>
         <dependency>
             <groupId>org.projectlombok</groupId>
             <artifactId>lombok</artifactId>
         </dependency>
-        <!-- So we can run tests like ConnectorClientTest that require a SOAP implementation -->
         <dependency>
             <groupId>com.sun.xml.messaging.saaj</groupId>
             <artifactId>saaj-impl</artifactId>
-            <!-- current implementation requires this version: -->
-            <version>1.5.3</version>
+            <version>3.0.5</version>
             <scope>test</scope>
-            <!-- END SOAP Implementation -->
         </dependency>
 
         <dependency>

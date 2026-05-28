@@ -9,6 +9,8 @@
 *.xml.versionsBackup
 **/*.xml.versionsBackup
 pactconfig-local.properties
+/test/popp-testsuite/jobIds.txt
+
 /.idea/
 /.vscode/
 jenkinsfiles
