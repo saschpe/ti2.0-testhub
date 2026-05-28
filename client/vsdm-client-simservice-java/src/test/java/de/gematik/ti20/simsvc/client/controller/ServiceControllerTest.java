@@ -38,6 +38,6 @@ class ServiceControllerTest {
     ResponseEntity<?> response = serviceController.status();
 
     assertNotNull(response);
-    assertEquals(200, response.getStatusCodeValue());
+    assertEquals(200, response.getStatusCode().value());
   }
 }

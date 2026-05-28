@@ -28,8 +28,7 @@ import de.gematik.test.tiger.common.config.TigerTypedConfigurationKey;
 
 public class TestConstants {
 
-  private static final String BLUEPRINT_FOLDER =
-      "test/popp-testsuite/src/test/resources/blueprints/";
+  private static final String BLUEPRINT_FOLDER = "src/test/resources/blueprints/";
   public static final String VALID_POPP_TOKEN_JSON_RESPONSE_FILE =
       BLUEPRINT_FOLDER + "poppTokenResponse.json";
   public static final String VALID_POPP_TOKEN_HEADER_CLAIMS_FILE =

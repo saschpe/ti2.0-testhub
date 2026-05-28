@@ -110,7 +110,7 @@ public class SchemaValidationSteps {
   private void assertValid(Schema schema, JsonNode jsonNode, String schemaPath, boolean soft) {
 
     try {
-      var errors = schema.validate(jsonNode);
+      var errors = schema.validate(jsonNode.toString(), InputFormat.JSON);
       if (!errors.isEmpty()) {
         var sb =
             new StringBuilder(

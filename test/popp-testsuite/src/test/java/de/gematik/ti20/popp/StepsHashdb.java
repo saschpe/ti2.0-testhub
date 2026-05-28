@@ -43,6 +43,7 @@ import io.restassured.http.Method;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.StandardOpenOption;
 import java.util.concurrent.TimeUnit;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
@@ -78,13 +79,7 @@ public class StepsHashdb {
 
   @Wenn("der TSP fragt den Status seines Imports oder seiner Löschung ab")
   public void sendStatusRequest() {
-    this.rbelMessageRetriever.filterRequestsAndStoreInContext(
-        RequestParameter.builder().path(".*/api/v1/hash-db/import").build().resolvePlaceholders());
-    final String jobId =
-        this.rbelMessageRetriever
-            .findElementInCurrentResponse("$.body.jobId")
-            .getRawStringContent();
-
+    final String jobId = findeJobIdInResponse();
     executeCommandWithContingentWait(
         () ->
             givenDefaultSpec()
@@ -197,12 +192,37 @@ public class StepsHashdb {
       executeCommandWithContingentWait(
           () ->
               givenDefaultSpec().body(eContentPayload).request(Method.POST, URL_HASH_DB_IMPORT_RU));
+      final String jobId = findeJobIdInResponse();
+      writeJobIdToFile(jobId);
+
     } catch (final IOException e) {
       throw new RuntimeException(
-          "Error loading signed eContetn at "
+          "Error loading signed eContent at "
               + FOLDER_FOR_SIGNED_HASHDB_PAYLOADS
               + econtentFileName,
           e);
+    }
+  }
+
+  private String findeJobIdInResponse() {
+    this.rbelMessageRetriever.filterRequestsAndStoreInContext(
+        RequestParameter.builder().path(".*/api/v1/hash-db/import").build().resolvePlaceholders());
+    return this.rbelMessageRetriever
+        .findElementInCurrentResponse("$.body.jobId")
+        .getRawStringContent();
+  }
+
+  private void writeJobIdToFile(final String jobId) {
+    final Path path = Path.of("jobIds.txt");
+    try {
+      Files.write(
+          path,
+          (jobId + System.lineSeparator()).getBytes(),
+          StandardOpenOption.CREATE,
+          StandardOpenOption.APPEND);
+    } catch (final IOException e) {
+      throw new RuntimeException(
+          "Error while writing the following jobid to jobIds.txt: " + jobId, e);
     }
   }
 }

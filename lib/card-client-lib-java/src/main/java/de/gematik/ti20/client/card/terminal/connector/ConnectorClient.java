@@ -24,9 +24,14 @@
  */
 package de.gematik.ti20.client.card.terminal.connector;
 
+import jakarta.xml.soap.MessageFactory;
+import jakarta.xml.soap.SOAPBody;
+import jakarta.xml.soap.SOAPElement;
+import jakarta.xml.soap.SOAPHeader;
+import jakarta.xml.soap.SOAPMessage;
+import jakarta.xml.ws.Dispatch;
+import java.util.HexFormat;
 import java.util.UUID;
-import javax.xml.soap.*;
-import javax.xml.ws.Dispatch;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -214,7 +219,7 @@ public class ConnectorClient {
     body.addChildElement(connectionHandle_element);
 
     SOAPElement command = body.addChildElement("Command", "", NAMESPACE_CARDSERVICE);
-    command.addTextNode(javax.xml.bind.DatatypeConverter.printHexBinary(apdu));
+    command.addTextNode(HexFormat.of().formatHex(apdu).toUpperCase());
     body.addChildElement(command);
 
     SOAPMessage response = dispatch.invoke(request);
@@ -227,7 +232,7 @@ public class ConnectorClient {
     if (responseElement.getChildElements().hasNext()) {
       SOAPElement responseApduElement = (SOAPElement) responseElement.getChildElements().next();
       String responseApduHex = responseApduElement.getValue();
-      responseApdu = javax.xml.bind.DatatypeConverter.parseHexBinary(responseApduHex);
+      responseApdu = HexFormat.of().parseHex(responseApduHex);
     }
 
     return responseApdu;

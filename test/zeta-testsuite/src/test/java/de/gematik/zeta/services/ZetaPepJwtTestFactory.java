@@ -56,6 +56,8 @@ import com.nimbusds.jwt.JWTClaimsSet;
 import com.nimbusds.jwt.SignedJWT;
 import de.gematik.test.tiger.common.config.TigerGlobalConfiguration;
 import java.io.InputStream;
+import java.net.InetSocketAddress;
+import java.net.Proxy;
 import java.net.URI;
 import java.nio.charset.StandardCharsets;
 import java.security.KeyStore;
@@ -72,14 +74,17 @@ import java.util.Date;
 import java.util.UUID;
 import lombok.extern.slf4j.Slf4j;
 import org.bouncycastle.jce.provider.BouncyCastleProvider;
+import org.jspecify.annotations.NonNull;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+import org.springframework.http.client.ClientHttpResponse;
 import org.springframework.http.client.SimpleClientHttpRequestFactory;
 import org.springframework.util.LinkedMultiValueMap;
 import org.springframework.util.MultiValueMap;
+import org.springframework.web.client.ResponseErrorHandler;
 import org.springframework.web.client.RestTemplate;
 
 /**
@@ -293,18 +298,22 @@ public class ZetaPepJwtTestFactory {
 
       // 5. Send token exchange via proxy
       SimpleClientHttpRequestFactory factory = new SimpleClientHttpRequestFactory();
-      factory.setProxy(
-          new java.net.Proxy(
-              java.net.Proxy.Type.HTTP, new java.net.InetSocketAddress(proxyHost, proxyPort)));
+      factory.setProxy(new Proxy(Proxy.Type.HTTP, new InetSocketAddress(proxyHost, proxyPort)));
 
       RestTemplate rt = new RestTemplate(factory);
       // Don't throw on error responses - let Tiger-Proxy capture them for validation
       rt.setErrorHandler(
-          new org.springframework.web.client.DefaultResponseErrorHandler() {
+          new ResponseErrorHandler() {
+            @Override
+            public boolean hasError(@NonNull ClientHttpResponse response) {
+              return false;
+            }
+
             @Override
             public void handleError(
-                @SuppressWarnings("NullableProblems")
-                    org.springframework.http.client.ClientHttpResponse response) {
+                @NonNull URI url,
+                @NonNull HttpMethod method,
+                @NonNull ClientHttpResponse response) {
               // no-op: allow error responses to pass through
             }
           });

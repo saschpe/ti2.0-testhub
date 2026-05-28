@@ -2,7 +2,7 @@ services:
   popp-token-generator:
     container_name: popp-token-generator
     platform: linux/amd64
-    image: gematik1/popp-token-generator:1.0.11
+    image: gematik1/popp-token-generator:1.0.12
     env_file:
       - path: ../.env
         required: true
@@ -22,7 +22,7 @@ services:
     platform: linux/amd64
     container_name: popp-client
     environment:
-      - SPRING_PROFILES_ACTIVE=dev
+      - SPRING_PROFILES_ACTIVE=dev-local
       - ZETA_AUTHENTICATION_SMB_KEYFILE=/app/smcb_private.p12
       - POPP_SERVER_URL=wss://popp-zeta-ingress:443/ws
       # URL für echten POPP-Server:
@@ -37,7 +37,7 @@ services:
       - "${PORT_POPP_CLIENT_MGMT:?PORT_POPP_CLIENT_MGMT missing – set it in doc/docker/.env}:9001"
     volumes:
       - ./zeta/smcb-private/smcb_private.p12:/app/smcb_private.p12:ro
-      - ../../../test/vsdm-testsuite/src/test/resources/data/cards:/data/cards
+      - ../../../test/vsdm-testsuite/src/test/resources/data/cards:/data/cards:ro
     depends_on:
       - popp-server
       - otel-collector
@@ -76,8 +76,8 @@ services:
       POSTGRES_DB: egk_hash_db
     ports:
       - "${PORT_POPP_SERVER_DB:?PORT_POPP_SERVER_DB missing – set it in doc/docker/.env}:5432"
-    volumes:
-      - popp-server-db-data:/var/lib/postgresql
+    tmpfs:
+      - /var/lib/postgresql
     restart: on-failure
     networks:
       - testhub_backend
@@ -188,6 +188,7 @@ services:
       - testhub_backend
     healthcheck:
       test: [ "CMD-SHELL", "exec 3<>/dev/tcp/127.0.0.1/9000;echo -e \"GET /auth/health/live HTTP/1.1\r\nhost: localhost:9000\r\nConnection: close\r\n\r\n\" >&3;grep \"status.*UP\" <&3" ]
+      start_period: 120s
       interval: 5s
       timeout: 5s
       retries: 30
@@ -205,8 +206,8 @@ services:
         required: true
     ports:
       - "${PORT_POPP_ZETA_PDP_DB:?PORT_POPP_ZETA_PDP_DB missing – set it in doc/docker/.env}:5432"
-    volumes:
-      - popp-zeta-postgres-db-data:/var/lib/postgresql/data
+    tmpfs:
+      - /var/lib/postgresql/data
     networks:
       - testhub_backend
     environment:
@@ -247,6 +248,3 @@ services:
     networks:
       - testhub_backend
 
-volumes:
-  popp-server-db-data:
-  popp-zeta-postgres-db-data:

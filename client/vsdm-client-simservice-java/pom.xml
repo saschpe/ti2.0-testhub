@@ -7,13 +7,12 @@
     <parent>
         <groupId>de.gematik</groupId>
         <artifactId>testhub</artifactId>
-        <version>2.5.0</version>
+        <version>3.0.0</version>
         <relativePath>../../pom.xml</relativePath>
     </parent>
 
     <groupId>de.gematik.ti20.simsvc.client</groupId>
     <artifactId>vsdm-client-simservice</artifactId>
-    <version>2.5.0</version>
 
     <name>VSDM Client Simulator Service</name>
     <description>Simulator-Service for VSDM2 related activities in client</description>
@@ -80,7 +79,11 @@
         </dependency>
         <dependency>
             <groupId>org.springframework.boot</groupId>
-            <artifactId>spring-boot-starter-webflux</artifactId>
+            <artifactId>spring-boot-starter-web</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-webclient</artifactId>
         </dependency>
         <dependency>
             <groupId>de.gematik.test</groupId>
@@ -102,10 +105,6 @@
         <dependency>
             <groupId>de.gematik.ti20.vsdm</groupId>
             <artifactId>vsdm-fhir-lib</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>org.apache.tomcat.embed</groupId>
-            <artifactId>tomcat-embed-core</artifactId>
         </dependency>
         <dependency>
             <groupId>org.junit.jupiter</groupId>

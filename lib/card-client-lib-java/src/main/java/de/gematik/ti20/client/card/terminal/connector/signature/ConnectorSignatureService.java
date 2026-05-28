@@ -29,9 +29,16 @@ import de.gematik.ti20.client.card.card.SignOptions;
 import de.gematik.ti20.client.card.terminal.CardTerminalException;
 import de.gematik.ti20.client.card.terminal.connector.ConnectorAttachedCard;
 import de.gematik.ti20.client.card.terminal.connector.ConnectorClient;
+import jakarta.xml.soap.MessageFactory;
+import jakarta.xml.soap.SOAPBody;
+import jakarta.xml.soap.SOAPElement;
+import jakarta.xml.soap.SOAPEnvelope;
+import jakarta.xml.soap.SOAPException;
+import jakarta.xml.soap.SOAPFault;
+import jakarta.xml.soap.SOAPMessage;
+import jakarta.xml.soap.SOAPPart;
+import jakarta.xml.ws.Dispatch;
 import java.util.Base64;
-import javax.xml.soap.*;
-import javax.xml.ws.Dispatch;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

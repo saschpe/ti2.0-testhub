@@ -25,6 +25,7 @@
 package de.gematik.ti20.client.card.card.apdu;
 
 import java.security.MessageDigest;
+import java.util.HexFormat;
 
 /** Utility class for APDU operations. */
 public class ApduUtil {
@@ -69,7 +70,7 @@ public class ApduUtil {
   public static byte[] buildSelectApplicationApdu(String aidString) {
     byte[] aid;
     try {
-      aid = javax.xml.bind.DatatypeConverter.parseHexBinary(aidString);
+      aid = HexFormat.of().parseHex(aidString);
     } catch (Exception e) {
       // Default to signature AID if parsing fails
       aid = AID_SIGNATURE_APPLICATION;

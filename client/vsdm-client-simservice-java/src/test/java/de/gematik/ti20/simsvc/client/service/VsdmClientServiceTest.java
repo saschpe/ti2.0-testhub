@@ -137,8 +137,7 @@ class VsdmClientServiceTest {
       String expectedToken = "cached-token";
       when(mockPoppTokenRepository.get(terminalId, egkSlotId, "card1")).thenReturn(expectedToken);
 
-      String result =
-          vsdmClientService.requestPoppToken(terminalId, egkSlotId, smcBSlotId, mockEgkCard);
+      String result = vsdmClientService.requestPoppToken(terminalId, egkSlotId, mockEgkCard);
 
       assertEquals(expectedToken, result);
       verify(mockPoppTokenRepository).get(terminalId, egkSlotId, "card1");
@@ -153,12 +152,40 @@ class VsdmClientServiceTest {
 
       when(mockPoppClientAdapter.getPoppToken(any())).thenReturn(expectedToken);
 
-      String result =
-          vsdmClientService.requestPoppToken(terminalId, egkSlotId, smcBSlotId, mockEgkCard);
+      String result = vsdmClientService.requestPoppToken(terminalId, egkSlotId, mockEgkCard);
 
       assertEquals(expectedToken, result);
       verify(mockPoppClientAdapter).getPoppToken(eq(mockEgkCard));
       verify(mockPoppTokenRepository).put(terminalId, egkSlotId, "card1", expectedToken);
+    }
+
+    @Test
+    void testRequestPoppToken_RetriesTransientPoppFailure() {
+      when(mockPoppTokenRepository.get(terminalId, egkSlotId, "card1")).thenReturn(null);
+      when(mockPoppClientAdapter.getPoppToken(any()))
+          .thenThrow(new RuntimeException("Websocket client is not connected"))
+          .thenReturn("service-token");
+
+      String result = vsdmClientService.requestPoppToken(terminalId, egkSlotId, mockEgkCard);
+
+      assertEquals("service-token", result);
+      verify(mockPoppClientAdapter, times(2)).getPoppToken(eq(mockEgkCard));
+      verify(mockPoppTokenRepository).put(terminalId, egkSlotId, "card1", "service-token");
+    }
+
+    @Test
+    void testRequestPoppToken_DoesNotRetryNonTransientPoppFailure() {
+      when(mockPoppTokenRepository.get(terminalId, egkSlotId, "card1")).thenReturn(null);
+      when(mockPoppClientAdapter.getPoppToken(any())).thenThrow(new RuntimeException("boom"));
+
+      ResponseStatusException exception =
+          assertThrows(
+              ResponseStatusException.class,
+              () -> vsdmClientService.requestPoppToken(terminalId, egkSlotId, mockEgkCard));
+
+      assertEquals(HttpStatus.INTERNAL_SERVER_ERROR, exception.getStatusCode());
+      verify(mockPoppClientAdapter, times(1)).getPoppToken(eq(mockEgkCard));
+      verify(mockPoppTokenRepository, never()).put(anyString(), anyInt(), anyString(), anyString());
     }
 
     @Nested
@@ -201,8 +228,7 @@ class VsdmClientServiceTest {
         when(mockPoppTokenService.requestPoppToken(vsdmClientConfig, "iknr", "kvnr"))
             .thenReturn(expectedToken);
 
-        String result =
-            vsdmClientService.requestPoppToken(terminalId, egkSlotId, smcBSlotId, mockEgkCard);
+        String result = vsdmClientService.requestPoppToken(terminalId, egkSlotId, mockEgkCard);
 
         assertEquals(expectedToken, result);
 
