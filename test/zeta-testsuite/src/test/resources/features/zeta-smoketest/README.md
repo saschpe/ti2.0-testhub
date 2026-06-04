@@ -27,8 +27,8 @@ Dieses Szenario prüft, ob alle ZeTA-Komponenten erreichbar sind und korrekt ant
 
 | Komponente | Container | Port | Beschreibung |
 |------------|-----------|------|--------------|
-| ZeTA PDP PoPP | `popp-zeta-pdp` | 9112 | Policy Decision Point – trifft Autorisierungsentscheidungen für PoPP |
-| ZeTA PEP PoPP | `popp-zeta-pep` | 9110 | Policy Enforcement Point – setzt Zugriffskontrolle für PoPP durch |
+| ZeTA PDP PoPP | `popp-zeta-pdp` | 2201 | Policy Decision Point – trifft Autorisierungsentscheidungen für PoPP |
+| ZeTA PEP PoPP | `popp-zeta-pep` | 2101 | Policy Enforcement Point – setzt Zugriffskontrolle für PoPP durch |
 | ZeTA PDP Ingress | `vsdm-zeta-ingress` | 9119 | Ingress für VSDM – stellt `.well-known`-Endpunkte bereit |
 
 ### Flow-Diagramm

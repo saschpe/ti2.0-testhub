@@ -24,7 +24,7 @@
  */
 package de.gematik.ti20.simsvc.server.config;
 
-import java.util.List;
+import java.util.Map;
 import lombok.Getter;
 import lombok.Setter;
 import org.springframework.boot.context.properties.ConfigurationProperties;
@@ -42,5 +42,6 @@ public class VsdmConfig {
   private String invalidKvnrPrefix;
   private String unknownKvnrPrefix;
 
-  private List<String> validProfileVersions;
+  // map of FHIR profile major versions to currently active patch version
+  private Map<String, String> validProfileVersionMapping;
 }

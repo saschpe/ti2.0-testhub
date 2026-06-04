@@ -31,7 +31,7 @@ import de.gematik.ti20.simsvc.server.config.VsdmConfig;
 import de.gematik.ti20.simsvc.server.service.*;
 import jakarta.servlet.http.HttpServletRequest;
 import java.util.Base64;
-import java.util.List;
+import java.util.Map;
 import org.hl7.fhir.r4.model.Bundle;
 import org.hl7.fhir.r4.model.Resource;
 import org.junit.jupiter.api.BeforeEach;
@@ -77,7 +77,7 @@ class VsdmControllerV1Test {
     vsdmConfig.setValidKvnrPrefix("X1234");
     vsdmConfig.setInvalidKvnrPrefix("X4321");
     vsdmConfig.setUnknownKvnrPrefix("X9");
-    vsdmConfig.setValidProfileVersions(List.of("1.0.0"));
+    vsdmConfig.setValidProfileVersionMapping(Map.of("1.0", "1.0.0"));
 
     userInfoValidationService = new UserInfoValidationService();
     userInfoValidationService.init();
@@ -128,7 +128,7 @@ class VsdmControllerV1Test {
     Resource mockResource = new Bundle();
     String userInfo = VALID_USER_INFO;
     String etag = "0";
-    String profileVersion = "1.0.0";
+    String profileVersion = "1.0";
 
     when(etagService.checkEtag(kvnr, etag)).thenReturn(false);
     when(vsdmService.readVsd(kvnr)).thenReturn(mockResource);
@@ -158,7 +158,7 @@ class VsdmControllerV1Test {
     Resource mockResource = new Bundle();
     String userInfo = VALID_USER_INFO;
     String etag = "0";
-    String profileVersion = "1.0.0";
+    String profileVersion = "1.0";
 
     // Mock request headers to contain specific content-type
     when(etagService.checkEtag(kvnr, etag)).thenReturn(false);
@@ -189,7 +189,7 @@ class VsdmControllerV1Test {
     Resource mockResource = new Bundle();
     String userInfo = VALID_USER_INFO;
     String etag = "0";
-    String profileVersion = "1.0.0";
+    String profileVersion = "1.0";
 
     when(etagService.checkEtag(kvnr, etag)).thenReturn(false);
     when(vsdmService.readVsd(kvnr)).thenReturn(mockResource);
@@ -219,7 +219,7 @@ class VsdmControllerV1Test {
 
     String userInfo = VALID_USER_INFO;
     String etag = "123456789";
-    String profileVersion = "1.0.0";
+    String profileVersion = "1.0";
 
     when(etagService.checkEtag(kvnr, etag)).thenReturn(true);
     when(checksumService.calculateChecksum(kvnr)).thenReturn("PZ");
@@ -252,7 +252,7 @@ class VsdmControllerV1Test {
 
     String userInfo = "mock-user-info";
     String etag = "123456789";
-    String profileVersion = "1.0.0";
+    String profileVersion = "1.0";
 
     ResponseStatusException exception =
         assertThrows(
@@ -279,7 +279,7 @@ class VsdmControllerV1Test {
 
     String userInfo = "mock-user-info";
     String etag = "123456789";
-    String profileVersion = "1.0.0";
+    String profileVersion = "1.0";
 
     ResponseStatusException exception =
         assertThrows(
@@ -298,7 +298,7 @@ class VsdmControllerV1Test {
 
     String userInfo = "mock-user-info";
     String etag = "123456789";
-    String profileVersion = "1.0.0";
+    String profileVersion = "1.0";
 
     ResponseStatusException exception =
         assertThrows(
@@ -318,7 +318,7 @@ class VsdmControllerV1Test {
     String poppTokenContentCoded = makePoppTokenContentCoded(kvnr, iknr);
     String userInfo = "INVALID";
     String etag = "123456789";
-    String profileVersion = "1.0.0";
+    String profileVersion = "1.0";
 
     ResponseStatusException exception =
         assertThrows(
@@ -346,7 +346,7 @@ class VsdmControllerV1Test {
     String userInfo = Base64.getEncoder().encodeToString(userInfoMissingFields.getBytes());
 
     String etag = "123456789";
-    String profileVersion = "1.0.0";
+    String profileVersion = "1.0";
 
     ResponseStatusException exception =
         assertThrows(
@@ -366,7 +366,7 @@ class VsdmControllerV1Test {
     String poppTokenContentCoded = makePoppTokenContentCoded(kvnr, iknr);
 
     String etag = "123456789";
-    String profileVersion = "1.0.0";
+    String profileVersion = "1.0";
 
     ResponseStatusException exception =
         assertThrows(
@@ -387,7 +387,7 @@ class VsdmControllerV1Test {
 
     String userInfo = VALID_USER_INFO;
     String etag = "123456789";
-    String profileVersion = "1.0.0";
+    String profileVersion = "1.0";
 
     ResponseStatusException exception =
         assertThrows(
@@ -408,7 +408,7 @@ class VsdmControllerV1Test {
 
     String userInfo = VALID_USER_INFO;
     String etag = "123456789";
-    String profileVersion = "1.0.0";
+    String profileVersion = "1.0";
 
     ResponseStatusException exception =
         assertThrows(

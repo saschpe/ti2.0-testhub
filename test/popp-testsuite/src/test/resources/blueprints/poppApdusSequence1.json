@@ -6,15 +6,15 @@
     "timeSpan": 10000,
     "steps": [
       {
-        "commandApdu": "00b0870000",
+        "commandApdu": "00B0870000",
         "expectedStatusWords": ["9000", "6281"]
       },
       {
-        "commandApdu": "00b0860000",
+        "commandApdu": "00B0860000",
         "expectedStatusWords": ["9000", "6281"]
       },
       {
-        "commandApdu": "80ca0100000000",
+        "commandApdu": "80CA0100000000",
         "expectedStatusWords": ["9000"]
       }
     ]

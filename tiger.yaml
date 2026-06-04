@@ -22,10 +22,12 @@ lib:
   logging.level:
     de.gematik.test.tiger: INFO
   additionalKeyStorePasswords:
-    ["testpassword", "changeit", "00"]
+    ["testpassword", "changeit", "00", "popp-store"]
 
 fhir:
   encoded: json
+
+popp.client.url: "http://localhost:8081/token"
 
 additionalConfigurationFiles:
   - filename: tiger/defaults.yaml

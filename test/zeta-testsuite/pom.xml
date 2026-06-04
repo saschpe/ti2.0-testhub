@@ -8,7 +8,7 @@
     <parent>
         <groupId>de.gematik</groupId>
         <artifactId>testhub</artifactId>
-        <version>3.0.0</version>
+        <version>3.1.0</version>
         <relativePath>../../pom.xml</relativePath>
     </parent>
 
@@ -20,6 +20,7 @@
 
     <properties>
         <skip.inttests>true</skip.inttests>
+        <version.json-schema-validator>2.0.0</version.json-schema-validator>
     </properties>
 
     <!-- Tiger 4.2.x is built against Spring Boot 3.x; keep the testsuite on that baseline.
@@ -164,6 +165,27 @@
             <groupId>org.glassfish.tyrus.bundles</groupId>
             <artifactId>tyrus-standalone-client</artifactId>
             <version>${version.tyrus-standalone-client}</version>
+            <scope>test</scope>
+        </dependency>
+
+        <dependency>
+            <groupId>org.junit.platform</groupId>
+            <artifactId>junit-platform-suite</artifactId>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.junit.platform</groupId>
+            <artifactId>junit-platform-suite-api</artifactId>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.junit.platform</groupId>
+            <artifactId>junit-platform-suite-commons</artifactId>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.junit.platform</groupId>
+            <artifactId>junit-platform-suite-engine</artifactId>
             <scope>test</scope>
         </dependency>
 

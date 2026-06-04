@@ -80,7 +80,7 @@ public class BaseSimulation extends Simulation {
   protected static final FeederBuilder.FileBased<String> EGK_FEEDER =
       csv("feeder/egk_slots.csv").circular();
 
-  protected static final String FHIR_PROFILE_VERSION = "1.0.0";
+  protected static final String FHIR_PROFILE_VERSION = "1.0";
 
   @NotNull
   protected static List<OpenInjectionStep> getRandomReadVsdSteps() {

@@ -59,10 +59,11 @@ Weitere Informationen zu den verschiedenen Profilen und deren Anwendungsfällen 
 im [Benutzerhandbuch](https://gematik.github.io/ti20-testhub/#_docker_compose_profiles) zu finden.
 
 Die untere Grafik zeigt den TI 2.0 TestHub in seiner aktuellen Ausbaustufe. Die VSDM 2.0 Testsuite sendet Anfragen an
-den Card, den PoPP und den VSDM Client Simulator. Diese kommunizieren mit den jeweiligen Server Simulatoren.
+den Card, den PoPP und den VSDM Client Simulator. Diese kommunizieren mit den jeweiligen Server Simulatoren oder auch
+mit den realen Servern.
 
 <br/>
-<img width="1108" height="744" src="./src/test/resources/images/TI20_TestHub_Stufe_6.png" alt=""/>
+<img width="1108" height="744" src="./src/test/resources/images/TI20_TestHub_Stufe_7.png" alt=""/>
 <br/>
 
 ## Integrationstests

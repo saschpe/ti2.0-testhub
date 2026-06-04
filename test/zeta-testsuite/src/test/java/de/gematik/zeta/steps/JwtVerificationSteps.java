@@ -108,7 +108,13 @@ public class JwtVerificationSteps {
             "$.body.client_assertion",
             "$.body.subject_token",
             "$.body.access_token")) {
-      var elements = retriever.findElementsInCurrentRequest(path);
+      List<RbelElement> elements;
+      try {
+        elements = retriever.findElementsInCurrentRequest(path);
+      } catch (RuntimeException e) {
+        log.debug("Path {} not found in current request, skipping: {}", path, e.getMessage());
+        continue;
+      }
       if (!elements.isEmpty()) {
         RbelElement element = elements.getFirst();
         String rawContent = element.getRawStringContent();
@@ -180,8 +186,6 @@ public class JwtVerificationSteps {
       }
 
       throw new AssertionError("JWT has neither jwk nor x5c in the header for verification");
-    } catch (AssertionError e) {
-      throw e;
     } catch (Exception e) {
       throw new AssertionError("JWT signature verification failed: " + e.getMessage(), e);
     }
@@ -214,8 +218,6 @@ public class JwtVerificationSteps {
       boolean valid = sig.verify(derSig);
       assertThat(valid).as("ES256 signature verification with x5c must succeed").isTrue();
       log.info("ES256 signature verified via x5c (BouncyCastle)");
-    } catch (AssertionError e) {
-      throw e;
     } catch (Exception e) {
       throw new AssertionError("x5c signature verification failed: " + e.getMessage(), e);
     }

@@ -37,7 +37,7 @@ mit sichtbarem PEP→Backend-Traffic laufen.
 ```
 ┌─────────┐         ┌─────────────┐         ┌──────────┐         ┌──────────┐         ┌─────────────┐
 │  Test   │         │ Tiger Proxy │         │ ZETA-PEP │         │ ZETA-PDP │         │ PoPP Server │
-│ Client  │         │  (localhost)│         │ (:9110)  │         │ (:9112)  │         │  (:9210)    │
+│ Client  │         │  (localhost)│         │ (:2101)  │         │ (:2201)  │         │  (:9500)    │
 └────┬────┘         └──────┬──────┘         └────┬─────┘         └────┬─────┘         └───────┬─────┘
      │                     │                     │                    │                       │
      │  1. PoPP-Token erzeugen                   │                    │                       │
@@ -96,9 +96,9 @@ mit sichtbarem PEP→Backend-Traffic laufen.
 
 ## Benötigte Container
 
-* ZETA PEP Server Mockservice (Port 9110)
-* ZETA PDP Server Mockservice (Port 9112)
-* PoPP Server Mockservice (Port 9210)
+* ZETA PEP Server Mockservice (Port 2101)
+* ZETA PDP Server Mockservice (Port 2201)
+* PoPP Server Mockservice (Port 9500)
 
 ## Ausführung
 

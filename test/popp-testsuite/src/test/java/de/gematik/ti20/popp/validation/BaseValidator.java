@@ -24,11 +24,18 @@
  */
 package de.gematik.ti20.popp.validation;
 
+import static org.assertj.core.api.Assertions.assertThat;
+
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import de.gematik.rbellogger.data.RbelElement;
 import de.gematik.test.tiger.common.config.TigerGlobalConfiguration;
 import de.gematik.test.tiger.lib.rbel.ModeType;
 import de.gematik.test.tiger.lib.rbel.RbelMessageRetriever;
 import de.gematik.test.tiger.lib.rbel.RbelValidator;
 import de.gematik.test.tiger.lib.rbel.RequestParameter;
+import java.util.ArrayList;
+import java.util.List;
 
 public class BaseValidator {
   final RbelMessageRetriever rbelMessageRetriever;
@@ -44,13 +51,23 @@ public class BaseValidator {
   }
 
   void findNextRequestToPathContainingNode(final String path, final String value) {
+
     this.rbelMessageRetriever.filterRequestsAndStoreInContext(
         RequestParameter.builder()
+            .path(null)
             .rbelPath(path)
             .value(value)
             .requireRequestMessage(false)
             .build()
             .resolvePlaceholders());
+  }
+
+  void currentRequestAtMatchesAsJsonTheFile(final String rbelPath, final String validationFile) {
+    this.rbelValidator.assertAttributeOfCurrentRequestMatchesAs(
+        rbelPath,
+        ModeType.JSON,
+        TigerGlobalConfiguration.resolvePlaceholders("!{file('" + validationFile + "')}"),
+        this.rbelMessageRetriever);
   }
 
   void currentResponseAtMatchesAsJsonTheFile(final String rbelPath, final String validationFile) {
@@ -70,5 +87,43 @@ public class BaseValidator {
   void currentResponseAtMatches(final String rbelPath, final String validation) {
     rbelValidator.assertAttributeOfCurrentResponseMatches(
         rbelPath, validation, true, this.rbelMessageRetriever);
+  }
+
+  void currentRequestApdusMatchCaseInsensitive(final String rbelPath, final String validationFile) {
+    String expectedJson =
+        TigerGlobalConfiguration.resolvePlaceholders("!{file('" + validationFile + "')}");
+
+    String actualJson = getPayload(rbelPath);
+    List<String> expectedApdus = extractApdus(expectedJson);
+    List<String> actualApdus = extractApdus(actualJson);
+
+    assertThat(actualApdus)
+        .as("APDU sequence mismatch for file: " + validationFile)
+        .usingElementComparator(String.CASE_INSENSITIVE_ORDER)
+        .containsExactlyElementsOf(expectedApdus);
+  }
+
+  private String getPayload(String rbelPath) {
+    List<RbelElement> elements = rbelMessageRetriever.findElementsInCurrentRequest(rbelPath);
+    if (elements.isEmpty()) {
+      throw new AssertionError("No element found for rbelPath: " + rbelPath);
+    }
+    return elements.getFirst().getRawStringContent();
+  }
+
+  private List<String> extractApdus(String json) {
+    try {
+      ObjectMapper mapper = new ObjectMapper();
+      JsonNode root = mapper.readTree(json);
+      List<String> apdus = new ArrayList<>();
+
+      for (JsonNode step : root.path("steps")) {
+        apdus.add(step.path("commandApdu").asText());
+      }
+      return apdus;
+
+    } catch (Exception e) {
+      throw new RuntimeException("Failed to parse APDUs", e);
+    }
   }
 }

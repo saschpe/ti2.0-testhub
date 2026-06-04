@@ -27,8 +27,8 @@ package de.gematik.ti20.popp.data;
 import de.gematik.test.tiger.common.config.TigerTypedConfigurationKey;
 
 public class TestConstants {
-
-  private static final String BLUEPRINT_FOLDER = "src/test/resources/blueprints/";
+  private static final String BLUEPRINT_FOLDER =
+      "test/popp-testsuite/src/test/resources/blueprints/";
   public static final String VALID_POPP_TOKEN_JSON_RESPONSE_FILE =
       BLUEPRINT_FOLDER + "poppTokenResponse.json";
   public static final String VALID_POPP_TOKEN_HEADER_CLAIMS_FILE =
@@ -53,9 +53,6 @@ public class TestConstants {
       BLUEPRINT_FOLDER + "poppApdusSequence2Connector.json";
   public static final String VALDID_JWKS_FILE = BLUEPRINT_FOLDER + "JwksResponse.json";
 
-  public static final String POPP_ENTITY_STATEMENT_LEGACY =
-      "https://popp-ru-dev-interim.int.epa.rise-link.de:8443/.well-known/openid-federation";
-
   private static final String HASH_DB_IMPORT_PATH = "/api/v1/hash-db/import";
   public static final String ENTITY_STATEMENT_PATH = "/.well-known/openid-federation";
 
@@ -64,9 +61,7 @@ public class TestConstants {
 
   public static final TigerTypedConfigurationKey<String> POPP_SERVICE_BASE_URL_RU =
       new TigerTypedConfigurationKey<>(
-          "POPP.SERVICE.SERVER.URL",
-          String.class,
-          "https://popp-ru-dev-interim.int.epa.rise-link.de:8443");
+          "POPP.SERVICE.SERVER.URL", String.class, "https://popp.dev.poppservice.de");
 
   public static final String URL_HASH_DB_IMPORT_RU =
       POPP_SERVICE_BASE_URL_RU.getValueOrDefault() + HASH_DB_IMPORT_PATH;

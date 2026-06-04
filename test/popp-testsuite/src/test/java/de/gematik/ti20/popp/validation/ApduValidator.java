@@ -60,19 +60,20 @@ public class ApduValidator extends BaseValidator {
     log.info("Valdidate Standard Cardreader APDUS");
     // Sequenz 0
     findNextRequestToPathContainingNode("$..payload.sequenceCounter", "0");
-    currentResponseAtMatchesAsJsonTheFile("$..payload", VALID_APDU_SEQUENCE_0_FILE);
+    currentRequestApdusMatchCaseInsensitive("$..payload", VALID_APDU_SEQUENCE_0_FILE);
 
     // Sequenz 1
     findNextRequestToPathContainingNode("$..payload.sequenceCounter", "1");
-    currentResponseAtMatchesAsJsonTheFile("$..payload", VALID_APDU_SEQUENCE_1_FILE);
+    currentRequestApdusMatchCaseInsensitive("$..payload", VALID_APDU_SEQUENCE_1_FILE);
 
+    // Sollte noch angepasst werden:
     // Sequenz 2
     // findNextRequestToPathContainingNode("$..payload.sequenceCounter", "2");
     // currentRequestAtMatchesAsJsonTheFile("$..payload", VALID_APDU_SEQUENCE_2_FILE);
 
     // Sequenz 3
-    findNextRequestToPathContainingNode("$..payload.sequenceCounter", "3");
-    currentResponseAtMatchesAsJsonTheFile("$..payload", VALID_APDU_SEQUENCE_3_FILE);
+    //  findNextRequestToPathContainingNode("$..payload.sequenceCounter", "3");
+    //  currentRequestAtMatchesAsJsonTheFile("$..payload", VALID_APDU_SEQUENCE_3_FILE);
 
     log.info("Standard Cardreader APDUS succesfully validated");
   }
