@@ -44,14 +44,7 @@ public class TestService {
   }
 
   public String getAccessToken() {
-    String at = "";
-    final Set<String> key = storageInterceptor.getCache().keySet();
-    for (final String keyValue : key) {
-      if (keyValue.startsWith("at:")) {
-        at = storageInterceptor.getCache().get(keyValue);
-      }
-    }
-    return at;
+    return getByKeyPrefix("at:");
   }
 
   public String getDpopToken(final String htm, final String htu) throws Exception {
@@ -61,10 +54,19 @@ public class TestService {
     byte[] hash = digest.digest();
     final String ath = Base64.getUrlEncoder().withoutPadding().encodeToString(hash);
 
-    final String dpopPublicKey = storageInterceptor.getCache().getOrDefault("dpop_public_key", "");
-    final String dpopPrivateKey =
-        storageInterceptor.getCache().getOrDefault("dpop_private_key", "");
+    final String dpopPublicKey = getByKeyPrefix("dpop_public_key");
+    final String dpopPrivateKey = getByKeyPrefix("dpop_private_key");
 
     return DpopHelper.createDpop(dpopPublicKey, dpopPrivateKey, htm, htu, ath);
+  }
+
+  private String getByKeyPrefix(final String keyPrefix) {
+    final Set<String> keySet = storageInterceptor.getCache().keySet();
+    for (final String keyValue : keySet) {
+      if (keyValue.startsWith(keyPrefix)) {
+        return storageInterceptor.getCache().get(keyValue);
+      }
+    }
+    return null;
   }
 }

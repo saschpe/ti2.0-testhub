@@ -11,10 +11,14 @@ properties:
     properties:
       typ:
         type: string
-        description: Type of the JWT. Must be "at+jwt" or "vnd.telematik.access+jwt".
+        # RFC 9068 requires "at+jwt"; "vnd.telematik.access+jwt" is the gematik variant.
+        # "Bearer" and "JWT" are accepted for compatibility with Keycloak's default token format.
+        description: Type of the JWT. Must be "at+jwt", "vnd.telematik.access+jwt", "Bearer" or "JWT".
         enum:
           - at+jwt
           - vnd.telematik.access+jwt
+          - Bearer
+          - JWT
       alg:
         type: string
         description: Asymmetric algorithm used to sign the JWT.

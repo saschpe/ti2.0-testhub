@@ -109,7 +109,7 @@ public class VsdmControllerV1 {
           HttpStatus.BAD_REQUEST, "VSDSERVICE_MISSING_PROFILE_VERSION");
     }
 
-    if (!vsdmConfig.getValidProfileVersions().contains(profileVersion)) {
+    if (!vsdmConfig.getValidProfileVersionMapping().containsKey(profileVersion)) {
       throw new ResponseStatusException(
           HttpStatus.BAD_REQUEST, "VSDSERVICE_INVALID_PROFILE_VERSION");
     }

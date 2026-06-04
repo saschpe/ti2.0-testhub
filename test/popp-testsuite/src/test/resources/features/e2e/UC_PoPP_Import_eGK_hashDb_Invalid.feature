@@ -17,7 +17,7 @@ Funktionalität: Fehlerfälle beim TLS-Aufbau der Verbindung
   @TESTSTUFE:3
   @PRIO:1
 
-  Szenario: Abweisung der Verbindung bei gesperrtem Zertifikat
+  Szenario: Import HashDB mit Abweisung der Verbindung bei gesperrtem Zertifikat
 
     Angenommen TGR lösche aufgezeichnete Nachrichten
     Und der TSP verwendet die Client Identität "tspEgkTlsRevoked" für die mTLS-Verbindung zum PoPP-Service
@@ -31,7 +31,7 @@ Funktionalität: Fehlerfälle beim TLS-Aufbau der Verbindung
   @TESTSTUFE:3
   @PRIO:1
 
-  Szenario: Abweisung der Verbindung bei abgelaufenen Zertifikat
+  Szenario: Import HashDB mit Abweisung der Verbindung bei abgelaufenen Zertifikat
 
     Angenommen TGR lösche aufgezeichnete Nachrichten
     Und der TSP verwendet die Client Identität "tspEgkTlsExpired" für die mTLS-Verbindung zum PoPP-Service
@@ -45,7 +45,7 @@ Funktionalität: Fehlerfälle beim TLS-Aufbau der Verbindung
   @TESTSTUFE:3
   @PRIO:1
 
-  Szenario: Abweisung der Verbindung bei Zertifikat mit falscher Rolle
+  Szenario: Import HashDB mit Abweisung der Verbindung bei Zertifikat mit falscher Rolle
 
     Angenommen TGR lösche aufgezeichnete Nachrichten
     Und der TSP verwendet die Client Identität "tspEgkTlsInvalidCertType" für die mTLS-Verbindung zum PoPP-Service

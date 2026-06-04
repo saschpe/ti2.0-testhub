@@ -11,6 +11,6 @@ vsdm:
   valid-kvnr-prefix: X1
   invalid-kvnr-prefix: X4
   unknown-kvnr-prefix: X9
-  valid-profile-versions:
-    - 1.0.0
-    - 1.0.0,1.0.0
+  valid-profile-version-mapping:
+    1.0: 1.0.0
+

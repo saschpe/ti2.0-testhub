@@ -32,10 +32,10 @@ Funktionalität: SMC-B Authentisierung - ZETA-Client Authentisierung mittels SMC
     # 6. PDP-Mock stellt ein Access-Token aus
 
     # Token-Exchange mit echtem SMC-B subject_token und client_assertion über Tiger-Proxy senden
-    Wenn sende SMC-B Token-Exchange-Request an "http://127.0.0.1:9112/token" über Tiger-Proxy "http://localhost:${tiger.tigerProxy.proxyPort}"
+    Wenn sende SMC-B Token-Exchange-Request an "${zeta.server.pdp.tokenUrl}" über Tiger-Proxy "http://localhost:${tiger.tigerProxy.proxyPort}"
 
     # Token-Request muss im Tiger-Proxy aufgezeichnet worden sein
-    Dann TGR finde die letzte Anfrage mit dem Pfad "/token"
+    Dann TGR finde die letzte Anfrage mit dem Pfad "${zeta.paths.vsdm.tokenEndpointPath}"
     Und TGR prüfe aktuelle Antwort stimmt im Knoten "$.responseCode" überein mit "2.."
     Und TGR prüfe aktuelle Antwort stimmt im Knoten "$.body.access_token" überein mit ".*"
 
@@ -52,10 +52,10 @@ Funktionalität: SMC-B Authentisierung - ZETA-Client Authentisierung mittels SMC
     # grant_type, subject_token_type, client_id, client_assertion, client_assertion_type
 
     # SMC-B Token-Exchange senden
-    Wenn sende SMC-B Token-Exchange-Request an "http://127.0.0.1:9112/token" über Tiger-Proxy "http://localhost:${tiger.tigerProxy.proxyPort}"
+    Wenn sende SMC-B Token-Exchange-Request an "${zeta.server.pdp.tokenUrl}" über Tiger-Proxy "http://localhost:${tiger.tigerProxy.proxyPort}"
 
     # Token-Exchange-Request im Traffic finden
-    Dann TGR finde die letzte Anfrage mit dem Pfad "/token"
+    Dann TGR finde die letzte Anfrage mit dem Pfad "${zeta.paths.vsdm.tokenEndpointPath}"
     Und TGR prüfe aktuelle Antwort stimmt im Knoten "$.responseCode" überein mit "2.."
 
     ## Request Body - grant_type und subject_token_type prüfen (RFC 8693)
@@ -85,10 +85,10 @@ Funktionalität: SMC-B Authentisierung - ZETA-Client Authentisierung mittels SMC
     # Ergänzt um Schema-Validierung, audience- und exp-Prüfung
 
     # SMC-B Token-Exchange senden
-    Wenn sende SMC-B Token-Exchange-Request an "http://127.0.0.1:9112/token" über Tiger-Proxy "http://localhost:${tiger.tigerProxy.proxyPort}"
+    Wenn sende SMC-B Token-Exchange-Request an "${zeta.server.pdp.tokenUrl}" über Tiger-Proxy "http://localhost:${tiger.tigerProxy.proxyPort}"
 
     # Token-Exchange-Request im Traffic finden
-    Dann TGR finde die letzte Anfrage mit dem Pfad "/token"
+    Dann TGR finde die letzte Anfrage mit dem Pfad "${zeta.paths.vsdm.tokenEndpointPath}"
     Und TGR prüfe aktuelle Antwort stimmt im Knoten "$.responseCode" überein mit "2.."
 
     # client_id und client_assertion extrahieren
@@ -119,9 +119,10 @@ Funktionalität: SMC-B Authentisierung - ZETA-Client Authentisierung mittels SMC
     Und TGR prüfe aktueller Request stimmt im Knoten "$.body.client_assertion.body.sub" überein mit "${CLIENT_ID}"
 
     ## Client Assertion Payload - audience enthält den Token-Endpoint
-    # Hinweis: RBel unwrapped Single-Element-Arrays zu Strings, daher ohne .0 Zugriff
+    # Hinweis: Die client_assertion verwendet die Keycloak-Ingress-URL als audience,
+    # da Keycloak diese URL als issuer erwartet (nicht die lokale Tiger-Proxy-URL)
     Und TGR prüfe aktueller Request enthält Knoten "$.body.client_assertion.body.aud"
-    Und TGR prüfe aktueller Request stimmt im Knoten "$.body.client_assertion.body.aud" überein mit "http://127.0.0.1:9112/token"
+    Und TGR prüfe aktueller Request stimmt im Knoten "$.body.client_assertion.body.aud" überein mit ".*protocol/openid-connect/token"
 
     ## Client Assertion Payload - exp muss in der Zukunft liegen
     Und TGR speichere Wert des Knotens "$.body.client_assertion.body.exp" der aktuellen Anfrage in der Variable "CLIENT_ASSERTION_EXP"
@@ -138,10 +139,10 @@ Funktionalität: SMC-B Authentisierung - ZETA-Client Authentisierung mittels SMC
     # aus dem SMC-B-Zertifikat enthält.
 
     # SMC-B Token-Exchange senden
-    Wenn sende SMC-B Token-Exchange-Request an "http://127.0.0.1:9112/token" über Tiger-Proxy "http://localhost:${tiger.tigerProxy.proxyPort}"
+    Wenn sende SMC-B Token-Exchange-Request an "${zeta.server.pdp.tokenUrl}" über Tiger-Proxy "http://localhost:${tiger.tigerProxy.proxyPort}"
 
     # Token-Exchange-Request im Traffic finden
-    Dann TGR finde die letzte Anfrage mit dem Pfad "/token"
+    Dann TGR finde die letzte Anfrage mit dem Pfad "${zeta.paths.vsdm.tokenEndpointPath}"
     Und TGR prüfe aktuelle Antwort stimmt im Knoten "$.responseCode" überein mit "2.."
 
     # grant_type und subject_token_type prüfen
@@ -185,10 +186,10 @@ Funktionalität: SMC-B Authentisierung - ZETA-Client Authentisierung mittels SMC
     # und die professionOID im professionOid-Claim.
 
     # Token-Exchange mit echtem SMC-B subject_token und client_assertion
-    Wenn sende SMC-B Token-Exchange-Request an "http://127.0.0.1:9112/token" über Tiger-Proxy "http://localhost:${tiger.tigerProxy.proxyPort}"
+    Wenn sende SMC-B Token-Exchange-Request an "${zeta.server.pdp.tokenUrl}" über Tiger-Proxy "http://localhost:${tiger.tigerProxy.proxyPort}"
 
     # Prüfe, dass der Token-Request erfolgreich war
-    Dann TGR finde die letzte Anfrage mit dem Pfad "/token"
+    Dann TGR finde die letzte Anfrage mit dem Pfad "${zeta.paths.vsdm.tokenEndpointPath}"
     Und TGR prüfe aktuelle Antwort stimmt im Knoten "$.responseCode" überein mit "2.."
 
     # SMC-B-Daten aus dem subject_token extrahieren
@@ -205,9 +206,10 @@ Funktionalität: SMC-B Authentisierung - ZETA-Client Authentisierung mittels SMC
     Und TGR speichere Wert des Knotens "$.body.access_token" der aktuellen Antwort in der Variable "ACCESS_TOKEN_JWT"
     Und decodiere und validiere JWT aus der aktuellen Antwort Knoten "$.body.access_token" gegen Schema "schemas/v_1_0/access-token.yaml" soft assert
 
-    # Prüfe, dass das Access-Token die TelematikID als clientId enthält
-    # (Der PDP-Mock übergibt die TelematikID aus sub des subject_token als clientId im Access-Token)
-    Und TGR prüfe aktuelle Antwort stimmt im Knoten "$.body.access_token.body.client_id" überein mit "${SMCB-INFO.telematikId}"
+    # Prüfe, dass das Access-Token die TelematikID als sub enthält
+    # (Keycloak setzt sub auf die TelematikID dank des udat-telematik-id Protocol-Mappers,
+    #  der in ZetaPepJwtTestFactory.setupKeycloak() per Admin API konfiguriert wird)
+    Und TGR prüfe aktuelle Antwort stimmt im Knoten "$.body.access_token.body.sub" überein mit "${SMCB-INFO.telematikId}"
 
     # Prüfe, dass das Access-Token die professionOID enthält
     Und TGR prüfe aktuelle Antwort stimmt im Knoten "$.body.access_token.body.profession_oid" überein mit "${SMCB-INFO.professionId}"
@@ -221,10 +223,10 @@ Funktionalität: SMC-B Authentisierung - ZETA-Client Authentisierung mittels SMC
     # den erforderlichen Attestation-Daten enthält (platform, sub, attestation_timestamp, posture).
 
     # SMC-B Token-Exchange senden
-    Wenn sende SMC-B Token-Exchange-Request an "http://127.0.0.1:9112/token" über Tiger-Proxy "http://localhost:${tiger.tigerProxy.proxyPort}"
+    Wenn sende SMC-B Token-Exchange-Request an "${zeta.server.pdp.tokenUrl}" über Tiger-Proxy "http://localhost:${tiger.tigerProxy.proxyPort}"
 
     # Token-Exchange-Request im Traffic finden
-    Dann TGR finde die letzte Anfrage mit dem Pfad "/token"
+    Dann TGR finde die letzte Anfrage mit dem Pfad "${zeta.paths.vsdm.tokenEndpointPath}"
     Und TGR prüfe aktuelle Antwort stimmt im Knoten "$.responseCode" überein mit "2.."
 
     # client_id extrahieren

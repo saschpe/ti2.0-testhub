@@ -40,7 +40,7 @@ class VsdmClientControllerTest {
   private final String terminalId = "terminalId";
   private final Integer egkSlotId = 1;
   private final Integer smcbSlotId = 2;
-  private final String profileVersion = "1.0.0";
+  private final String profileVersion = "1.0";
 
   @BeforeEach
   void setUp() {

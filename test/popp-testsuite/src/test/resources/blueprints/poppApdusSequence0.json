@@ -7,11 +7,11 @@
     "timeSpan": 10000,
     "steps": [
       {
-        "commandApdu": "00a4040c07D2760001448000",
+        "commandApdu": "00A4040C07D2760001448000",
         "expectedStatusWords": ["9000"]
       },
       {
-        "commandApdu": "00b0910000",
+        "commandApdu": "00B0910000",
         "expectedStatusWords": ["9000", "6281"]
       }
     ]

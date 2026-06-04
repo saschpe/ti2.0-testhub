@@ -10,7 +10,7 @@
         "expectedStatusWords": ["9000"]
       },
       {
-        "commandApdu": "10860000107c0ec30c000a8027600101169990210100",
+        "commandApdu": "10860000107C0EC30C000A8027600101169990210100",
         "expectedStatusWords": ["9000"]
       }
     ]

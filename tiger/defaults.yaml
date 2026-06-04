@@ -1,12 +1,12 @@
 smoke:
   endpoints:
     poppZetaPdp:
-      url: http://127.0.0.1:9112/service/status
-      path: /service/status
+      url: http://127.0.0.1:${ports.poppPdpPort}/auth/realms/zeta-guard/.well-known/openid-configuration
+      path: /auth/realms/zeta-guard/.well-known/openid-configuration
       name: PoPP ZeTA PDP
     poppZetaPep:
-      url: http://127.0.0.1:9110/service/status
-      path: /service/status
+      url: http://127.0.0.1:${ports.poppPepPort}/.well-known/oauth-protected-resource
+      path: /.well-known/oauth-protected-resource
       name: PoPP ZeTA PEP
     vsdmZetaIngress:
       url: https://127.0.0.1:9119/.well-known/oauth-protected-resource
@@ -24,11 +24,11 @@ smoke:
 zeta:
   server:
     popp:
-      url: http://127.0.0.1:9210
+      url: http://127.0.0.1:9500
     poppTokenGenerator:
       url: http://127.0.0.1:9500
     pdp:
-      tokenUrl: http://127.0.0.1:9112/token
+      tokenUrl: http://127.0.0.1:${ports.poppPdpPort}/auth/realms/zeta-guard/protocol/openid-connect/token
       # Keycloak issuer – used as 'aud' in client_assertion JWTs (must match KC_HOSTNAME + realm)
       issuer: https://vsdm-zeta-ingress/auth/realms/zeta-guard
     opa:

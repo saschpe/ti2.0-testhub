@@ -328,6 +328,7 @@ public class ZetaPepJwtTestFactory {
       form.add("subject_token_type", "urn:ietf:params:oauth:token-type:jwt");
       form.add("client_assertion_type", "urn:ietf:params:oauth:client-assertion-type:jwt-bearer");
       form.add("client_assertion", clientAssertion);
+      form.add("client_id", CLIENT_ID);
 
       HttpEntity<MultiValueMap<String, String>> request = new HttpEntity<>(form, headers);
       rt.postForEntity(URI.create(tokenEndpoint), request, String.class);
@@ -458,13 +459,53 @@ public class ZetaPepJwtTestFactory {
   private static String createClientAssertionJwt(ECKey ecJwk, PdpTarget target) throws Exception {
     var now = Instant.now();
 
-    // Build client-self-assessment data (required by ZETA Guard plugin)
-    var platformProductId = new java.util.HashMap<String, Object>();
+    // Build posture (without posture_type - it's an external type id property, sibling of posture)
+    var posture = new java.util.LinkedHashMap<String, Object>();
+
+    // attestation_challenge = Base64Url(SHA-256(jwkThumbprint_bytes || nonce_bytes))
+    String nonce = cachedNonce != null ? cachedNonce : UUID.randomUUID().toString();
+    byte[] jwkThumbprintBytes = ecJwk.computeThumbprint().decode();
+    byte[] nonceBytes = Base64.getUrlDecoder().decode(nonce);
+    var challengeDigest = MessageDigest.getInstance("SHA-256");
+    challengeDigest.update(jwkThumbprintBytes);
+    challengeDigest.update(nonceBytes);
+    String attestationChallenge =
+        Base64.getUrlEncoder().withoutPadding().encodeToString(challengeDigest.digest());
+    posture.put("attestation_challenge", attestationChallenge);
+    posture.put(
+        "public_key",
+        java.util.Base64.getUrlEncoder()
+            .withoutPadding()
+            .encodeToString(ecJwk.toPublicKey().getEncoded()));
+
+    // product_id, product_version and platform_product_id are required by SoftwarePosture
+    posture.put("product_id", "de.gematik.test.zeta");
+    posture.put("product_version", "1.0.0");
+    posture.put("os", "linux");
+    posture.put("os_version", "6.1");
+    posture.put("arch", "x86_64");
+    var postureProductId = new java.util.LinkedHashMap<String, Object>();
+    postureProductId.put("platform", "linux");
+    postureProductId.put("packaging_type", "jar");
+    postureProductId.put("application_id", "de.gematik.test.zeta");
+    posture.put("platform_product_id", postureProductId);
+
+    // client_statement structure - posture_type is external/sibling to posture (Jackson
+    // @JsonTypeInfo EXTERNAL_PROPERTY)
+    var clientStatement = new java.util.LinkedHashMap<String, Object>();
+    clientStatement.put("platform", "linux");
+    clientStatement.put("sub", CLIENT_ID);
+    clientStatement.put("attestation_timestamp", now.minusSeconds(10).getEpochSecond());
+    clientStatement.put("posture_type", "software");
+    clientStatement.put("posture", posture);
+
+    // urn:telematik:client-self-assessment must be a ClientInstanceData (with name etc.)
+    var platformProductId = new java.util.LinkedHashMap<String, Object>();
     platformProductId.put("platform", "linux");
     platformProductId.put("packaging_type", "jar");
     platformProductId.put("application_id", "de.gematik.test.zeta");
 
-    var selfAssessment = new java.util.HashMap<String, Object>();
+    var selfAssessment = new java.util.LinkedHashMap<String, Object>();
     selfAssessment.put("name", "ZeTA Test Client");
     selfAssessment.put("client_id", CLIENT_ID);
     selfAssessment.put("manufacturer_id", "gematik");
@@ -481,14 +522,22 @@ public class ZetaPepJwtTestFactory {
             .jwtID(UUID.randomUUID().toString())
             .issueTime(Date.from(now))
             .expirationTime(Date.from(now.plusSeconds(60)))
+            .claim("client_statement", clientStatement)
             .claim("urn:telematik:client-self-assessment", selfAssessment);
 
     var claims = claimsBuilder.build();
+
+    log.debug("Client assertion claims JSON: {}", claims.toJSONObject());
 
     var header = new JWSHeader.Builder(JWSAlgorithm.ES256).keyID(ecJwk.getKeyID()).build();
 
     var jwt = new SignedJWT(header, claims);
     jwt.sign(new ECDSASigner(ecJwk));
+    // Debug: decode and log the actual JWT payload
+    var parts = jwt.serialize().split("\\.");
+    var payloadJson =
+        new String(java.util.Base64.getUrlDecoder().decode(parts[1]), StandardCharsets.UTF_8);
+    log.debug("Client assertion JWT payload: {}", payloadJson);
     return jwt.serialize();
   }
 
@@ -538,6 +587,7 @@ public class ZetaPepJwtTestFactory {
     form.add("subject_token_type", "urn:ietf:params:oauth:token-type:jwt");
     form.add("client_assertion_type", "urn:ietf:params:oauth:client-assertion-type:jwt-bearer");
     form.add("client_assertion", clientAssertion);
+    form.add("client_id", CLIENT_ID);
 
     HttpEntity<MultiValueMap<String, String>> request = new HttpEntity<>(form, headers);
 

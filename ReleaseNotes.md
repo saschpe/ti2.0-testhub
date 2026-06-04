@@ -2,9 +2,18 @@
 
 # Release Notes TI 2.0 TestHub
 
+## Release 3.1.0
+
+### Changes
+
+- TESTHUB-145: Fix classpath issues with Gatling tests in VSDM testsuite
+- TESTHUB-146: Fix handling of actor ID in VSDM load tests
+- PTVSDM-1618: Fix handling of FHIR profile versions in VSDM2 server implementation
+
 ## Release 3.0.0
 
 ### Changes
+
 - TESTHUB-132: Update Spring Boot to 4.0.6 and introduce spring-boot-dependencies (BOM), several more dependency updates
 - TESTHUB-137: Add Delete endpoint to clear PoppToken-Cache
 

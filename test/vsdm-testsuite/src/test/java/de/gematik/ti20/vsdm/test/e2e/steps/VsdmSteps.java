@@ -62,7 +62,7 @@ public class VsdmSteps {
   private static final TigerTypedConfigurationKey<Boolean> VSDM_LOAD_TESTING_ACTIVE =
       new TigerTypedConfigurationKey<>("vsdm.loadTesting.active", Boolean.class, Boolean.FALSE);
 
-  private static String VALID_PROFILE_VERSION = "1.0.0";
+  private static String VALID_PROFILE_VERSION = "1.0";
 
   private Actor hccs() {
     return OnStage.theActorInTheSpotlight();

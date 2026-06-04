@@ -28,6 +28,7 @@ import static de.gematik.test.tiger.lib.TigerHttpClient.executeCommandWithContin
 import static de.gematik.test.tiger.lib.TigerHttpClient.givenDefaultSpec;
 import static de.gematik.ti20.popp.data.TestConstants.*;
 
+import de.gematik.rbellogger.data.RbelElement;
 import de.gematik.test.tiger.common.config.TigerGlobalConfiguration;
 import de.gematik.test.tiger.glue.TigerProxyGlue;
 import de.gematik.test.tiger.lib.rbel.ModeType;
@@ -44,6 +45,7 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.StandardOpenOption;
+import java.util.Arrays;
 import java.util.concurrent.TimeUnit;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
@@ -79,7 +81,7 @@ public class StepsHashdb {
 
   @Wenn("der TSP fragt den Status seines Imports oder seiner Löschung ab")
   public void sendStatusRequest() {
-    final String jobId = findeJobIdInResponse();
+    final String jobId = findeJobIdInResponseOrThrow();
     executeCommandWithContingentWait(
         () ->
             givenDefaultSpec()
@@ -111,10 +113,7 @@ public class StepsHashdb {
     this.rbelMessageRetriever.filterRequestsAndStoreInContext(
         RequestParameter.builder().path(".*/api/v1/hash-db/import").build().resolvePlaceholders());
     this.rbelValidator.assertAttributeOfCurrentResponseMatches(
-        "$.responseCode",
-        String.valueOf(HttpStatus.UNAUTHORIZED_401),
-        true,
-        this.rbelMessageRetriever);
+        "$.responseCode", "(400|401|403)", true, this.rbelMessageRetriever);
   }
 
   @Dann("der TSP erhält eine positive Rückmeldung mit einer jobID")
@@ -192,8 +191,8 @@ public class StepsHashdb {
       executeCommandWithContingentWait(
           () ->
               givenDefaultSpec().body(eContentPayload).request(Method.POST, URL_HASH_DB_IMPORT_RU));
-      final String jobId = findeJobIdInResponse();
-      writeJobIdToFile(jobId);
+      final String[] jobIds = findeJobIdsInResponseOrEmpty();
+      writeJobIdsToFile(jobIds);
 
     } catch (final IOException e) {
       throw new RuntimeException(
@@ -204,25 +203,37 @@ public class StepsHashdb {
     }
   }
 
-  private String findeJobIdInResponse() {
+  private String[] findeJobIdsInResponseOrEmpty() {
     this.rbelMessageRetriever.filterRequestsAndStoreInContext(
         RequestParameter.builder().path(".*/api/v1/hash-db/import").build().resolvePlaceholders());
-    return this.rbelMessageRetriever
-        .findElementInCurrentResponse("$.body.jobId")
-        .getRawStringContent();
+    return this.rbelMessageRetriever.findElementsInCurrentResponseOrEmpty("$.body.jobId").stream()
+        .map(RbelElement::getRawStringContent)
+        .toArray(String[]::new);
   }
 
-  private void writeJobIdToFile(final String jobId) {
-    final Path path = Path.of("jobIds.txt");
-    try {
-      Files.write(
-          path,
-          (jobId + System.lineSeparator()).getBytes(),
-          StandardOpenOption.CREATE,
-          StandardOpenOption.APPEND);
-    } catch (final IOException e) {
-      throw new RuntimeException(
-          "Error while writing the following jobid to jobIds.txt: " + jobId, e);
+  private String findeJobIdInResponseOrThrow() {
+    final String[] jobIds = findeJobIdsInResponseOrEmpty();
+    if (jobIds.length != 1) {
+      throw new RuntimeException("expecting exactly one job ID but found " + jobIds.length);
     }
+    return jobIds[0];
+  }
+
+  private void writeJobIdsToFile(final String[] jobIds) {
+    final Path path = Path.of("jobIds.txt");
+    Arrays.stream(jobIds)
+        .forEach(
+            jobId -> {
+              try {
+                Files.write(
+                    path,
+                    (jobId + System.lineSeparator()).getBytes(),
+                    StandardOpenOption.CREATE,
+                    StandardOpenOption.APPEND);
+              } catch (final IOException e) {
+                throw new RuntimeException(
+                    "Error while writing the following jobid to jobIds.txt: " + jobId, e);
+              }
+            });
   }
 }

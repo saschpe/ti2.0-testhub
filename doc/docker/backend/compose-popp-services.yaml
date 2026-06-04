@@ -26,7 +26,7 @@ services:
       - ZETA_AUTHENTICATION_SMB_KEYFILE=/app/smcb_private.p12
       - POPP_SERVER_URL=wss://popp-zeta-ingress:443/ws
       # URL für echten POPP-Server:
-      #      - POPP_SERVER_URL=wss://popp-ru-dev-interim.int.epa.rise-link.de:8443/popp/practitioner/api/v1/token-generation-ehc
+      #      - POPP_SERVER_URL=wss://popp.dev.poppservice.de/popp/practitioner/api/v1/token-generation-ehc
       - OTEL_EXPORTER_OTLP_ENDPOINT=http://otel-collector:4318
       #      - JAVA_TOOL_OPTIONS="-agentlib:jdwp=transport=dt_socket,server=y,suspend=n,address=*:5013"
       - VIRTUAL_CARD_IMAGE_FILE=/data/cards/egkCardImage.xml

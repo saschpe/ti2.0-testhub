@@ -78,7 +78,7 @@ class VsdmClientServiceTest {
   private final int smcBSlotId = 2;
   private final String cardId = "card1";
   private final String poppToken = "token123";
-  private final String profileVersion = "1.0.0";
+  private final String profileVersion = "1.0";
 
   @BeforeEach
   void setUp() throws Exception {

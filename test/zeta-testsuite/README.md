@@ -23,8 +23,8 @@ je nach Testtyp. Unser Vorschlag ist, alle Backend-Dienste gemeinsam zu staren.
 
 Anschließend stehen u. a. folgende relevanten Endpunkte zur Verfügung (Standard-Setup des TestHubs):
 
-* ZETA-PEP (PoPP): `http://localhost:9110` (für HTTP) bzw. `ws://localhost:9110` (für WebSocket)
-* ZETA-PDP (PoPP): `http://localhost:9112`
+* ZETA-PEP (PoPP): `http://localhost:2101` (für HTTP) bzw. `ws://localhost:2101` (für WebSocket)
+* ZETA-PDP (PoPP): `http://localhost:2201`
 
 ## Features
 
@@ -65,7 +65,7 @@ Die WebSocket-Tests müssen vom **Projekt-Root-Verzeichnis** (`ti2.0-testhub/`) 
 > laufende Docker-Container erfolgreich ist. Um die Tests auszuführen, muss `-Dskip.inttests=false` gesetzt werden.
 
 > [!NOTE]
-> Die WebSocket-Tests werden **direkt** gegen den ZETA-PEP unter `ws://127.0.0.1:9110/...` ausgeführt.
+> Die WebSocket-Tests werden **direkt** gegen den ZETA-PEP unter `ws://127.0.0.1:2101/...` ausgeführt.
 > WebSocket-Traffic kann **nicht** über den Tiger-Proxy geroutet werden.
 
 ## Smoke-Tests
@@ -178,7 +178,7 @@ Die WebSocket-spezifischen Schritte sind in den Klassen unter `de.gematik.zeta.s
 
 * **Proxy-Einsatz:**
   WebSocket-Traffic kann nicht über den Tiger-Proxy geroutet werden. Die WebSocket-Tests kommunizieren
-  daher direkt mit dem ZETA-PEP (`ws://127.0.0.1:9110`). HTTP-Traffic kann weiterhin über den Tiger-Proxy
+  daher direkt mit dem ZETA-PEP (`ws://127.0.0.1:2101`). HTTP-Traffic kann weiterhin über den Tiger-Proxy
   mitgeschnitten werden.
 
 ## Weiterführende Informationen

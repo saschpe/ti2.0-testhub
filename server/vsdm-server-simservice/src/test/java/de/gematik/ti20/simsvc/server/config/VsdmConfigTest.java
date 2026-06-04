@@ -26,7 +26,7 @@ package de.gematik.ti20.simsvc.server.config;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-import java.util.List;
+import java.util.Map;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
@@ -62,10 +62,10 @@ class VsdmConfigTest {
 
   @Test
   void testSetValidProfileVersions() {
-    vsdmConfig.setValidProfileVersions(null);
-    assertNull(vsdmConfig.getValidProfileVersions());
+    vsdmConfig.setValidProfileVersionMapping(null);
+    assertNull(vsdmConfig.getValidProfileVersionMapping());
 
-    vsdmConfig.setValidProfileVersions(List.of("v1", "v2"));
-    assertEquals(List.of("v1", "v2"), vsdmConfig.getValidProfileVersions());
+    vsdmConfig.setValidProfileVersionMapping(Map.of("v1", "v2"));
+    assertEquals(Map.of("v1", "v2"), vsdmConfig.getValidProfileVersionMapping());
   }
 }
