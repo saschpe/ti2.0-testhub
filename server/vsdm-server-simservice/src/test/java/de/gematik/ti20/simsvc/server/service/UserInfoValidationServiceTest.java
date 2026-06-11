@@ -28,13 +28,13 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatCode;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
+import de.gematik.ti20.simsvc.server.exception.ZetaErrorException;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.util.Base64;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.http.HttpStatus;
-import org.springframework.web.server.ResponseStatusException;
 
 class UserInfoValidationServiceTest {
 
@@ -50,10 +50,10 @@ class UserInfoValidationServiceTest {
     return Base64.getEncoder().encodeToString(json.getBytes(StandardCharsets.UTF_8));
   }
 
-  private static void assertBadRequest(final Throwable throwable) {
-    assertThat(throwable).isInstanceOf(ResponseStatusException.class);
-    assertThat(((ResponseStatusException) throwable).getStatusCode())
-        .isEqualTo(HttpStatus.BAD_REQUEST);
+  private static void assertZetaErrorException(final Throwable throwable) {
+    assertThat(throwable).isInstanceOf(ZetaErrorException.class);
+    assertThat(((ZetaErrorException) throwable).getErrorCase().getHttpCode())
+        .isEqualTo(HttpStatus.BAD_REQUEST.value());
   }
 
   @Test
@@ -101,79 +101,79 @@ class UserInfoValidationServiceTest {
   }
 
   @Test
-  void validateUserInfo_invalidBase64_throwsBadRequest() {
+  void validateUserInfo_invalidBase64_throwsZetaError() {
     assertThatThrownBy(() -> userInfoValidationService.validateUserInfo("!kein-base64!"))
-        .satisfies(UserInfoValidationServiceTest::assertBadRequest);
+        .satisfies(UserInfoValidationServiceTest::assertZetaErrorException);
   }
 
   @Test
-  void validateUserInfo_validBase64ButInvalidJson_throwsBadRequest() {
+  void validateUserInfo_validBase64ButInvalidJson_throwsZetaError() {
     final String notJson = toBase64("das ist kein JSON {{{");
 
     assertThatThrownBy(() -> userInfoValidationService.validateUserInfo(notJson))
-        .satisfies(UserInfoValidationServiceTest::assertBadRequest);
+        .satisfies(UserInfoValidationServiceTest::assertZetaErrorException);
   }
 
   @Test
-  void validateUserInfo_emptyJson_throwsBadRequest() {
+  void validateUserInfo_emptyJson_throwsZetaError() {
     final String emptyJson = toBase64("{}");
 
     assertThatThrownBy(() -> userInfoValidationService.validateUserInfo(emptyJson))
-        .satisfies(UserInfoValidationServiceTest::assertBadRequest);
+        .satisfies(UserInfoValidationServiceTest::assertZetaErrorException);
   }
 
   @Test
-  void validateUserInfo_missingIdentifier_throwsBadRequest() {
+  void validateUserInfo_missingIdentifier_throwsZetaError() {
     final String json =
         """
         {"professionOID": "1.2.276.0.76.4.49"}
         """;
 
     assertThatThrownBy(() -> userInfoValidationService.validateUserInfo(toBase64(json)))
-        .satisfies(UserInfoValidationServiceTest::assertBadRequest);
+        .satisfies(UserInfoValidationServiceTest::assertZetaErrorException);
   }
 
   @Test
-  void validateUserInfo_missingProfessionOID_throwsBadRequest() {
+  void validateUserInfo_missingProfessionOID_throwsZetaError() {
     final String json =
         """
         {"identifier": "12345"}
         """;
 
     assertThatThrownBy(() -> userInfoValidationService.validateUserInfo(toBase64(json)))
-        .satisfies(UserInfoValidationServiceTest::assertBadRequest);
+        .satisfies(UserInfoValidationServiceTest::assertZetaErrorException);
   }
 
   @Test
-  void validateUserInfo_missingBothRequiredFields_throwsBadRequest() {
+  void validateUserInfo_missingBothRequiredFields_throwsZetaError() {
     final String json =
         """
         {"subject": "sub-001", "organizationName": "Musterkrankenhaus"}
         """;
 
     assertThatThrownBy(() -> userInfoValidationService.validateUserInfo(toBase64(json)))
-        .satisfies(UserInfoValidationServiceTest::assertBadRequest);
+        .satisfies(UserInfoValidationServiceTest::assertZetaErrorException);
   }
 
   @Test
-  void validateUserInfo_identifierIsNotString_throwsBadRequest() {
+  void validateUserInfo_identifierIsNotString_throwsZetaError() {
     final String json =
         """
         {"identifier": 12345, "professionOID": "1.2.276.0.76.4.49"}
         """;
 
     assertThatThrownBy(() -> userInfoValidationService.validateUserInfo(toBase64(json)))
-        .satisfies(UserInfoValidationServiceTest::assertBadRequest);
+        .satisfies(UserInfoValidationServiceTest::assertZetaErrorException);
   }
 
   @Test
-  void validateUserInfo_professionOIDIsNotString_throwsBadRequest() {
+  void validateUserInfo_professionOIDIsNotString_throwsZetaError() {
     final String json =
         """
         {"identifier": "12345", "professionOID": 123}
         """;
 
     assertThatThrownBy(() -> userInfoValidationService.validateUserInfo(toBase64(json)))
-        .satisfies(UserInfoValidationServiceTest::assertBadRequest);
+        .satisfies(UserInfoValidationServiceTest::assertZetaErrorException);
   }
 }

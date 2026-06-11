@@ -28,6 +28,7 @@ import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
 
 import de.gematik.ti20.simsvc.server.config.VsdmConfig;
+import de.gematik.ti20.simsvc.server.exception.ZetaErrorException;
 import de.gematik.ti20.simsvc.server.service.*;
 import jakarta.servlet.http.HttpServletRequest;
 import java.util.Base64;
@@ -92,9 +93,9 @@ class VsdmControllerV1Test {
             userInfoValidationService);
 
     request = mock(HttpServletRequest.class);
-    when(request.getHeader("zeta-popp-token-content")).thenReturn("mock-popp-token");
-    when(request.getHeader("zeta-user-info")).thenReturn("mock-user-info");
-    when(request.getHeader("if-none-match")).thenReturn("0");
+    lenient().when(request.getHeader("zeta-popp-token-content")).thenReturn("mock-popp-token");
+    lenient().when(request.getHeader("zeta-user-info")).thenReturn("mock-user-info");
+    lenient().when(request.getHeader("if-none-match")).thenReturn("0");
   }
 
   private String makePoppTokenContentCoded(final String kvnr, final String iknr) {
@@ -254,15 +255,17 @@ class VsdmControllerV1Test {
     String etag = "123456789";
     String profileVersion = "1.0";
 
-    ResponseStatusException exception =
+    when(request.getHeader("zeta-popp-token-content")).thenReturn("INVALID");
+
+    ZetaErrorException exception =
         assertThrows(
-            ResponseStatusException.class,
+            ZetaErrorException.class,
             () ->
                 vsdmController.vsdmbundle(
                     poppTokenContentCoded, userInfo, etag, profileVersion, request));
 
-    assertEquals(HttpStatus.BAD_REQUEST, exception.getStatusCode());
-    assertEquals("SERVICE_MISSING_OR_INVALID_HEADER", exception.getReason());
+    assertEquals(HttpStatus.BAD_REQUEST.value(), exception.getErrorCase().getHttpCode());
+    assertEquals("ERROR_HEADER_USERINFO", exception.getErrorCase().getBdeReference());
   }
 
   @Test
@@ -281,15 +284,15 @@ class VsdmControllerV1Test {
     String etag = "123456789";
     String profileVersion = "1.0";
 
-    ResponseStatusException exception =
+    ZetaErrorException exception =
         assertThrows(
-            ResponseStatusException.class,
+            ZetaErrorException.class,
             () ->
                 vsdmController.vsdmbundle(
                     poppTokenContentCoded, userInfo, etag, profileVersion, request));
 
-    assertEquals(HttpStatus.BAD_REQUEST, exception.getStatusCode());
-    assertEquals("SERVICE_MISSING_OR_INVALID_HEADER", exception.getReason());
+    assertEquals(HttpStatus.BAD_REQUEST.value(), exception.getErrorCase().getHttpCode());
+    assertEquals("ERROR_HEADER_USERINFO", exception.getErrorCase().getBdeReference());
   }
 
   @Test
@@ -300,15 +303,40 @@ class VsdmControllerV1Test {
     String etag = "123456789";
     String profileVersion = "1.0";
 
-    ResponseStatusException exception =
+    when(request.getHeader("zeta-popp-token-content")).thenReturn(poppTokenContentCoded);
+
+    ZetaErrorException exception =
         assertThrows(
-            ResponseStatusException.class,
+            ZetaErrorException.class,
             () ->
                 vsdmController.vsdmbundle(
                     poppTokenContentCoded, userInfo, etag, profileVersion, request));
 
-    assertEquals(HttpStatus.BAD_REQUEST, exception.getStatusCode());
-    assertEquals("SERVICE_MISSING_OR_INVALID_HEADER", exception.getReason());
+    assertEquals(HttpStatus.BAD_REQUEST.value(), exception.getErrorCase().getHttpCode());
+    assertEquals("MISSING_HEADER_POPP", exception.getErrorCase().getBdeReference());
+  }
+
+  @Test
+  void testVsdmBundle_InvalidPoppToken() {
+    String poppTokenContentCoded = "INVALID";
+
+    String userInfo = VALID_USER_INFO;
+    String etag = "123456789";
+    String profileVersion = "1.0";
+
+    when(request.getHeader("zeta-popp-token-content")).thenReturn(poppTokenContentCoded);
+    when(request.getHeader("zeta-user-info")).thenReturn(userInfo);
+    when(request.getHeader("if-none-match")).thenReturn(etag);
+
+    ZetaErrorException exception =
+        assertThrows(
+            ZetaErrorException.class,
+            () ->
+                vsdmController.vsdmbundle(
+                    poppTokenContentCoded, userInfo, etag, profileVersion, request));
+
+    assertEquals(HttpStatus.BAD_REQUEST.value(), exception.getErrorCase().getHttpCode());
+    assertEquals("ERROR_HEADER_POPPTOKEN", exception.getErrorCase().getBdeReference());
   }
 
   @Test
@@ -320,15 +348,15 @@ class VsdmControllerV1Test {
     String etag = "123456789";
     String profileVersion = "1.0";
 
-    ResponseStatusException exception =
+    ZetaErrorException exception =
         assertThrows(
-            ResponseStatusException.class,
+            ZetaErrorException.class,
             () ->
                 vsdmController.vsdmbundle(
                     poppTokenContentCoded, userInfo, etag, profileVersion, request));
 
-    assertEquals(HttpStatus.BAD_REQUEST, exception.getStatusCode());
-    assertEquals("SERVICE_MISSING_OR_INVALID_HEADER", exception.getReason());
+    assertEquals(HttpStatus.BAD_REQUEST.value(), exception.getErrorCase().getHttpCode());
+    assertEquals("ERROR_HEADER_USERINFO", exception.getErrorCase().getBdeReference());
   }
 
   @Test
@@ -348,15 +376,15 @@ class VsdmControllerV1Test {
     String etag = "123456789";
     String profileVersion = "1.0";
 
-    ResponseStatusException exception =
+    ZetaErrorException exception =
         assertThrows(
-            ResponseStatusException.class,
+            ZetaErrorException.class,
             () ->
                 vsdmController.vsdmbundle(
                     poppTokenContentCoded, userInfo, etag, profileVersion, request));
 
-    assertEquals(HttpStatus.BAD_REQUEST, exception.getStatusCode());
-    assertEquals("SERVICE_MISSING_OR_INVALID_HEADER", exception.getReason());
+    assertEquals(HttpStatus.BAD_REQUEST.value(), exception.getErrorCase().getHttpCode());
+    assertEquals("ERROR_HEADER_USERINFO", exception.getErrorCase().getBdeReference());
   }
 
   @Test
@@ -368,15 +396,17 @@ class VsdmControllerV1Test {
     String etag = "123456789";
     String profileVersion = "1.0";
 
-    ResponseStatusException exception =
+    when(request.getHeader("zeta-user-info")).thenReturn(null);
+
+    ZetaErrorException exception =
         assertThrows(
-            ResponseStatusException.class,
+            ZetaErrorException.class,
             () ->
                 vsdmController.vsdmbundle(
                     poppTokenContentCoded, null, etag, profileVersion, request));
 
-    assertEquals(HttpStatus.BAD_REQUEST, exception.getStatusCode());
-    assertEquals("SERVICE_MISSING_OR_INVALID_HEADER", exception.getReason());
+    assertEquals(HttpStatus.BAD_REQUEST.value(), exception.getErrorCase().getHttpCode());
+    assertEquals("MISSING_HEADER_USERINFO", exception.getErrorCase().getBdeReference());
   }
 
   @Test

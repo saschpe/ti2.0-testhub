@@ -2,6 +2,25 @@
 
 # Release Notes TI 2.0 TestHub
 
+## Release 3.2.0
+
+### Update Notes
+
+For licensing reasons the docker image names were changed. Make sure to remove the old images to avoid confusion.
+
+### Changes
+
+- TESTHUB-134: Clarify documentation for configuration of external VSDM server
+- TESTHUB-148: Rename docker images to follow the pattern `testhub-<component>`
+- TESTHUB-150: Clarify documentation for configuration of external Popp server
+- TESTHUB-153: Bump Tiger version to 4.3.0
+- PTVSDM-1605: Publishing VSDM error tests on GitHub
+- PTVSDM-1619: Correcting VSDM coverage assertion
+- PTVSDM-1620: Fix handling of Zeta related error: missing or invalid zeta-popp-token, zeta-user-info
+- PTVSDM-1621: Configure charset for VSDM server responses
+- ZTI-4062: Add performance tests to ZETA Testsuite
+- TESTHUB-18: VSDM Integration Tests in CI
+
 ## Release 3.1.0
 
 ### Changes

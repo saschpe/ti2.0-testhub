@@ -41,3 +41,4 @@ Funktionalität: Abfrage der Versichertenstammdaten vom Fachdienst VSDM 2.0
     Beispiele:
       | Smcb-Card           | Smcb-Slot | Egk-Card           | Egk-Slot | Http-Code |
       | "smcbCardImage.xml" | 1         | "egkCardData.json" | 2        | 200       |
+#      | "smcbCardImage.xml" | 1         | "egkCardImageTK.xml"    | 2        | 200       |

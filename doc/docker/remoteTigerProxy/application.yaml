@@ -15,7 +15,7 @@ tigerProxy:
       - vsdm-client
       - card-terminal-client
   tls:
-    serverRootCa: "tigerProxy.p12"
+    serverRootCa: "tiger-config/tigerProxy.p12"
 #    masterSecretsFile: /tmp/secrets.txt
     alternativeNames:
         - "popp-ingress"

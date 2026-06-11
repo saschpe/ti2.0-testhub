@@ -18,12 +18,12 @@ jenkinsfiles
 ReleaseChecklist.internal.md
 /test/popp-testsuite/src/test/resources/features/e2e/UC_PoPP_1_2a_eGK_OCSP_revoked_Invalid.feature
 /test/popp-testsuite/src/test/resources/features/e2e/UC_PoPP_1_2a_eGK_expired_Invalid.feature
-/test/popp-testsuite/tiger-intern.yaml
 /test/popp-testsuite/src/test/resources/certificates/mykeystore.p12
+/test/popp-testsuite/src/test/resources/hashDbPayloads
 /test/vsdm-testsuite/src/test/resources/drafts
-/test/vsdm-testsuite/src/test/resources/features/error
 /test/vsdm-testsuite/src/test/resources/scripts
 /test/vsdm-testsuite/POLARION.md
 /doc/docker/backend/zeta/smcb-private/**
+/doc/docker/compose-ci-vsdm.yaml
 /no-publish/
 

@@ -44,8 +44,9 @@ import org.junit.jupiter.api.*;
 @Slf4j
 class VsdmClientIT {
 
-  private static final String CARD_CLIENT_URL = "http://127.0.0.1:${ports.cardTerminalPort}";
-  private static final String VSDM_CLIENT_URL = "http://127.0.0.1:${ports.vsdmClientPort}";
+  private static final String HOST = System.getProperty("ports.host", "127.0.0.1");
+  private static final String CARD_CLIENT_URL = "http://" + HOST + ":${ports.cardTerminalPort}";
+  private static final String VSDM_CLIENT_URL = "http://" + HOST + ":${ports.vsdmClientPort}";
 
   private static final Integer TERMINAL_ID = 1;
   private static final Integer EGK_SLOT = 1;

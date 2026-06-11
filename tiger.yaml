@@ -22,7 +22,7 @@ lib:
   logging.level:
     de.gematik.test.tiger: INFO
   additionalKeyStorePasswords:
-    ["testpassword", "changeit", "00", "popp-store"]
+    [ "testpassword", "changeit", "00", "popp-store" ]
 
 fhir:
   encoded: json

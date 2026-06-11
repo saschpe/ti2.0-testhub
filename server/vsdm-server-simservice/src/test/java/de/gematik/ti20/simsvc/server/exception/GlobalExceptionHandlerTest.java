@@ -45,11 +45,31 @@ class GlobalExceptionHandlerTest {
   }
 
   @Test
+  void thatContentTypeIsSetCorrectly() {
+    final ResponseStatusException ex =
+        new ResponseStatusException(HttpStatus.NOT_ACCEPTABLE, "SERVICE_UNSUPPORTED_MEDIATYPE");
+    final ResponseEntity<String> response =
+        globalExceptionHandler.handleResponseStatusException(ex);
+    assertThat(response.getHeaders().getContentType().toString())
+        .isEqualTo("application/fhir+json;charset=UTF-8");
+  }
+
+  @Test
   void thatUnknownCodeCanBeProcessed() {
     final ResponseStatusException ex = new ResponseStatusException(123, "unknown", null);
     final ResponseEntity<String> response =
         globalExceptionHandler.handleResponseStatusException(ex);
     assertThat(response.getStatusCode().value()).isEqualTo(123);
     assertThat(response.getBody()).contains("SERVICE_INTERNAL_SERVER_ERROR");
+  }
+
+  @Test
+  void thatZetaErrorCanBeProcess() {
+    final ZetaErrorException ex = new ZetaErrorException(ErrorCase.MISSING_HEADER_POPP);
+    final ResponseEntity<String> response = globalExceptionHandler.handleZetaErrorException(ex);
+    assertThat(response.getStatusCode().value()).isEqualTo(400);
+    assertThat(response.getBody())
+        .contains(
+            "{\"error\": \"MISSING_HEADER_POPP\", \"error_description\": \"Header ZETA-PoPP-Token-Content fehlt.\"}");
   }
 }

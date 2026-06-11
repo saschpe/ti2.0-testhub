@@ -39,21 +39,12 @@ If you want to operate the entire PoPP infrastructure (PoPP Client and Server) e
     environment:
         - VSDM_USE_MOCK_POPP_TOKEN=false
 
-3. Set `SPRING_PROFILES_ACTIVE` to an empty string:
+3. Set `POPP_SERVER_URL` to the external server endpoint to request a new PoPP token:
 
     # doc/docker/backend/compose-popp-services.yml
     popp-client:
         # ...
         environment:
-        - SPRING_PROFILES_ACTIVE=
-
-4. Set `POPP_SERVER_URL` to the external server endpoint to request a new PoPP token:
-
-    # doc/docker/backend/compose-popp-services.yml
-    popp-client:
-        # ...
-        environment:
-        - SPRING_PROFILES_ACTIVE=
         - POPP_SERVER_URL=wss://example.com/popp/token
 
 5. Ensure the PEP components use the external PoPP server to resolve the public keys for PoPP token validation:
@@ -65,7 +56,7 @@ Rebuild and restart services to ensure all configuration values are applied corr
 
 ==== Common Issues When Using An External Implementation
 
-Ensure that the `kid` in your PoPP token can be found in the JWKS endpoint offered by the PoPP issuer.
+Ensure that the `kid` in your PoPP token can be found in the JWKS endpoint (usually /.well-known/signed-jwks) offered by the PoPP issuer.
 
 Make sure that the external implementation returns the expected responses from the respective endpoints. To learn refer to the https://github.com/gematik/zeta-guard-ngx-pep[PEP source code] dealing with the JWKS data.
 
@@ -83,7 +74,7 @@ docker logs vsdm-client
 docker logs popp-client
 ----
 
-* Ensure the PoPP control REST endpoint is accessible and returns valid responses in the expected format.
+* Ensure the PoPP client REST endpoint is accessible and returns valid responses in the expected format.
 
 === Summary
 

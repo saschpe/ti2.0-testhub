@@ -14,3 +14,9 @@ vsdm:
   valid-profile-version-mapping:
     1.0: 1.0.0
 
+spring:
+  servlet:
+    encoding:
+      charset: UTF-8
+      enabled: true
+      force-response: true

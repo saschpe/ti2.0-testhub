@@ -15,28 +15,29 @@ services:
 
   popp-client:
     profiles: [ "full" ]
-    image: gematik1/popp-client:2.4.1
+    image: gematik1/popp-client:2.5.1
     env_file:
       - path: ../.env
         required: true
     platform: linux/amd64
     container_name: popp-client
     environment:
-      - SPRING_PROFILES_ACTIVE=dev-local
+      - SPRING_PROFILES_ACTIVE=dev
       - ZETA_AUTHENTICATION_SMB_KEYFILE=/app/smcb_private.p12
       - POPP_SERVER_URL=wss://popp-zeta-ingress:443/ws
-      # URL für echten POPP-Server:
-      #      - POPP_SERVER_URL=wss://popp.dev.poppservice.de/popp/practitioner/api/v1/token-generation-ehc
+      # URL für lokalen Test PoPP-Server: POPP_SERVER_URL=wss://popp-zeta-ingress:443/ws
+      # URL für echten PoPP-Server: POPP_SERVER_URL=wss://popp.dev.poppservice.de/popp/practitioner/api/v1/token-generation-ehc
       - OTEL_EXPORTER_OTLP_ENDPOINT=http://otel-collector:4318
-      #      - JAVA_TOOL_OPTIONS="-agentlib:jdwp=transport=dt_socket,server=y,suspend=n,address=*:5013"
+      # - JAVA_TOOL_OPTIONS="-agentlib:jdwp=transport=dt_socket,server=y,suspend=n,address=*:5013"
       - VIRTUAL_CARD_IMAGE_FILE=/data/cards/egkCardImage.xml
+      # - VIRTUAL_CARD_IMAGE_FILE=/data/cards/egkCardImageTK.xml
     networks:
       - testhub_client
     ports:
       - "${PORT_POPP_CLIENT:?PORT_POPP_CLIENT missing – set it in doc/docker/.env}:8081"
       - "${PORT_POPP_CLIENT_MGMT:?PORT_POPP_CLIENT_MGMT missing – set it in doc/docker/.env}:9001"
     volumes:
-      - ./zeta/smcb-private/smcb_private.p12:/app/smcb_private.p12:ro
+      - ./zeta/smcb-private/smcb_private_1.p12:/app/smcb_private.p12:ro
       - ../../../test/vsdm-testsuite/src/test/resources/data/cards:/data/cards:ro
     depends_on:
       - popp-server
@@ -44,7 +45,7 @@ services:
 
   popp-server:
     profiles: [ "full" ]
-    image: gematik1/popp-server:2.4.1
+    image: gematik1/popp-server:2.5.1
     env_file:
       - path: ../.env
         required: true
@@ -119,10 +120,11 @@ services:
       - no_proxy=localhost,127.0.0.1,popp-zeta-ingress,popp-zeta-pep,popp-zeta-pdp,popp-zeta-pdp-opa,popp-server
     ports:
       - "${PORT_POPP_ZETA_PEP:?PORT_POPP_ZETA_PEP missing – set it in doc/docker/.env}:80"
+    command: ["nginx", "-g", "daemon off;", "-c", "/ci_nginx/nginx.conf"]
     volumes:
       - ./zeta-popp/pep/conf/:/etc/nginx/templates/:ro
-      - ./zeta-popp/pep/nginx.conf:/etc/nginx/nginx.conf:ro
-      - ./zeta-popp/well-known/oauth-protected-resource:/srv/.well-known/oauth-protected-resource:ro
+      - ./zeta-popp/pep:/ci_nginx:ro
+      - ./zeta-popp/well-known/:/srv/.well-known/:ro
     networks:
       - testhub_backend
     depends_on:
@@ -244,7 +246,7 @@ services:
       - '--addr=0.0.0.0:8181'
       - '/policies/authz.rego'
     volumes:
-      - ./zeta-popp/policies/authz.rego:/policies/authz.rego:ro
+      - ./zeta-popp/policies:/policies:ro
     networks:
       - testhub_backend
 

@@ -44,7 +44,7 @@ Funktionalität: PoPP-Token erzeugen mit eGK bei physischer Anwesenheit
     #  | "Standardleser" | "kontaktbehaftet" |
     #  | "Standardleser" | "kontaktlos"      |
       | "virtuell"      | "kontaktbehaftet" |
-    #  | "virtuell"      | "kontaktlos"      |
+      | "virtuell"      | "kontaktlos"      |
 
 
   @TCID:UC_PoPP_1_2a_Valid_ehealth

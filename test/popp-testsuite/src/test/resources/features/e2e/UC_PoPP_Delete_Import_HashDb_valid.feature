@@ -27,22 +27,27 @@ Funktionalität: Import und löschen von Daten in eGK-Hash-Datenbank
 
     Angenommen TGR lösche aufgezeichnete Nachrichten
     Und der TSP verwendet die Client Identität "tspEgkTlsValid" für die mTLS-Verbindung zum PoPP-Service
-    Und der TSP löscht alle Einträge zur der genutzen eGK
-
-    Und der Versicherte in der LEI präsentiert seine eGK "Standardleser" am Lesegerät "kontaktlos"
-    Und TGR pausiere Testausführung mit Nachricht "Lege eGK auf den kontaktlosen Kartenleser"
-    Und das Primärsystem den PoPP-Token vom PoPP-Service abfragt und erwarte einen Fehler
-
-
-    Wenn der TSP sendet den signierten eContent "80276883110000144098.eContent-signed" an den PoPP Service
+    Wenn der TSP sendet den signierten eContent "80276883110000163142.eContent-signed" zum löschen an den PoPP Service
     Dann der TSP erhält eine positive Rückmeldung mit einer jobID
-    Und der TSP fragt den Status seines Imports ab
-    Und der TSP erhält Informationen über den Status seines Imports
+    Und TGR finde die erste Anfrage mit Pfad "/api/v1/hash-db/import"
+    Und TGR setze lokale Variable "job_id_delete" auf "!{rbel:currentResponseAsString('$.body.jobId')}"
+    Und warte für "30" Sekunden
+    Wenn der TSP fragt das Ergebnis des Jobs mit der jobID "${job_id_delete}" ab
+    Und der TSP löscht den abgeschlossenen Auftrag mit der JobId "${job_id_delete}"
+    Und der Versicherte in der LEI präsentiert seine eGK "virtuell" am Lesegerät "kontaktlos"
+    Und Das Primärsystem den PoPP-Token mit Image "EGK_80276883110000163142" vom PoPP-Service abgefragt
+    Dann erhält das Primärsystem den Status ERROR vom PoPP-Service mit Message "Unexpected error: Server error WarningUnknownCertificates: "
+    Wenn TGR lösche aufgezeichnete Nachrichten
+    Und der TSP sendet den signierten eContent "80276883110000163142.eContent-signed" zum importieren an den PoPP Service
+    Dann der TSP erhält eine positive Rückmeldung mit einer jobID
+    Und TGR finde die erste Anfrage mit Pfad "/api/v1/hash-db/import"
+    Und TGR setze lokale Variable "job_id_import" auf "!{rbel:currentResponseAsString('$.body.jobId')}"
+    Und warte für "30" Sekunden
+    Wenn der TSP fragt das Ergebnis des Jobs mit der jobID "${job_id_import}" ab
+    Und der TSP löscht den abgeschlossenen Auftrag mit der JobId "${job_id_import}"
 
-    Und der TSP wartet auf Abschluss des Imports
-
-    Und der Versicherte in der LEI präsentiert seine eGK "Standardleser" am Lesegerät "kontaktlos"
-    Und das Primärsystem den PoPP-Token vom PoPP-Service abfragt
+    Und der Versicherte in der LEI präsentiert seine eGK "virtuell" am Lesegerät "kontaktlos"
+    Und Das Primärsystem den PoPP-Token mit Image "EGK_80276883110000163142" vom PoPP-Service abgefragt
     Dann das PoPP-Token ist vollständig und spezifikationskonform
 
 

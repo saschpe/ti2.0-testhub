@@ -30,6 +30,7 @@ import com.networknt.schema.Schema;
 import com.networknt.schema.SchemaRegistry;
 import com.networknt.schema.SpecificationVersion;
 import de.gematik.ti20.simsvc.server.exception.ErrorCase;
+import de.gematik.ti20.simsvc.server.exception.ZetaErrorException;
 import jakarta.annotation.PostConstruct;
 import java.io.IOException;
 import java.io.InputStream;
@@ -37,7 +38,6 @@ import java.nio.charset.StandardCharsets;
 import java.util.Base64;
 import java.util.List;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.web.server.ResponseStatusException;
 
@@ -76,7 +76,7 @@ public class UserInfoValidationService {
    */
   public void validateUserInfo(final String userInfoBase64) {
     if (userInfoBase64 == null || userInfoBase64.isBlank()) {
-      throw badRequest();
+      throw new ZetaErrorException(ErrorCase.ERROR_HEADER_USERINFO);
     }
 
     final String json = decodeBase64(userInfoBase64);
@@ -84,22 +84,14 @@ public class UserInfoValidationService {
     try {
       final List<Error> errors = userInfoSchema.validate(json, InputFormat.JSON);
       if (!errors.isEmpty()) {
-        throw badRequest();
+        throw new ZetaErrorException(ErrorCase.ERROR_HEADER_USERINFO);
       }
     } catch (final ResponseStatusException e) {
       throw e;
     } catch (final Exception e) {
       log.warn("zeta-user-info JSON-Validierung fehlgeschlagen: {}", e.getMessage());
-      throw badRequest();
+      throw new ZetaErrorException(ErrorCase.ERROR_HEADER_USERINFO);
     }
-  }
-
-  private static ResponseStatusException badRequest() {
-    return new ResponseStatusException(
-        HttpStatus.BAD_REQUEST,
-        ErrorCase.SERVICE_MISSING_OR_INVALID_HEADER
-            .getBdeReference()
-            .replace("<header>", "zeta-user-info"));
   }
 
   private String decodeBase64(final String userInfoBase64) {
@@ -108,7 +100,7 @@ public class UserInfoValidationService {
       return new String(decoded, StandardCharsets.UTF_8);
     } catch (final IllegalArgumentException e) {
       log.warn("zeta-user-info ist kein gültiges Base64: {}", e.getMessage());
-      throw badRequest();
+      throw new ZetaErrorException(ErrorCase.ERROR_HEADER_USERINFO);
     }
   }
 }
