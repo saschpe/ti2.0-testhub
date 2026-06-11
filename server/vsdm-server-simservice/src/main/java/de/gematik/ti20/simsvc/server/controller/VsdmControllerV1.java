@@ -29,6 +29,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.base.Strings;
 import de.gematik.ti20.simsvc.server.config.VsdmConfig;
 import de.gematik.ti20.simsvc.server.exception.ErrorCase;
+import de.gematik.ti20.simsvc.server.exception.ZetaErrorException;
 import de.gematik.ti20.simsvc.server.model.PoppTokenContent;
 import de.gematik.ti20.simsvc.server.service.ChecksumService;
 import de.gematik.ti20.simsvc.server.service.EtagService;
@@ -134,18 +135,10 @@ public class VsdmControllerV1 {
 
   private void validateHeaders(final HttpServletRequest request) {
     if (request.getHeader("zeta-popp-token-content") == null) {
-      throw new ResponseStatusException(
-          HttpStatus.BAD_REQUEST,
-          ErrorCase.SERVICE_MISSING_OR_INVALID_HEADER
-              .getBdeReference()
-              .replaceAll("<header>", "zeta-popp-token-content"));
+      throw new ZetaErrorException(ErrorCase.MISSING_HEADER_POPP);
     }
     if (request.getHeader("zeta-user-info") == null) {
-      throw new ResponseStatusException(
-          HttpStatus.BAD_REQUEST,
-          ErrorCase.SERVICE_MISSING_OR_INVALID_HEADER
-              .getBdeReference()
-              .replaceAll("<header>", "zeta-user-info"));
+      throw new ZetaErrorException(ErrorCase.MISSING_HEADER_USERINFO);
     }
     if (request.getHeader("if-none-match") == null) {
       throw new ResponseStatusException(
@@ -207,19 +200,11 @@ public class VsdmControllerV1 {
       final String patientId = checkAndGetKvnr(root);
 
       return new PoppTokenContent(insurerId, patientId);
-    } catch (final IllegalArgumentException e) {
-      // Base64 decoding failed
-      throw new ResponseStatusException(
-          HttpStatus.BAD_REQUEST,
-          ErrorCase.SERVICE_MISSING_OR_INVALID_HEADER
-              .getBdeReference()
-              .replaceAll("<header>", "zeta-popp-token-content"));
     } catch (final ResponseStatusException e) {
       throw e;
     } catch (final Exception e) {
-      // JSON parsing or other unexpected errors
-      throw new ResponseStatusException(
-          HttpStatus.BAD_REQUEST, ErrorCase.SERVICE_MISSING_OR_INVALID_HEADER.getBdeReference());
+      // Base64 decoding failed, JSON parsing or other unexpected errors
+      throw new ZetaErrorException(ErrorCase.ERROR_HEADER_POPPTOKEN);
     }
   }
 }

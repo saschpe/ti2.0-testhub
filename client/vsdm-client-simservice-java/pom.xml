@@ -7,7 +7,7 @@
     <parent>
         <groupId>de.gematik</groupId>
         <artifactId>testhub</artifactId>
-        <version>3.1.0</version>
+        <version>3.2.0</version>
         <relativePath>../../pom.xml</relativePath>
     </parent>
 
@@ -21,7 +21,7 @@
         <start-class>de.gematik.ti20.simsvc.client.VsdmClientApplication</start-class>
         <skip.unittests>false</skip.unittests>
         <skip.inttests>true</skip.inttests>
-        <image.docker.tag>${project.groupId}/${project.artifactId}:local</image.docker.tag>
+        <image.docker.tag>testhub/${project.artifactId}:local</image.docker.tag>
 
         <!-- Exclude ZetaSdkClientAdapter from Test Coverage analysis as it is tested in integration tests (VsdmClientIT.java) and is not feasible to be tested via unit tests -->
         <sonar.exclusions>**/ZetaSdkClientAdapter.java</sonar.exclusions>

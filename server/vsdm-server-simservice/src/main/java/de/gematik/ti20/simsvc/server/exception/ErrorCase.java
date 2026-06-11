@@ -73,7 +73,19 @@ public enum ErrorCase {
       "79100",
       500,
       "SERVICE_INTERNAL_SERVER_ERROR",
-      "Ein unerwarteter interner Fehler ist aufgetreten.");
+      "Ein unerwarteter interner Fehler ist aufgetreten."),
+  MISSING_HEADER_USERINFO("79206", 400, "MISSING_HEADER_USERINFO", "Header ZETA-User-Info fehlt. "),
+  MISSING_HEADER_POPP("79207", 400, "MISSING_HEADER_POPP", "Header ZETA-PoPP-Token-Content fehlt."),
+  ERROR_HEADER_USERINFO(
+      "79401",
+      400,
+      "ERROR_HEADER_USERINFO",
+      "ZETA-User-Info Daten können nicht verarbeitet werden."),
+  ERROR_HEADER_POPPTOKEN(
+      "79402",
+      400,
+      "ERROR_HEADER_POPPTOKEN",
+      "ZETA-PoPP-Token Daten können nicht verarbeitet werden.");
 
   private final String bdeCode;
   private final Integer httpCode;

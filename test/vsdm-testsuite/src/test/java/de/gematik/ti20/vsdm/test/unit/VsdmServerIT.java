@@ -26,11 +26,13 @@ package de.gematik.ti20.vsdm.test.unit;
 
 import static org.junit.jupiter.api.Assertions.*;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import de.gematik.bbriccs.fhir.codec.FhirCodec;
 import de.gematik.ti20.vsdm.fhir.def.VsdmBundle;
 import de.gematik.ti20.vsdm.fhir.def.VsdmOperationOutcome;
 import java.util.Base64;
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 import lombok.extern.slf4j.Slf4j;
 import okhttp3.OkHttpClient;
@@ -44,7 +46,11 @@ import org.junit.jupiter.api.Test;
 @Slf4j
 class VsdmServerIT {
 
-  private static final String VSDM_SERVER_URL = "http://localhost:9130";
+  private static final String VSDM_SERVER_URL =
+      "http://"
+          + System.getProperty("ports.host", "localhost")
+          + ":"
+          + System.getProperty("ports.vsdmServerPort", "9130");
   private static final String VSDM_ENDPOINT = VSDM_SERVER_URL + "/vsdservice/v1/vsdmbundle";
 
   // KVNR from egk image: X110639491
@@ -127,7 +133,7 @@ class VsdmServerIT {
     assertNotEquals("", result.responseBody);
 
     assertTrue(result.responseBody.startsWith("{\"resourceType\":\"Bundle\","));
-    assertEquals("application/fhir+json", result.response.header("Content-Type"));
+    assertEquals("application/fhir+json;charset=UTF-8", result.response.header("Content-Type"));
 
     final VsdmBundle vsdmBundle = (VsdmBundle) result.resource;
     assertNotNull(vsdmBundle);
@@ -185,7 +191,7 @@ class VsdmServerIT {
     assertNotEquals("", result.responseBody);
 
     assertTrue(result.responseBody.startsWith("<Bundle xmlns=\"http://hl7.org/fhir\">"));
-    assertEquals("application/fhir+xml", result.response.header("Content-Type"));
+    assertEquals("application/fhir+xml;charset=UTF-8", result.response.header("Content-Type"));
 
     final VsdmBundle vsdmBundle = (VsdmBundle) result.resource;
     assertNotNull(vsdmBundle);
@@ -295,6 +301,7 @@ class VsdmServerIT {
             VALID_PROFILE_VERSION);
     assertEquals(200, result.response.code());
 
+    assertEquals("application/fhir+json;charset=UTF-8", result.response.header("Content-Type"));
     final String etag = result.response.header("etag");
     assertNotNull(etag);
 
@@ -307,6 +314,8 @@ class VsdmServerIT {
             ACCEPT_JSON,
             VALID_PROFILE_VERSION);
     assertEquals(304, result2.response.code());
+
+    assertEquals("application/fhir+json;charset=UTF-8", result.response.header("Content-Type"));
 
     assertNotNull(result2.response.header("etag"));
     assertEquals(etag, result2.response.header("etag"));
@@ -327,6 +336,7 @@ class VsdmServerIT {
             ACCEPT_JSON,
             VALID_PROFILE_VERSION);
 
+    assertEquals("application/fhir+json;charset=UTF-8", result.response.header("Content-Type"));
     assertEquals(400, result.response.code());
     assertNotNull(result.response.body());
     assertNotEquals("", result.response.body());
@@ -353,6 +363,7 @@ class VsdmServerIT {
             ACCEPT_JSON,
             VALID_PROFILE_VERSION);
 
+    assertEquals("application/fhir+json;charset=UTF-8", result.response.header("Content-Type"));
     assertEquals(400, result.response.code());
     assertNotNull(result.response.body());
     assertNotEquals("", result.response.body());
@@ -378,6 +389,7 @@ class VsdmServerIT {
             ACCEPT_JSON,
             VALID_PROFILE_VERSION);
 
+    assertEquals("application/fhir+json;charset=UTF-8", result.response.header("Content-Type"));
     assertEquals(400, result.response.code());
     assertNotNull(result.response.body());
     assertNotEquals("", result.response.body());
@@ -395,79 +407,81 @@ class VsdmServerIT {
   @Order(8)
   void testMissingPoppToken() throws Exception {
     final Result result =
-        callOnce(
-            VsdmOperationOutcome.class,
-            null,
-            MOCK_USER_INFO,
-            "0",
-            ACCEPT_JSON,
-            VALID_PROFILE_VERSION);
+        callOnce(null, null, MOCK_USER_INFO, "0", ACCEPT_JSON, VALID_PROFILE_VERSION);
 
     assertEquals(400, result.response.code());
     assertNotNull(result.response.body());
 
-    assertNotNull(result.resource);
+    assertEquals("Proxy", result.response.header("ZETA-Cause"));
 
-    final VsdmOperationOutcome operationOutcome = (VsdmOperationOutcome) result.resource;
-    assertNotNull(operationOutcome);
-
-    final CodeableConcept cc = operationOutcome.getIssue().getFirst().getDetails();
-    assertNotNull(cc);
-    assertEquals("Der erforderliche HTTP-Header [header] ist ungültig.", cc.getText());
+    final ObjectMapper objectMapper = new ObjectMapper();
+    final Map bodyMap = objectMapper.readValue(result.responseBody, Map.class);
+    assertNotNull(bodyMap);
+    assertEquals("MISSING_HEADER_POPP", bodyMap.get("error"));
+    assertEquals("Header ZETA-PoPP-Token-Content fehlt.", bodyMap.get("error_description"));
   }
 
   @Test
   @Order(9)
-  void testMissingUserInfo() throws Exception {
+  void testInvalidPoppToken() throws Exception {
     final Result result =
-        callOnce(
-            VsdmOperationOutcome.class,
-            MOCK_POPP_TOKEN,
-            null,
-            "0",
-            ACCEPT_JSON,
-            VALID_PROFILE_VERSION);
+        callOnce(null, "INVALID", MOCK_USER_INFO, "0", ACCEPT_JSON, VALID_PROFILE_VERSION);
 
     assertEquals(400, result.response.code());
     assertNotNull(result.response.body());
 
-    assertNotNull(result.resource);
+    assertEquals("Proxy", result.response.header("ZETA-Cause"));
 
-    final VsdmOperationOutcome vsdmOperationOutcome = (VsdmOperationOutcome) result.resource;
-    assertNotNull(vsdmOperationOutcome);
-
-    final CodeableConcept cc = vsdmOperationOutcome.getIssue().getFirst().getDetails();
-    assertNotNull(cc);
-    assertEquals("Der erforderliche HTTP-Header [header] ist ungültig.", cc.getText());
+    final ObjectMapper objectMapper = new ObjectMapper();
+    final Map bodyMap = objectMapper.readValue(result.responseBody, Map.class);
+    assertNotNull(bodyMap);
+    assertEquals("ERROR_HEADER_POPPTOKEN", bodyMap.get("error"));
+    assertEquals(
+        "ZETA-PoPP-Token Daten können nicht verarbeitet werden.", bodyMap.get("error_description"));
   }
 
   @Test
   @Order(10)
-  void testInvalidUserInfo() throws Exception {
+  void testMissingUserInfo() throws Exception {
     final Result result =
-        callOnce(
-            VsdmOperationOutcome.class,
-            MOCK_POPP_TOKEN,
-            "invalid",
-            "0",
-            ACCEPT_JSON,
-            VALID_PROFILE_VERSION);
+        callOnce(null, MOCK_POPP_TOKEN, null, "0", ACCEPT_JSON, VALID_PROFILE_VERSION);
 
     assertEquals(400, result.response.code());
     assertNotNull(result.response.body());
 
-    assertNotNull(result.resource);
+    assertEquals(400, result.response.code());
+    assertNotNull(result.response.body());
 
-    final VsdmOperationOutcome vsdmOperationOutcome = (VsdmOperationOutcome) result.resource;
-    assertNotNull(vsdmOperationOutcome);
+    assertEquals("Proxy", result.response.header("ZETA-Cause"));
 
-    final CodeableConcept cc = vsdmOperationOutcome.getIssue().getFirst().getDetails();
-    assertNotNull(cc);
-    assertEquals("Der erforderliche HTTP-Header [header] ist ungültig.", cc.getText());
+    final ObjectMapper objectMapper = new ObjectMapper();
+    final Map bodyMap = objectMapper.readValue(result.responseBody, Map.class);
+    assertNotNull(bodyMap);
+    assertEquals("MISSING_HEADER_USERINFO", bodyMap.get("error"));
+    assertEquals("Header ZETA-User-Info fehlt. ", bodyMap.get("error_description"));
   }
 
   @Test
   @Order(11)
+  void testInvalidUserInfo() throws Exception {
+    final Result result =
+        callOnce(null, MOCK_POPP_TOKEN, "invalid", "0", ACCEPT_JSON, VALID_PROFILE_VERSION);
+
+    assertEquals(400, result.response.code());
+    assertNotNull(result.response.body());
+
+    assertEquals("Proxy", result.response.header("ZETA-Cause"));
+
+    final ObjectMapper objectMapper = new ObjectMapper();
+    final Map bodyMap = objectMapper.readValue(result.responseBody, Map.class);
+    assertNotNull(bodyMap);
+    assertEquals("ERROR_HEADER_USERINFO", bodyMap.get("error"));
+    assertEquals(
+        "ZETA-User-Info Daten können nicht verarbeitet werden.", bodyMap.get("error_description"));
+  }
+
+  @Test
+  @Order(12)
   void testMissingIfNoneMatch() throws Exception {
     final Result result =
         callOnce(
@@ -482,7 +496,7 @@ class VsdmServerIT {
   }
 
   @Test
-  @Order(12)
+  @Order(13)
   void testResponseContainsEtag() throws Exception {
     final Result result =
         callOnce(
@@ -497,7 +511,7 @@ class VsdmServerIT {
   }
 
   @Test
-  @Order(13)
+  @Order(14)
   void testResponseContainsPz() throws Exception {
     final Result result =
         callOnce(
@@ -513,7 +527,7 @@ class VsdmServerIT {
   }
 
   @Test
-  @Order(14)
+  @Order(15)
   void testProtocolHttp1_1() throws Exception {
     final Result result =
         callOnce(
@@ -528,7 +542,7 @@ class VsdmServerIT {
   }
 
   @Test
-  @Order(15)
+  @Order(16)
   void testMissingProfileVersion() throws Exception {
     final Result result =
         callOnce(
@@ -548,7 +562,7 @@ class VsdmServerIT {
   }
 
   @Test
-  @Order(16)
+  @Order(17)
   void testInvalidProfileVersion() throws Exception {
     final Result result =
         callOnce(
@@ -627,7 +641,8 @@ class VsdmServerIT {
     log.debug("readVsd: {}", readVsdResponse.code());
     log.debug(readVsdBody);
 
-    final Resource resource = fhirCodec.decode(expectedClass, readVsdBody);
+    final Resource resource =
+        expectedClass != null ? fhirCodec.decode(expectedClass, readVsdBody) : null;
 
     return new Result(resource, readVsdResponse, readVsdBody);
   }

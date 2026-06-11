@@ -1,8 +1,10 @@
 name: "testhub-backend"
 
 include:
-  - ./compose-popp-services.yaml
-  - ./compose-vsdm-services.yaml
+  - path: ./compose-popp-services.yaml
+    project_directory: .
+  - path: ./compose-vsdm-services.yaml
+    project_directory: .
 
 services:
   otel-collector:

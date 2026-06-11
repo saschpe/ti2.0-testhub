@@ -102,6 +102,26 @@ Die E2E-Tests können mit folgender Kommandozeile im Projekt-Root-Verzeichnis ge
 ./mvnw -pl test/vsdm-testsuite/ clean verify -Dcucumber.filter.tags="@TYPE:E2E" -Dskip.inttests=false
 ```
 
+## E2E-Tests
+
+Die Testsuite beinhaltet aktuell sieben ERROR-Testfälle, welche bestimmte Fehlersituationen durch die Verwendung von
+manipulierten Popp-Token auslösen. Hierzu ist es erforderlich, dass der Popp-Token-Generator (kurz: PTG) gestartet ist.
+Die folgenden Error-Codes werden getestet:
+
+* 79010 - VSDSERVICE_INVALID_IK
+* 79011 - VSDSERVICE_INVALID_KVNR
+* 79012 - VSDSERVICE_UNKNOWN_IK
+* 79013 - VSDSERVICE_UNKNOWN_KVNR
+* 79014 - VSDSERVICE_MISSING_PATIENT_RECORD_VERSION
+* 79015 - VSDSERVICE_INVALID_PROFILE_VERSION
+* 79016 - VSDSERVICE_MISSING_PROFILE_VERSION
+
+Die ERROR-Tests können mit folgender Kommandozeile im Projekt-Root-Verzeichnis gestartet werden:
+
+```
+./mvnw -pl test/vsdm-testsuite/ clean verify -Dcucumber.filter.tags="@TYPE:ERROR" -Dskip.inttests=false
+```
+
 ## Lasttests (Tiger)
 
 Die VSDM 2.0 Testsuite enthält aktuell vier Lasttests, welche die Antwortzeiten der VSDM 2.0 Server Simulation prüfen.

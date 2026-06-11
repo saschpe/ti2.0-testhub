@@ -28,7 +28,9 @@ import de.gematik.bbriccs.fhir.EncodingType;
 import de.gematik.bbriccs.fhir.codec.FhirCodec;
 import de.gematik.ti20.vsdm.fhir.builder.VsdmOperationOutcomeBuilder;
 import de.gematik.ti20.vsdm.fhir.def.VsdmOperationOutcome;
+import java.nio.charset.StandardCharsets;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
@@ -43,11 +45,28 @@ public class GlobalExceptionHandler {
 
     final ErrorCase errorCase = ErrorCase.getByBdeReference(ex.getReason());
     if (errorCase != null) {
-      return ResponseEntity.status(errorCase.getHttpCode()).body(operationOutcome(errorCase));
+      return ResponseEntity.status(errorCase.getHttpCode())
+          .contentType(new MediaType("application", "fhir+json", StandardCharsets.UTF_8))
+          .body(operationOutcome(errorCase));
     } else {
       return ResponseEntity.status(ex.getStatusCode())
+          .contentType(new MediaType("application", "fhir+json", StandardCharsets.UTF_8))
           .body(operationOutcome(ErrorCase.SERVICE_INTERNAL_SERVER_ERROR));
     }
+  }
+
+  @ExceptionHandler(ZetaErrorException.class)
+  public ResponseEntity<String> handleZetaErrorException(final ZetaErrorException ex) {
+    final ErrorCase errorCase = ex.getErrorCase();
+    final String zetaError =
+        "{\"error\": \""
+            + errorCase.getBdeReference()
+            + "\", \"error_description\": \""
+            + errorCase.getBdeText()
+            + "\"}";
+    return ResponseEntity.status(errorCase.getHttpCode())
+        .header("ZETA-Cause", "Proxy")
+        .body(zetaError);
   }
 
   private String operationOutcome(final ErrorCase errorCase) {

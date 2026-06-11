@@ -92,76 +92,14 @@ Funktionalität: Client-Registrierung und ZETA Service Discovery (DB-Integration
     Und TGR prüfe aktueller Request enthält Knoten "$.body.grant_types"
     Und TGR prüfe aktueller Request enthält Knoten "$.body.jwks"
 
-  # ===========================================================================
-  # Token Exchange: DCR + PoPP-Token + client_assertion gegen echten Keycloak
-  # ===========================================================================
-
-  @Ignore @client_registrierung @token_exchange
-  Szenario: Keycloak-Token-Exchange mit SMC-B client_assertion und PoPP-Token (Gutfall)
-    # STATUS: @Ignore – Keycloak ZeTA Extension (keycloak-zeta:0.4.1) liefert HTTP 500
-    # bei DCR mit brainpoolP256r1-JWKS (x5c). Das SMC-B-Zertifikat kann aktuell nicht
-    # über die DCR-Schnittstelle registriert werden.
-    #
-    # Sobald die Extension brainpoolP256r1 in JWKS/x5c unterstützt, kann dieser Test
-    # aktiviert werden.
-    #
-    # Ablauf (sobald freigeschaltet):
-    # 1. Client-Registrierung (DCR) mit SMC-B JWKS (brainpoolP256r1, x5c)
-    # 2. PoPP-Token via popp-token-generator erzeugen
-    # 3. client_assertion JWT mit SMC-B-Schlüssel signieren (BP256R1)
-    # 4. DPoP-Proof JWT erstellen
-    # 5. Token-Exchange-Request an Keycloak senden
-
-    # Token-Request über Tiger-Proxy an ZETA-PDP (Keycloak) senden
-    Wenn sende Token-Exchange-Request für Client "zeta-client" an "${zeta.server.pdp.tokenUrl}" über Tiger-Proxy "http://localhost:${tiger.tigerProxy.proxyPort}"
-
-    # Token-Request muss erfolgreich sein (2xx)
-    Dann TGR finde die letzte Anfrage mit dem Pfad "/auth/realms/zeta-guard/protocol/openid-connect/token"
-    Und TGR prüfe aktuelle Antwort stimmt im Knoten "$.responseCode" überein mit "2.."
-    Und TGR prüfe aktuelle Antwort stimmt im Knoten "$.body.access_token" überein mit ".*"
-
-  # ===========================================================================
-  # Fehlerfälle – @Ignore: zwei Voraussetzungen fehlen noch (s. Kommentar)
-  # ===========================================================================
-
-  @Ignore @client_registrierung @policy_ablehnungen
-  Szenariogrundriss: Client-Registrierung wird wegen Client Policy abgelehnt und begründet
-    # STATUS: @Ignore – zwei Voraussetzungen fehlen noch:
-    #
-    # 1. NETZWERK-TOPOLOGIE: OPA-Requests laufen intern zwischen Docker-Containern
-    #    (vsdm-zeta-pdp → opa) und NICHT durch den lokalen TigerProxy (Port 6950).
-    #    TigerProxyManipulationSteps registriert Regeln am lokalen Admin-API (Port 6900) –
-    #    diese greifen nicht für Docker-interne Requests.
-    #    Lösung: Modifikation auf docker-tiger-proxy (Port 6300) registrieren
-    #    UND OPA-Traffic über docker-tiger-proxy routen.
-    #
-    # 2. OPA-POLICY: authz.rego gibt aktuell immer allow=true zurück.
-    Gegeben sei TGR sende eine leere GET Anfrage an "${zeta.paths.client.reset}"
-
-    # OPA Request manipulieren - ungültige Werte setzen
-    # Der Guard sendet diese Daten an OPA, wir manipulieren den Request um Policy-Ablehnungen zu testen
-    Und TGR setze lokale Variable "opaCondition" auf "isRequest && request.path =~ '.*${zeta.paths.opa.decisionPath}'"
-    Dann Setze im TigerProxy für die Nachricht "${opaCondition}" die Manipulation auf Feld "<OpaInputField>" und Wert "<NeuerWert>" und 1 Ausführungen
-
-    Wenn TGR sende eine leere GET Anfrage an "${zeta.paths.client.vsdRequest}"
-
-    # OPA Decision prüfen - sollte allow=false liefern
-    Dann TGR finde die letzte Anfrage mit dem Pfad "${zeta.paths.opa.decisionPath}"
-    Und TGR prüfe aktuelle Antwort stimmt im Knoten "$.responseCode" überein mit "200"
-    Und TGR prüfe aktuelle Antwort stimmt im Knoten "$.body.result.allow" überein mit "false"
-
-    # Registrierungs-/Token-Request muss mit 403 abgelehnt werden
-    Dann TGR finde die letzte Anfrage mit dem Pfad "${zeta.paths.guard.tokenEndpointPath}"
-    Und TGR prüfe aktuelle Antwort stimmt im Knoten "$.responseCode" überein mit "403"
-    Und TGR speichere Wert des Knotens "$.body" der aktuellen Antwort in der Variable "body"
-    Und validiere "${body}" gegen Schema "schemas/v_1_0/zeta-error.yaml"
-    Und TGR prüfe aktuelle Antwort stimmt im Knoten "$.body.error_description" überein mit ".*<ErwarteterHinweis>.*"
-
-    Beispiele: Ungültige Policy-Werte
-      | OpaInputField                                         | NeuerWert                    | ErwarteterHinweis                                               |
-      | $.body.input.user_info.professionOID                  | 1.2.276.0.76.4.999           | ${testdata.policy_rejection.invalid_profession_oid_error_hint}  |
-      | $.body.input.client_assertion.posture.product_id      | unknown_product              | ${testdata.policy_rejection.invalid_product_id_error_hint}      |
-      | $.body.input.client_assertion.posture.product_version | 99.99.99                     | ${testdata.policy_rejection.invalid_product_version_error_hint} |
-      | $.body.input.authorization_request.scopes.0           | invalid_scope_xyz            | ${testdata.policy_rejection.invalid_scope_error_hint}           |
-      | $.body.input.authorization_request.aud.0              | https://evil.example.com/api | ${testdata.policy_rejection.invalid_audience_error_hint}        |
+  # Hinweis: Token-Exchange- (Auth/DPoP/PoP) und Policy-Ablehnungs-Szenarien
+  # wurden in separate Feature-Dateien ausgelagert, um Registrierung (DCR)
+  # von Laufzeit-Authentifizierungs-Tests zu trennen.
+  #
+  # Neue Dateien:
+  # - test/zeta-testsuite/src/test/resources/features/zeta-client-authentifizierung/client_authentifizierung.feature
+  # - test/zeta-testsuite/src/test/resources/features/zeta-client-policy/client_policy.feature
+  #
+  # Die originalen Szenarien wurden dort eins zu eins übernommen (ggf. ohne @Ignore),
+  # damit CI/Jobs verschiedene Gruppen (mocked vs. integration) gezielt ausführen können.
 

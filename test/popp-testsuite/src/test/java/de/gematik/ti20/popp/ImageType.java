@@ -1,6 +1,6 @@
 /*-
  * #%L
- * VSDM Server Simservice
+ * PoPP Testsuite
  * %%
  * Copyright (C) 2025 - 2026 gematik GmbH
  * %%
@@ -22,18 +22,20 @@
  * by gematik, find details in the "Readme" file.
  * #L%
  */
-package de.gematik.ti20.simsvc.server;
+package de.gematik.ti20.popp;
 
-import io.swagger.v3.oas.annotations.OpenAPIDefinition;
-import io.swagger.v3.oas.annotations.info.Info;
-import org.springframework.boot.SpringApplication;
-import org.springframework.boot.autoconfigure.SpringBootApplication;
+import lombok.Getter;
 
-@OpenAPIDefinition(info = @Info(title = "VSDM Server Simulator Service"))
-@SpringBootApplication
-public class Main {
+@Getter
+public enum ImageType {
+  EXPIRED_EGK("EGK_80276883110000179865_gema5_abgelaufen2025.xml"),
+  VALID_EGK("IMG_eGK_G21_TU_root6 1.xml"),
+  EGK_80276883110000163142("EGK_80276883110000163142_gema5.xml"),
+  VALID_TK_EGK("EGK_TK_1b.xml");
 
-  public static void main(String[] args) {
-    SpringApplication.run(Main.class, args);
+  private final String fileName;
+
+  ImageType(final String fileName) {
+    this.fileName = fileName;
   }
 }

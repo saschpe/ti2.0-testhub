@@ -28,7 +28,7 @@ services:
 
   vsdm-server:
     container_name: vsdm-server
-    image: de.gematik.ti20.simsvc.server/vsdm-server-simservice:local
+    image: testhub/vsdm-server-simservice:local
     env_file:
       - path: ../.env
         required: true
@@ -58,9 +58,10 @@ services:
     environment: *vsdm-no-proxy-env
     ports:
       - "${PORT_VSDM_ZETA_PEP:?PORT_VSDM_ZETA_PEP missing – set it in doc/docker/.env}:80"
+    command: ["nginx", "-g", "daemon off;", "-c", "/ci_nginx/nginx.conf"]
     volumes:
-      - ./zeta/vsdm-zeta-pep.conf:/etc/nginx/nginx.conf:ro
-      - ./zeta/well-known/oauth-protected-resource:/srv/.well-known/oauth-protected-resource:ro
+      - ./zeta/vsdm-pep-conf:/ci_nginx:ro
+      - ./zeta/well-known/:/srv/.well-known/:ro
       - ./zeta/asl/:/etc/nginx/asl/
     depends_on:
       vsdm-zeta-pdp:
@@ -164,7 +165,7 @@ services:
       - '--addr=0.0.0.0:8181'
       - '/policies/authz.rego'
     volumes:
-      - ./zeta/policies/authz.rego:/policies/authz.rego:ro
+      - ./zeta/policies:/policies:ro
     networks:
       - testhub_backend
 
