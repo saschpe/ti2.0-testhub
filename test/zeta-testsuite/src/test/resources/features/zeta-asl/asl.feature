@@ -1,11 +1,12 @@
 #language:de
 # Befehl zum Ausführen der Tests (vom Root-Verzeichnis ti2.0-testhub/):
-# ./mvnw -pl test/zeta-testsuite clean verify -Dskip.inttests=false -Dcucumber.filter.tags='@asl'
+# ./mvnw -pl test/zeta-testsuite clean verify -Dskip.inttests=false -Dcucumber.filter.tags='@asl' -Dzeta.env=local
 #
 # VORAUSSETZUNG: TestHub im Profil "full":
 #   docker compose -f doc/docker/compose-local.yaml --profile full up -d
-@PRODUKT:ZETA
-
+@PRODUKT:ZT_Cluster
+@PRODUKT:VSDM_2_FD
+@PRODUKT:Anb_FD_VSDM
 Funktionalität: ASL-Handshake am ZETA-PEP – Positiv- und Negativfall
 
   Grundlage:
@@ -16,7 +17,11 @@ Funktionalität: ASL-Handshake am ZETA-PEP – Positiv- und Negativfall
     Und die Karte "test/vsdm-testsuite/src/test/resources/data/cards/smcbCardImage.xml" ist in Slot 1 des Kartenterminals geladen
     Und die Karte "test/vsdm-testsuite/src/test/resources/data/cards/egkCardImage.xml" ist in Slot 2 des Kartenterminals geladen
 
-
+  @TCID:ZETA_CONNECTIVITY_ASL_HANDSHAKE_VSDM
+  @STATUS:Implementiert
+  @MODUS:Automatisch
+  @TESTSTUFE:3
+  @PRIO:1
   @asl_handshake_success @pep @asl @positiv
   Szenariogrundriss: ASL-Handshake gelingt, wenn der VSDM-Client einen VSD-Read durchführt
     # E2E über den VSDM-Client (zeta-sdk-jvm 0.5.1 + asl-jvm). Das Well-Known des

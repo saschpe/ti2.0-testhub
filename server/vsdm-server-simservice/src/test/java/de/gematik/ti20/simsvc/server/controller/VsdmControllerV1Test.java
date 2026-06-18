@@ -95,7 +95,7 @@ class VsdmControllerV1Test {
     request = mock(HttpServletRequest.class);
     lenient().when(request.getHeader("zeta-popp-token-content")).thenReturn("mock-popp-token");
     lenient().when(request.getHeader("zeta-user-info")).thenReturn("mock-user-info");
-    lenient().when(request.getHeader("if-none-match")).thenReturn("0");
+    lenient().when(request.getHeader("if-none-match")).thenReturn("\"0\"");
   }
 
   private String makePoppTokenContentCoded(final String kvnr, final String iknr) {
@@ -128,13 +128,14 @@ class VsdmControllerV1Test {
     String responseBody = "{\"resourceType\":\"Bundle\"}";
     Resource mockResource = new Bundle();
     String userInfo = VALID_USER_INFO;
-    String etag = "0";
+    String etag = "\"0\"";
     String profileVersion = "1.0";
 
     when(etagService.checkEtag(kvnr, etag)).thenReturn(false);
     when(vsdmService.readVsd(kvnr)).thenReturn(mockResource);
     when(fhirService.encodeResponse(eq(mockResource), eq(request), any(HttpHeaders.class)))
         .thenReturn(responseBody);
+    when(request.getHeader("if-none-match")).thenReturn(etag);
 
     ResponseEntity<?> response =
         vsdmController.vsdmbundle(poppTokenContentCoded, userInfo, etag, profileVersion, request);
@@ -158,7 +159,7 @@ class VsdmControllerV1Test {
     String responseBody = "{\"resourceType\":\"Bundle\"}";
     Resource mockResource = new Bundle();
     String userInfo = VALID_USER_INFO;
-    String etag = "0";
+    String etag = "\"0\"";
     String profileVersion = "1.0";
 
     // Mock request headers to contain specific content-type
@@ -166,6 +167,7 @@ class VsdmControllerV1Test {
     when(vsdmService.readVsd(kvnr)).thenReturn(mockResource);
     when(fhirService.encodeResponse(eq(mockResource), eq(request), any(HttpHeaders.class)))
         .thenReturn(responseBody);
+    when(request.getHeader("if-none-match")).thenReturn(etag);
 
     ResponseEntity<?> response =
         vsdmController.vsdmbundle(poppTokenContentCoded, userInfo, etag, profileVersion, request);
@@ -189,13 +191,14 @@ class VsdmControllerV1Test {
         "{\"resourceType\":\"Bundle\",\"name\":\"Müller\",\"city\":\"München\"}";
     Resource mockResource = new Bundle();
     String userInfo = VALID_USER_INFO;
-    String etag = "0";
+    String etag = "\"0\"";
     String profileVersion = "1.0";
 
     when(etagService.checkEtag(kvnr, etag)).thenReturn(false);
     when(vsdmService.readVsd(kvnr)).thenReturn(mockResource);
     when(fhirService.encodeResponse(eq(mockResource), eq(request), any(HttpHeaders.class)))
         .thenReturn(responseBodyWithUmlaut);
+    when(request.getHeader("if-none-match")).thenReturn(etag);
 
     ResponseEntity<?> response =
         vsdmController.vsdmbundle(poppTokenContentCoded, userInfo, etag, profileVersion, request);
@@ -219,11 +222,12 @@ class VsdmControllerV1Test {
     String poppTokenContentCoded = makePoppTokenContentCoded(kvnr, iknr);
 
     String userInfo = VALID_USER_INFO;
-    String etag = "123456789";
+    String etag = "\"123456789\"";
     String profileVersion = "1.0";
 
     when(etagService.checkEtag(kvnr, etag)).thenReturn(true);
     when(checksumService.calculateChecksum(kvnr)).thenReturn("PZ");
+    when(request.getHeader("if-none-match")).thenReturn(etag);
 
     ResponseEntity<?> response =
         vsdmController.vsdmbundle(poppTokenContentCoded, userInfo, etag, profileVersion, request);
@@ -252,10 +256,11 @@ class VsdmControllerV1Test {
     String poppTokenContentCoded = "INVALID";
 
     String userInfo = "mock-user-info";
-    String etag = "123456789";
+    String etag = "\"123456789\"";
     String profileVersion = "1.0";
 
     when(request.getHeader("zeta-popp-token-content")).thenReturn("INVALID");
+    when(request.getHeader("if-none-match")).thenReturn(etag);
 
     ZetaErrorException exception =
         assertThrows(
@@ -281,8 +286,10 @@ class VsdmControllerV1Test {
         Base64.getEncoder().encodeToString(poppTokenContentMissingFields.getBytes());
 
     String userInfo = "mock-user-info";
-    String etag = "123456789";
+    String etag = "\"123456789\"";
     String profileVersion = "1.0";
+
+    when(request.getHeader("if-none-match")).thenReturn(etag);
 
     ZetaErrorException exception =
         assertThrows(
@@ -300,7 +307,7 @@ class VsdmControllerV1Test {
     String poppTokenContentCoded = null;
 
     String userInfo = "mock-user-info";
-    String etag = "123456789";
+    String etag = "\"123456789\"";
     String profileVersion = "1.0";
 
     when(request.getHeader("zeta-popp-token-content")).thenReturn(poppTokenContentCoded);
@@ -321,7 +328,7 @@ class VsdmControllerV1Test {
     String poppTokenContentCoded = "INVALID";
 
     String userInfo = VALID_USER_INFO;
-    String etag = "123456789";
+    String etag = "\"123456789\"";
     String profileVersion = "1.0";
 
     when(request.getHeader("zeta-popp-token-content")).thenReturn(poppTokenContentCoded);
@@ -345,8 +352,10 @@ class VsdmControllerV1Test {
     String iknr = "109500969";
     String poppTokenContentCoded = makePoppTokenContentCoded(kvnr, iknr);
     String userInfo = "INVALID";
-    String etag = "123456789";
+    String etag = "\"123456789\"";
     String profileVersion = "1.0";
+
+    when(request.getHeader("if-none-match")).thenReturn(etag);
 
     ZetaErrorException exception =
         assertThrows(
@@ -373,8 +382,10 @@ class VsdmControllerV1Test {
           """;
     String userInfo = Base64.getEncoder().encodeToString(userInfoMissingFields.getBytes());
 
-    String etag = "123456789";
+    String etag = "\"123456789\"";
     String profileVersion = "1.0";
+
+    when(request.getHeader("if-none-match")).thenReturn(etag);
 
     ZetaErrorException exception =
         assertThrows(
@@ -393,7 +404,7 @@ class VsdmControllerV1Test {
     String iknr = "9876543210";
     String poppTokenContentCoded = makePoppTokenContentCoded(kvnr, iknr);
 
-    String etag = "123456789";
+    String etag = "\"123456789\"";
     String profileVersion = "1.0";
 
     when(request.getHeader("zeta-user-info")).thenReturn(null);
@@ -416,8 +427,10 @@ class VsdmControllerV1Test {
     String poppTokenContentCoded = makePoppTokenContentCoded(kvnr, iknr);
 
     String userInfo = VALID_USER_INFO;
-    String etag = "123456789";
+    String etag = "\"123456789\"";
     String profileVersion = "1.0";
+
+    when(request.getHeader("if-none-match")).thenReturn(etag);
 
     ResponseStatusException exception =
         assertThrows(
@@ -437,8 +450,10 @@ class VsdmControllerV1Test {
     String poppTokenContentCoded = makePoppTokenContentCoded(kvnr, iknr);
 
     String userInfo = VALID_USER_INFO;
-    String etag = "123456789";
+    String etag = "\"123456789\"";
     String profileVersion = "1.0";
+
+    when(request.getHeader("if-none-match")).thenReturn(etag);
 
     ResponseStatusException exception =
         assertThrows(
@@ -458,7 +473,9 @@ class VsdmControllerV1Test {
     String poppTokenContentCoded = makePoppTokenContentCoded(kvnr, iknr);
 
     String userInfo = VALID_USER_INFO;
-    String etag = "123456789";
+    String etag = "\"123456789\"";
+
+    when(request.getHeader("if-none-match")).thenReturn(etag);
 
     ResponseStatusException exception =
         assertThrows(
@@ -476,7 +493,9 @@ class VsdmControllerV1Test {
     String poppTokenContentCoded = makePoppTokenContentCoded(kvnr, iknr);
 
     String userInfo = VALID_USER_INFO;
-    String etag = "123456789";
+    String etag = "\"123456789\"";
+
+    when(request.getHeader("if-none-match")).thenReturn(etag);
 
     ResponseStatusException exception =
         assertThrows(

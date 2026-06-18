@@ -1,12 +1,20 @@
 #language:de
 # Befehl zum ausführen des Tests:
-# ./mvnw -pl test/zeta-testsuite clean verify -Dskip.inttests=false -Dcucumber.filter.tags='@smoke'
+# ./mvnw -pl test/zeta-testsuite clean verify -Dskip.inttests=false -Dcucumber.filter.tags='@smoke' -Dzeta.env=local
+@PRODUKT:ZT_Cluster
+@PRODUKT:PoPP_Service
+@PRODUKT:Anb_PoPP_Service
 @PRODUKT:ZETA
 
-Funktionalität: Smoke Tests
+@DESCRIPTION
+Funktionalität: Smoke Tests mit PoPP und VSDM2
 
-  @smoke
-  Szenariogrundriss: Availability check ZETA Komponenten (PDP / PEP / Ingress)
+  @TCID:ZETA_SMOKE_CLUSTER_AVAILABILITY_POPP
+  @STATUS:Implementiert
+  @MODUS:Automatisch
+  @TESTSTUFE:3
+  @PRIO:1
+  Szenariogrundriss: Availability check ZETA Komponenten (PDP / PEP / Ingress) für PoPP
     Gegeben sei TGR lösche aufgezeichnete Nachrichten
     Wenn TGR sende eine leere GET Anfrage an "<Ressource>"
     Dann TGR finde die letzte Anfrage mit dem Pfad "<Pfad>"

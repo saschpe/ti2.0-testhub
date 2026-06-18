@@ -111,7 +111,7 @@ public class JwtVerificationSteps {
       List<RbelElement> elements;
       try {
         elements = retriever.findElementsInCurrentRequest(path);
-      } catch (RuntimeException e) {
+      } catch (RuntimeException | AssertionError e) {
         log.debug("Path {} not found in current request, skipping: {}", path, e.getMessage());
         continue;
       }
@@ -185,10 +185,90 @@ public class JwtVerificationSteps {
         return;
       }
 
-      throw new AssertionError("JWT has neither jwk nor x5c in the header for verification");
+      // kid-only token (e.g. a PoPP token: header has only kid/typ/alg). Resolve the public key
+      // via OpenID-Federation discovery of the token issuer:
+      //   <iss>/.well-known/openid-federation  → metadata.oauth_resource.signed_jwks_uri
+      //   → signed-jwks (JWS of type jwk-set+jwt) → keys[] → pick by kid → verify ES256.
+      String kid = signedJwt.getHeader().getKeyID();
+      String iss = signedJwt.getJWTClaimsSet().getStringClaim("iss");
+      if (kid != null && iss != null) {
+        verifyViaFederationDiscovery(signedJwt, iss, kid);
+        return;
+      }
+
+      throw new AssertionError(
+          "JWT has neither jwk, x5c nor a resolvable kid/iss in the header for verification");
     } catch (Exception e) {
       throw new AssertionError("JWT signature verification failed: " + e.getMessage(), e);
     }
+  }
+
+  /**
+   * Resolves the signing key of a {@code kid}-only JWT (e.g. a PoPP token) via OpenID-Federation
+   * discovery of its issuer and verifies the ES256 signature:
+   *
+   * <ol>
+   *   <li>GET {@code <iss>/.well-known/openid-federation} (Entity Statement, a JWS).
+   *   <li>Read {@code metadata.oauth_resource.signed_jwks_uri}.
+   *   <li>GET the signed JWKS (a JWS of type {@code jwk-set+jwt}) and extract its {@code keys}.
+   *   <li>Pick the EC key whose {@code kid} matches the token header and verify the signature.
+   * </ol>
+   */
+  private void verifyViaFederationDiscovery(
+      com.nimbusds.jwt.SignedJWT signedJwt, String issuer, String kid) throws Exception {
+    String entityStatementJwt = httpGet(issuer + "/.well-known/openid-federation");
+    var esClaims = com.nimbusds.jwt.SignedJWT.parse(entityStatementJwt).getJWTClaimsSet();
+
+    @SuppressWarnings("unchecked")
+    var metadata = (java.util.Map<String, Object>) esClaims.getClaim("metadata");
+    assertThat(metadata).as("entity statement must contain a metadata block").isNotNull();
+    @SuppressWarnings("unchecked")
+    var oauthResource = (java.util.Map<String, Object>) metadata.get("oauth_resource");
+    assertThat(oauthResource)
+        .as("entity statement metadata must contain oauth_resource")
+        .isNotNull();
+    String signedJwksUri = (String) oauthResource.get("signed_jwks_uri");
+    assertThat(signedJwksUri)
+        .as("oauth_resource must contain a signed_jwks_uri")
+        .isNotBlank()
+        .startsWith("https://");
+
+    String signedJwksJwt = httpGet(signedJwksUri);
+    var jwksClaims = com.nimbusds.jwt.SignedJWT.parse(signedJwksJwt).getJWTClaimsSet();
+    var jwkSet = com.nimbusds.jose.jwk.JWKSet.parse(jwksClaims.toJSONObject());
+
+    com.nimbusds.jose.jwk.JWK jwk = jwkSet.getKeyByKeyId(kid);
+    assertThat(jwk)
+        .as("signed JWKS must contain a key with kid=%s (federation discovery)", kid)
+        .isNotNull();
+
+    var ecKey = jwk.toECKey();
+    boolean valid = signedJwt.verify(new com.nimbusds.jose.crypto.ECDSAVerifier(ecKey));
+    assertThat(valid)
+        .as("ES256 signature verification via federation-discovered key (kid=%s) must succeed", kid)
+        .isTrue();
+    log.info(
+        "ES256 signature verified via OpenID-Federation discovery (iss={}, kid={}, jwksUri={})",
+        issuer,
+        kid,
+        signedJwksUri);
+  }
+
+  /** Simple direct HTTPS GET (public discovery endpoints, valid public TLS certs). */
+  private String httpGet(String url) throws Exception {
+    var client =
+        java.net.http.HttpClient.newBuilder()
+            .connectTimeout(java.time.Duration.ofSeconds(20))
+            .followRedirects(java.net.http.HttpClient.Redirect.NORMAL)
+            .build();
+    var request =
+        java.net.http.HttpRequest.newBuilder(java.net.URI.create(url))
+            .timeout(java.time.Duration.ofSeconds(20))
+            .GET()
+            .build();
+    var response = client.send(request, java.net.http.HttpResponse.BodyHandlers.ofString());
+    assertThat(response.statusCode()).as("GET %s must return 200", url).isEqualTo(200);
+    return response.body().trim();
   }
 
   /** Verifies using x5c certificate (supports brainpoolP256r1 via BouncyCastle). */

@@ -41,6 +41,7 @@ import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.MediaType;
+import org.springframework.http.client.ClientHttpResponse;
 import org.springframework.http.client.SimpleClientHttpRequestFactory;
 import org.springframework.web.client.RestTemplate;
 
@@ -53,6 +54,10 @@ public class ZetaPepJwtSteps {
 
   private String getPoppServerUrl() {
     return TigerGlobalConfiguration.resolvePlaceholders("${zeta.server.popp.url}");
+  }
+
+  private String getPoppClientUrl() {
+    return TigerGlobalConfiguration.resolvePlaceholders("${zeta.server.poppClient.url}");
   }
 
   private String getZetaPdpTokenUrl() {
@@ -123,25 +128,14 @@ public class ZetaPepJwtSteps {
   @Wenn("erzeuge PoPP-Token über den PoPP-Server {string}")
   @When("generate PoPP-Token via PoPP-Server {string}")
   public void generatePoppToken(String poppServerBaseUrl) {
-    String resolved = TigerGlobalConfiguration.resolvePlaceholders(poppServerBaseUrl);
-    URI uri = URI.create(resolved + "/popp/test/api/v1/token-generator");
+    // Use popp-client (which connects to PoPP server via WebSocket) instead of mock token generator
+    String poppClientUrl = getPoppClientUrl();
+    URI uri = URI.create(poppServerBaseUrl + "/token");
 
-    long now = System.currentTimeMillis() / 1000;
     String requestBody =
         """
-        {
-          "tokenParamsList": [{
-            "proofMethod": "ehc-practitioner-trustedchannel",
-            "patientProofTime": "%d",
-            "iat": "%d",
-            "patientId": "X123456789",
-            "insurerId": "123456789",
-            "actorId": "1-2012345678",
-            "actorProfessionOid": "1.2.276.0.76.4.50"
-          }]
-        }
-        """
-            .formatted(now, now);
+        {"communicationType": "contact-virtual"}
+        """;
 
     RestTemplate rt = new RestTemplate();
     HttpHeaders headers = new HttpHeaders();
@@ -150,11 +144,13 @@ public class ZetaPepJwtSteps {
 
     var response = rt.postForEntity(uri, request, String.class);
     assertThat(response.getStatusCode().is2xxSuccessful())
-        .as("PoPP-Server should return 2xx for token generation")
+        .as("PoPP-Client should return 2xx for token generation")
         .isTrue();
 
-    String token = extractTokenFromGeneratorResponse(response.getBody());
-    log.info("PoPP-Token erzeugt: {}...", token.substring(0, Math.min(50, token.length())));
+    String token = extractTokenFromPoppClientResponse(response.getBody());
+    log.info(
+        "PoPP-Token erzeugt (via popp-client): {}...",
+        token.substring(0, Math.min(50, token.length())));
 
     TigerGlobalConfiguration.putValue("POPP_TOKEN", token);
   }
@@ -189,6 +185,23 @@ public class ZetaPepJwtSteps {
             java.net.Proxy.Type.HTTP, new java.net.InetSocketAddress("127.0.0.1", proxyPort)));
 
     RestTemplate rt = new RestTemplate(factory);
+    // Don't throw on 4xx/5xx (e.g. backend 404 for unknown paths against the real PoPP backend);
+    // the response is captured by the Tiger proxy and asserted in the feature steps.
+    rt.setErrorHandler(
+        new org.springframework.web.client.ResponseErrorHandler() {
+          @Override
+          public boolean hasError(@org.springframework.lang.NonNull ClientHttpResponse response) {
+            return false;
+          }
+
+          @Override
+          public void handleError(
+              @org.springframework.lang.NonNull URI url,
+              @org.springframework.lang.NonNull HttpMethod method,
+              @org.springframework.lang.NonNull ClientHttpResponse response) {
+            // no-op: let error responses pass through for Tiger-Proxy validation
+          }
+        });
     HttpHeaders headers = new HttpHeaders();
     headers.set(HttpHeaders.AUTHORIZATION, "Bearer " + accessToken);
     headers.set("PoPP", poppToken);
@@ -227,6 +240,19 @@ public class ZetaPepJwtSteps {
     } catch (JsonProcessingException e) {
       throw new AssertionError(
           "Failed to parse PoPP-Server token generator response: " + e.getMessage(), e);
+    }
+  }
+
+  private String extractTokenFromPoppClientResponse(String responseBody) {
+    try {
+      JsonNode node = new ObjectMapper().readTree(responseBody);
+      JsonNode tokenNode = node.get("token");
+      if (tokenNode == null || tokenNode.isNull()) {
+        throw new AssertionError("PoPP-Client response does not contain 'token': " + responseBody);
+      }
+      return tokenNode.asText();
+    } catch (JsonProcessingException e) {
+      throw new AssertionError("Failed to parse PoPP-Client response: " + e.getMessage(), e);
     }
   }
 }

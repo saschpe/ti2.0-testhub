@@ -1,7 +1,11 @@
 #language:de
 # Befehl zum Ausführen der WebSocket-Tests (vom Root-Verzeichnis ti2.0-testhub/):
-# ./mvnw -pl test/zeta-testsuite clean verify -Dskip.inttests=false -Dcucumber.filter.tags='@websocket'
+# ./mvnw -pl test/zeta-testsuite clean verify -Dskip.inttests=false -Dcucumber.filter.tags='@websocket' -Dzeta.env=local
+@PRODUKT:ZT_Cluster
+@PRODUKT:PoPP_Service
+@PRODUKT:Anb_PoPP_Service
 @PRODUKT:ZETA
+
 
 Funktionalität: PoPP WebSocket-Kommunikation über ZETA-PEP
 
@@ -24,6 +28,11 @@ Funktionalität: PoPP WebSocket-Kommunikation über ZETA-PEP
     Und setze Timeout für WebSocket Nachrichten auf 10 Sekunden
     Und deaktiviere HTTP Proxy für WebSocket
 
+  @TCID:ZETA_WS_HANDSHAKE_WITH_VALID_AUTH_TOKEN
+  @STATUS:Implementiert
+  @MODUS:Automatisch
+  @TESTSTUFE:3
+  @PRIO:1
   @Ignore @websocket @popp @pep
   # STATUS: @Ignore — ngx_pep:0.3.0 gibt 403 bei WebSocket-Upgrade trotz gültigem Token+DPoP.
   # Der PEP rekonstruiert bei Upgrade-Headern vermutlich ws:// statt http:// als Schema,
@@ -52,6 +61,11 @@ Funktionalität: PoPP WebSocket-Kommunikation über ZETA-PEP
 
     Dann wird die WebSocket Verbindung geschlossen
 
+  @TCID:ZETA_WS_HANDSHAKE_WITH_INVALID_AUTH_TOKEN
+  @STATUS:Implementiert
+  @MODUS:Automatisch
+  @TESTSTUFE:3
+  @PRIO:1
   @websocket @popp @pep
   Szenario: ZETA-PEP lehnt WebSocket-Handshake mit ungültigem Authorization Token ab
     # Negativtest: Ungültiges JWT → PEP lehnt Upgrade-Handshake ab
@@ -61,6 +75,11 @@ Funktionalität: PoPP WebSocket-Kommunikation über ZETA-PEP
 
     Wenn eine plain WebSocket Verbindung zu "ws://127.0.0.1:${ports.poppPepPort}/ws" mit den gesetzten Handshake Headern fehlschlägt
 
+  @TCID:ZETA_WS_HANDSHAKE_WITH_MISSING_AUTH_TOKEN
+  @STATUS:Implementiert
+  @MODUS:Automatisch
+  @TESTSTUFE:3
+  @PRIO:1
   @websocket @popp @pep
   Szenario: ZETA-PEP lehnt WebSocket-Handshake ohne Authorization ab
     # Negativtest: Kein Auth-Header → PEP bricht den Handshake ab

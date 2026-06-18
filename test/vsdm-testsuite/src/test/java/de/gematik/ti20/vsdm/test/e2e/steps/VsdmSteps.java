@@ -42,8 +42,14 @@ import io.cucumber.java.de.Angenommen;
 import io.cucumber.java.de.Dann;
 import io.cucumber.java.de.Und;
 import io.cucumber.java.de.Wenn;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Optional;
+import java.util.OptionalDouble;
+import java.util.OptionalLong;
 import java.util.concurrent.ThreadLocalRandom;
+import java.util.regex.Pattern;
+import javax.annotation.Nonnull;
 import lombok.extern.slf4j.Slf4j;
 import net.serenitybdd.core.Serenity;
 import net.serenitybdd.screenplay.Actor;
@@ -67,6 +73,35 @@ public class VsdmSteps {
     return OnStage.theActorInTheSpotlight();
   }
 
+  // Matches ${ENV_NAME:defaultValue}
+  private static final Pattern ENV_PLACEHOLDER_PATTERN =
+      Pattern.compile("^\\$\\{([A-Z0-9_]+)(?::([^}]*))?}$");
+
+  @Nonnull
+  private String resolveEnvPlaceholder(final @Nonnull String rawValue) {
+    // Cucumber-Stringwerte können mit Quotes kommen
+    String value = rawValue.replaceAll("^\"|\"$", "");
+    var matcher = ENV_PLACEHOLDER_PATTERN.matcher(value);
+
+    if (!matcher.matches()) {
+      return value; // normaler fixer Wert
+    }
+
+    String envName = matcher.group(1);
+    String fallback = matcher.group(2); // kann null sein
+    String envValue = System.getenv(envName);
+
+    if (envValue != null && !envValue.isBlank()) {
+      return envValue;
+    }
+    if (fallback != null) {
+      return fallback;
+    }
+
+    throw new IllegalArgumentException(
+        "Environment variable '" + envName + "' is not set and no fallback was provided.");
+  }
+
   @Before
   public void setTheStage() {
     OnStage.setTheStage(new OnlineCast());
@@ -88,7 +123,7 @@ public class VsdmSteps {
 
   @Angenommen("der Versicherte in der LEI verwendet eine eGK {string} im Slot {int}")
   public void givenPatientIsUsingItsEgk(String egkCard, Integer slot) {
-    hccs().attemptsTo(InsertEgkCard.fromFileInSlot(egkCard, slot));
+    hccs().attemptsTo(InsertEgkCard.fromFileInSlot(resolveEnvPlaceholder(egkCard), slot));
   }
 
   @Angenommen("das Primärsystem hat die VSD bereits einmal im Quartal abgefragt")

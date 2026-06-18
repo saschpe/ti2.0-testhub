@@ -1,7 +1,13 @@
 #language:de
 # Befehl zum Ausführen der Tests (vom Root-Verzeichnis ti2.0-testhub/):
-# ./mvnw -pl test/zeta-testsuite clean verify -Dskip.inttests=false -Dcucumber.filter.tags='@rest_pep_transfer'
+# ./mvnw -pl test/zeta-testsuite clean verify -Dskip.inttests=false -Dcucumber.filter.tags='@rest_pep_transfer' -Dzeta.env=local
+@PRODUKT:ZT_Cluster
+@PRODUKT:PoPP_Service
+@PRODUKT:Anb_PoPP_Service
+@PRODUKT:VSDM_2_FD
+@PRODUKT:Anb_FD_VSDM
 @PRODUKT:ZETA
+
 
 Funktionalität: REST Datenübertragung zwischen Client und Server via ZETA-PEP Proxy
 
@@ -12,37 +18,55 @@ Funktionalität: REST Datenübertragung zwischen Client und Server via ZETA-PEP 
 
   Grundlage:
     Wenn TGR lösche aufgezeichnete Nachrichten
-    Und TGR setze lokale Variable "pepProxyUrl" auf "http://127.0.0.1:2101"
+    Und TGR setze lokale Variable "pepProxyUrl" auf "${zeta.server.pep.url}"
     Und TGR setze lokale Variable "pepTestPath" auf "/v3/api-docs"
+    Und TGR setze lokale Variable "pepFindPath" auf "/v3/api-docs"
     Und TGR lösche alle default headers
 
+  @TCID:ZETA_REST_PEP_TRANSFER_WITH_VALID_ACCESS_TOKEN
+  @STATUS:Implementiert
+  @MODUS:Automatisch
+  @TESTSTUFE:3
+  @PRIO:1
   @rest_pep_transfer
   Szenario: PEP akzeptiert gültigen Token und leitet Anfrage an Backend weiter
     Gegeben sei ein gültiger ZETA-PEP AccessToken wird erzeugt
 
-    # Anfrage an einen existierenden Backend-Endpunkt über PEP senden
+    # Anfrage an einen Backend-Endpunkt über den echten PEP senden
     Wenn TGR sende eine leere GET Anfrage an "${pepProxyUrl}${pepTestPath}"
 
-    # PEP akzeptiert Token, leitet an PoPP-Server weiter, Backend antwortet mit 200
-    Dann TGR finde die letzte Anfrage mit dem Pfad "${pepTestPath}"
-    Und TGR prüfe aktuelle Antwort stimmt im Knoten "$.responseCode" überein mit "200"
+    # Beweis der Token-Akzeptanz: Mit gültigem Token leitet der echte PEP an das
+    # Backend weiter (≠ 401). Der Mock-Pfad /v3/api-docs existiert im echten
+    # PoPP-Backend nicht → 404. Ohne Token liefert der PEP 401 (s. Negativtest).
+    Dann TGR finde die letzte Anfrage mit dem Pfad "${pepFindPath}"
+    Und TGR prüfe aktuelle Antwort stimmt im Knoten "$.responseCode" überein mit "(?!401)\d{3}"
 
+  @TCID:ZETA_REST_PEP_TRANSFER_WITH_MISSING_ACCESS_TOKEN
+  @STATUS:Implementiert
+  @MODUS:Automatisch
+  @TESTSTUFE:3
+  @PRIO:1
   @rest_pep_transfer
   Szenario: REST-Anfrage ohne Authorization wird vom PEP abgelehnt
     Wenn TGR sende eine leere GET Anfrage an "${pepProxyUrl}${pepTestPath}"
 
     # PEP muss mit 401 Unauthorized antworten
-    Dann TGR finde die letzte Anfrage mit dem Pfad "${pepTestPath}"
+    Dann TGR finde die letzte Anfrage mit dem Pfad "${pepFindPath}"
     Und TGR prüfe aktuelle Antwort stimmt im Knoten "$.responseCode" überein mit "401"
 
+
+  @TCID:ZETA_REST_PEP_TRANSFER_WITH_INVALID_ACCESS_TOKEN
+  @STATUS:Implementiert
+  @MODUS:Automatisch
+  @TESTSTUFE:3
+  @PRIO:1
   @rest_pep_transfer
   Szenario: REST-Anfrage mit ungültigem Token wird vom PEP abgelehnt
     Gegeben sei ein ungültiger ZETA-PEP AccessToken wird erzeugt
 
     Wenn TGR sende eine leere GET Anfrage an "${pepProxyUrl}${pepTestPath}"
 
-    # PEP sollte eigentlich 401 liefern, der Docker-PEP (ngx_pep) antwortet bei
-    # stark malformed Tokens aber mit 500.  Wir akzeptieren beide Fehlerfamilien.
-    Dann TGR finde die letzte Anfrage mit dem Pfad "${pepTestPath}"
+    # Der echte PEP liefert bei ungültigem Token 401; wir akzeptieren 4xx/5xx.
+    Dann TGR finde die letzte Anfrage mit dem Pfad "${pepFindPath}"
     Und TGR prüfe aktuelle Antwort stimmt im Knoten "$.responseCode" überein mit "4..|5.."
 

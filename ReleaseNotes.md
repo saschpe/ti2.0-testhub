@@ -2,6 +2,13 @@
 
 # Release Notes TI 2.0 TestHub
 
+## Release 3.3.0
+
+### Changes
+
+- TESTHUB-152: simplify feature test parametrization and component startup
+- TESTHUB-154: ensure if-none-match header is quoted
+
 ## Release 3.2.0
 
 ### Update Notes

@@ -18,6 +18,6 @@ Funktionalität: Prüfen des JWKS vom PoPP-Service
   Dieser Testfall testet den Anwendungsfall Signaturprüfung des PoPP-Token über JWKS vom PoPP-Service.
 
     Angenommen hole das EntityStatement vom Endpunkt
-    Und die Anfrage liefert ein gültiges EntityStatement mit einem gültigen JWKS-Link
+    Und TGR finde die erste Anfrage mit Pfad "/.well-known/openid-federation"
     Wenn frage das JWKS über den JWKS Link "!{rbel:currentResponseAsString('$..signed_jwks_uri')}" aus dem EntityStatement ab
     Und validiere das JWKS

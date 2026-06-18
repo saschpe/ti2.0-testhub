@@ -1,13 +1,16 @@
 #language:de
 # Befehl zum Ausführen der Tests:
-# ./mvnw -pl test/zeta-testsuite clean verify -Dskip.inttests=false -Dcucumber.filter.tags='@smcb_authentisierung and not @Ignore'
+# ./mvnw -pl test/zeta-testsuite clean verify -Dskip.inttests=false -Dcucumber.filter.tags='@smcb_authentisierung and not @Ignore' -Dzeta.env=local
 #
 # Hinweis: Diese Tests weisen die SMC-B-Authentisierung des ZETA-Clients nach.
 # Ein echtes, per SMC-B-Zertifikat signiertes subject_token wird erzeugt und zusammen
 # mit einer client_assertion über den Tiger-Proxy an den ZETA-PDP-Mock gesendet.
 # Der mitgeschnittene Traffic wird geprüft.
-@PRODUKT:ZETA
-
+@PRODUKT:ZT_Cluster
+@PRODUKT:PoPP_Service
+@PRODUKT:Anb_PoPP_Service
+@PRODUKT:VSDM_2_FD
+@PRODUKT:Anb_FD_VSDM
 Funktionalität: SMC-B Authentisierung - ZETA-Client Authentisierung mittels SMC-B
 
   Diese Tests sollen nachweisen,
@@ -21,6 +24,11 @@ Funktionalität: SMC-B Authentisierung - ZETA-Client Authentisierung mittels SMC
   # ===========================================================================
   # Szenario 1: Gutfall - Token Exchange mit echtem SMC-B subject_token
   # ===========================================================================
+  @TCID:ZETA_SMCB_AUTH_WITH_SUBJECT_TOKEN
+  @STATUS:Implementiert
+  @MODUS:Automatisch
+  @TESTSTUFE:3
+  @PRIO:1
   @smcb_authentisierung
   Szenario: Token Exchange mit SMC-B-signiertem subject_token liefert Access-Token (Gutfall)
     # Dieser Test prüft den erfolgreichen Token-Exchange-Flow:
@@ -46,6 +54,11 @@ Funktionalität: SMC-B Authentisierung - ZETA-Client Authentisierung mittels SMC
   # ===========================================================================
   # Szenario 2: Token Exchange Request Body enthält alle erforderlichen Felder
   # ===========================================================================
+  @TCID:ZETA_SMCB_REQUEST_INTEGRITY
+  @STATUS:Implementiert
+  @MODUS:Automatisch
+  @TESTSTUFE:3
+  @PRIO:1
   @smcb_authentisierung
   Szenario: Token Exchange Request Body enthält alle erforderlichen Felder (RFC 8693)
     # Dieser Test prüft, dass der Token-Exchange-Request alle Pflichtfelder enthält:
@@ -78,6 +91,11 @@ Funktionalität: SMC-B Authentisierung - ZETA-Client Authentisierung mittels SMC
   # ===========================================================================
   # Szenario 3: Client Assertion JWT Validierung
   # ===========================================================================
+  @TCID:ZETA_SMCB_CLIENT_ASSERTION_JWT_VALIDATION
+  @STATUS:Implementiert
+  @MODUS:Automatisch
+  @TESTSTUFE:3
+  @PRIO:1
   @smcb_authentisierung
   Szenario: Client Assertion JWT enthält korrekte Struktur und gültige Signatur
     # Dieser Test weist nach, dass die client_assertion die korrekte Struktur hat,
@@ -131,6 +149,11 @@ Funktionalität: SMC-B Authentisierung - ZETA-Client Authentisierung mittels SMC
   # ===========================================================================
   # Szenario 4: subject_token enthält korrekte SMC-B-Daten (Bindung TelematikID)
   # ===========================================================================
+  @TCID:ZETA_SMCB_SUBJECT_TOKEN_INTEGRITY
+  @STATUS:Implementiert
+  @MODUS:Automatisch
+  @TESTSTUFE:3
+  @PRIO:1
   @smcb_authentisierung
   Szenario: SMC-B subject_token enthält TelematikID, korrekte Struktur und gültige Signatur
     # Dieser Test weist nach, dass das erzeugte subject_token
@@ -178,6 +201,11 @@ Funktionalität: SMC-B Authentisierung - ZETA-Client Authentisierung mittels SMC
   # ===========================================================================
   # Szenario 5: Access-Token enthält TelematikID und professionOID
   # ===========================================================================
+  @TCID:ZETA_SMCB_ACCESS_TOKEN_INTEGRITY
+  @STATUS:Implementiert
+  @MODUS:Automatisch
+  @TESTSTUFE:3
+  @PRIO:1
   @smcb_authentisierung
   Szenario: Access-Token nach SMC-B Token Exchange enthält korrekte User-Info Claims
     # Dieser Test prüft End-to-End, dass der PDP-Mock die TelematikID und
@@ -217,6 +245,11 @@ Funktionalität: SMC-B Authentisierung - ZETA-Client Authentisierung mittels SMC
   # ===========================================================================
   # Szenario 6: Client Assertion enthält Client Statement mit Attestation-Daten
   # ===========================================================================
+  @TCID:ZETA_SMCB_CLIENT_ASSERTION_VALIDATION
+  @STATUS:Implementiert
+  @MODUS:Automatisch
+  @TESTSTUFE:3
+  @PRIO:1
   @smcb_authentisierung
   Szenario: Client Assertion JWT enthält Client Statement mit Attestation-Daten
     # Dieser Test prüft, dass die client_assertion ein client_statement mit

@@ -13,3 +13,5 @@ tigerProxy:
     - x509
     - asl
     - asn1
+
+kidTokenKey: 0012005900010001

@@ -50,7 +50,7 @@ class VsdmClientControllerTest {
 
   @Test
   void testReadVsd_Success() {
-    String ifNoneMatch = "etag123";
+    String ifNoneMatch = "\"etag123\"";
     boolean isFhirXml = true;
 
     ResponseEntity<String> mockResponse = ResponseEntity.ok("Success");
@@ -75,7 +75,7 @@ class VsdmClientControllerTest {
 
   @Test
   void testReadVsd_DefaultIsFhirXml() {
-    String ifNoneMatch = "etag123";
+    String ifNoneMatch = "\"etag123\"";
     boolean forceUpdate = false;
 
     ResponseEntity<String> mockResponse = ResponseEntity.ok("Success");

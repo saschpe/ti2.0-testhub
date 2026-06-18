@@ -1,7 +1,17 @@
 #language:de
 # Befehl zum Ausführen der Tests (vom Root-Verzeichnis ti2.0-testhub/):
-# ./mvnw -pl test/zeta-testsuite clean verify -Dskip.inttests=false -Dcucumber.filter.tags='@policy_updateability'
+# ./mvnw -pl test/zeta-testsuite clean verify -Dskip.inttests=false -Dcucumber.filter.tags='@policy_updateability' -Dzeta.env=local
+#
+# @Ignore: Nutzt die LOKALE OPA Policy-Admin-API (PUT /v1/policies/). Die echte
+# RU-DEV-OPA bietet keinen von uns nutzbaren Admin-Zugang → beim Lauf gegen echte
+# Komponenten übersprungen.
+@PRODUKT:ZT_Cluster
+@PRODUKT:PoPP_Service
+@PRODUKT:Anb_PoPP_Service
+@PRODUKT:VSDM_2_FD
+@PRODUKT:Anb_FD_VSDM
 @PRODUKT:ZETA
+@Ignore
 
 Funktionalität: Policy Hot-Reload via OPA
 
@@ -19,7 +29,11 @@ Funktionalität: Policy Hot-Reload via OPA
   # ===========================================================================
   # Policy Hot-Reload: P1 aktiv → P11 wird veröffentlicht → P11 aktiv
   # ===========================================================================
-
+  @TCID:ZETA_UPDATEABILITY_POLICY_HOT_RELOAD
+  @STATUS:Implementiert
+  @MODUS:Automatisch
+  @TESTSTUFE:3
+  @PRIO:1
   @policy_updateability
   Szenario: OPA wendet Policy-Updates zur Laufzeit an (Hot-Reload)
     # --- Vorbedingung: OPA hat keine anwendungsspezifische Policy geladen ---

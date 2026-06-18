@@ -59,6 +59,7 @@ class VsdmServerIT {
   // unknown KVNR, but should return synthetic data: X123450264
   private static final String MOCK_POPP_TOKEN_SYNTHETIC_DATA =
       makePoppTokenContentCoded("X123450264", "109500969");
+  private static final String VALID_IF_NONE_MATCH = "\"0\"";
 
   private static final String MOCK_POPP_TOKEN_UNKNOWN_KVNR =
       makePoppTokenContentCoded("X9110639492", "109500969");
@@ -87,18 +88,18 @@ class VsdmServerIT {
     String poppTokenContent =
         String.format(
             """
-                        {
-                            "actorId": "1-20014060625",
-                            "actorProfessionOid": "1.2.276.0.76.4.32",
-                            "at": 1773397230,
-                            "insurerId": "%1$s",
-                            "iss": "https://popp.example.com",
-                            "patientId": "%2$s",
-                            "patientProofTime": 1773397230,
-                            "proofMethod": "ehc-practitioner-trustedchannel",
-                            "version": "1.0.0"
-                      }
-                  """,
+                                      {
+                                          "actorId": "1-20014060625",
+                                          "actorProfessionOid": "1.2.276.0.76.4.32",
+                                          "at": 1773397230,
+                                          "insurerId": "%1$s",
+                                          "iss": "https://popp.example.com",
+                                          "patientId": "%2$s",
+                                          "patientProofTime": 1773397230,
+                                          "proofMethod": "ehc-practitioner-trustedchannel",
+                                          "version": "1.0.0"
+                                    }
+                                """,
             iknr, kvnr);
     return Base64.getEncoder().encodeToString(poppTokenContent.getBytes());
   }
@@ -106,13 +107,13 @@ class VsdmServerIT {
   private static String makeUserInfoCoded() {
     String userInfo =
         """
-            {
-              "subject": "subject",
-              "commonName": "commonName",
-              "identifier": "1-20014060625",
-              "professionOID": "1.2.276.0.76.4.50"
-            }
-               \s""";
+                        {
+                          "subject": "subject",
+                          "commonName": "commonName",
+                          "identifier": "1-20014060625",
+                          "professionOID": "1.2.276.0.76.4.50"
+                        }
+                           \s""";
     return Base64.getEncoder().encodeToString(userInfo.getBytes());
   }
 
@@ -124,7 +125,7 @@ class VsdmServerIT {
             VsdmBundle.class,
             MOCK_POPP_TOKEN,
             MOCK_USER_INFO,
-            "0",
+            VALID_IF_NONE_MATCH,
             ACCEPT_JSON,
             VALID_PROFILE_VERSION);
 
@@ -182,7 +183,7 @@ class VsdmServerIT {
             VsdmBundle.class,
             MOCK_POPP_TOKEN,
             MOCK_USER_INFO,
-            "0",
+            VALID_IF_NONE_MATCH,
             ACCEPT_XML,
             VALID_PROFILE_VERSION);
 
@@ -240,7 +241,7 @@ class VsdmServerIT {
             VsdmBundle.class,
             MOCK_POPP_TOKEN_SYNTHETIC_DATA,
             MOCK_USER_INFO,
-            "0",
+            VALID_IF_NONE_MATCH,
             ACCEPT_JSON,
             VALID_PROFILE_VERSION);
 
@@ -296,7 +297,7 @@ class VsdmServerIT {
             VsdmBundle.class,
             MOCK_POPP_TOKEN,
             MOCK_USER_INFO,
-            "1",
+            VALID_IF_NONE_MATCH,
             ACCEPT_JSON,
             VALID_PROFILE_VERSION);
     assertEquals(200, result.response.code());
@@ -332,7 +333,7 @@ class VsdmServerIT {
             VsdmOperationOutcome.class,
             MOCK_POPP_TOKEN_UNKNOWN_KVNR,
             MOCK_USER_INFO,
-            "0",
+            VALID_IF_NONE_MATCH,
             ACCEPT_JSON,
             VALID_PROFILE_VERSION);
 
@@ -359,7 +360,7 @@ class VsdmServerIT {
             VsdmOperationOutcome.class,
             MOCK_POPP_TOKEN_UNKNOWN_IKNR,
             MOCK_USER_INFO,
-            "0",
+            VALID_IF_NONE_MATCH,
             ACCEPT_JSON,
             VALID_PROFILE_VERSION);
 
@@ -385,7 +386,7 @@ class VsdmServerIT {
             VsdmOperationOutcome.class,
             MOCK_POPP_TOKEN_INVALID_IKNR,
             MOCK_USER_INFO,
-            "0",
+            VALID_IF_NONE_MATCH,
             ACCEPT_JSON,
             VALID_PROFILE_VERSION);
 
@@ -407,7 +408,8 @@ class VsdmServerIT {
   @Order(8)
   void testMissingPoppToken() throws Exception {
     final Result result =
-        callOnce(null, null, MOCK_USER_INFO, "0", ACCEPT_JSON, VALID_PROFILE_VERSION);
+        callOnce(
+            null, null, MOCK_USER_INFO, VALID_IF_NONE_MATCH, ACCEPT_JSON, VALID_PROFILE_VERSION);
 
     assertEquals(400, result.response.code());
     assertNotNull(result.response.body());
@@ -425,7 +427,13 @@ class VsdmServerIT {
   @Order(9)
   void testInvalidPoppToken() throws Exception {
     final Result result =
-        callOnce(null, "INVALID", MOCK_USER_INFO, "0", ACCEPT_JSON, VALID_PROFILE_VERSION);
+        callOnce(
+            null,
+            "INVALID",
+            MOCK_USER_INFO,
+            VALID_IF_NONE_MATCH,
+            ACCEPT_JSON,
+            VALID_PROFILE_VERSION);
 
     assertEquals(400, result.response.code());
     assertNotNull(result.response.body());
@@ -465,7 +473,13 @@ class VsdmServerIT {
   @Order(11)
   void testInvalidUserInfo() throws Exception {
     final Result result =
-        callOnce(null, MOCK_POPP_TOKEN, "invalid", "0", ACCEPT_JSON, VALID_PROFILE_VERSION);
+        callOnce(
+            null,
+            MOCK_POPP_TOKEN,
+            "invalid",
+            VALID_IF_NONE_MATCH,
+            ACCEPT_JSON,
+            VALID_PROFILE_VERSION);
 
     assertEquals(400, result.response.code());
     assertNotNull(result.response.body());
@@ -497,13 +511,28 @@ class VsdmServerIT {
 
   @Test
   @Order(13)
+  void testUnquotedIfNoneMatch() throws Exception {
+    final Result result =
+        callOnce(
+            VsdmOperationOutcome.class,
+            MOCK_POPP_TOKEN,
+            MOCK_USER_INFO,
+            "0",
+            ACCEPT_JSON,
+            VALID_PROFILE_VERSION);
+
+    assertEquals(400, result.response.code());
+  }
+
+  @Test
+  @Order(14)
   void testResponseContainsEtag() throws Exception {
     final Result result =
         callOnce(
             VsdmBundle.class,
             MOCK_POPP_TOKEN,
             MOCK_USER_INFO,
-            "0",
+            VALID_IF_NONE_MATCH,
             ACCEPT_JSON,
             VALID_PROFILE_VERSION);
 
@@ -511,14 +540,14 @@ class VsdmServerIT {
   }
 
   @Test
-  @Order(14)
+  @Order(15)
   void testResponseContainsPz() throws Exception {
     final Result result =
         callOnce(
             VsdmBundle.class,
             MOCK_POPP_TOKEN,
             MOCK_USER_INFO,
-            "0",
+            VALID_IF_NONE_MATCH,
             ACCEPT_JSON,
             VALID_PROFILE_VERSION);
 
@@ -527,14 +556,14 @@ class VsdmServerIT {
   }
 
   @Test
-  @Order(15)
+  @Order(16)
   void testProtocolHttp1_1() throws Exception {
     final Result result =
         callOnce(
             VsdmBundle.class,
             MOCK_POPP_TOKEN,
             MOCK_USER_INFO,
-            "0",
+            VALID_IF_NONE_MATCH,
             ACCEPT_JSON,
             VALID_PROFILE_VERSION);
 
@@ -542,11 +571,16 @@ class VsdmServerIT {
   }
 
   @Test
-  @Order(16)
+  @Order(17)
   void testMissingProfileVersion() throws Exception {
     final Result result =
         callOnce(
-            VsdmOperationOutcome.class, MOCK_POPP_TOKEN, MOCK_USER_INFO, "0", ACCEPT_JSON, null);
+            VsdmOperationOutcome.class,
+            MOCK_POPP_TOKEN,
+            MOCK_USER_INFO,
+            VALID_IF_NONE_MATCH,
+            ACCEPT_JSON,
+            null);
 
     assertEquals(400, result.response.code());
     assertNotNull(result.response.body());
@@ -562,14 +596,14 @@ class VsdmServerIT {
   }
 
   @Test
-  @Order(17)
+  @Order(18)
   void testInvalidProfileVersion() throws Exception {
     final Result result =
         callOnce(
             VsdmOperationOutcome.class,
             MOCK_POPP_TOKEN,
             MOCK_USER_INFO,
-            "0",
+            VALID_IF_NONE_MATCH,
             ACCEPT_JSON,
             "unknown");
 

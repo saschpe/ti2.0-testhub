@@ -55,7 +55,7 @@ public class VsdmBackgroundLoadSimulation extends BaseSimulation {
                     .header("authorization", "DPoP #{access_token}")
                     .header("dpop", "#{dpop_token}")
                     .header("popp", "#{popp_token}")
-                    .header("if-none-match", "0")
+                    .header("if-none-match", "\"0\"")
                     .check(status().is(200)));
   }
 

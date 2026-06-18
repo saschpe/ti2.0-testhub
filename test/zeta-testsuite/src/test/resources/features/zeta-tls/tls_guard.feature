@@ -1,6 +1,6 @@
 #language:de
 # Befehl zum Ausführen des Tests:
-# ./mvnw -pl test/zeta-testsuite clean verify -Dskip.inttests=false -Dcucumber.filter.tags='@TLS_Guard'
+# ./mvnw -pl test/zeta-testsuite clean verify -Dskip.inttests=false -Dcucumber.filter.tags='@TLS_Guard' -Dzeta.env=local
 @PRODUKT:ZETA @TLS_Guard
 
 Funktionalität: TLS-Konformität ZETA Guard
@@ -73,16 +73,15 @@ Funktionalität: TLS-Konformität ZETA Guard
       | ${zeta_base_url} | unsupported_mix | nicht erfolgreich   | nicht gesendet |
 
   @Ciphersuiten_pflicht
-  Szenariogrundriss: Als Cipher-Suite MÜSSEN TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256 und TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384 unterstützt werden.
-    # Profile:
-    # ecdhe_rsa_aes_128_gcm_sha256 -> TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256 (0xC0,0x2F)
-    # ecdhe_rsa_aes_256_gcm_sha384 -> TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384 (0xC0,0x30)
+  Szenariogrundriss: Als Cipher-Suite MÜSSEN TLS_ECDHE_ECDSA_WITH_AES_128_GCM_SHA256 und TLS_ECDHE_ECDSA_WITH_AES_256_GCM_SHA384 unterstützt werden.
+    # ecdhe_ecdsa_aes_128_gcm_sha256 -> TLS_ECDHE_ECDSA_WITH_AES_128_GCM_SHA256 (0xC0,0x2B)
+    # ecdhe_ecdsa_aes_256_gcm_sha384 -> TLS_ECDHE_ECDSA_WITH_AES_256_GCM_SHA384 (0xC0,0x2C)
     Gegeben sei die TLS 1.2 TlsTestTool-Konfigurationsdaten für den Host "<host>" für das Cipher-Suite-Profil <ciphersuite_profil>
     Dann ist der TLS-Handshake erfolgreich
     Beispiele:
-      | host             | ciphersuite_profil            |
-      | ${zeta_base_url} | ecdhe_rsa_aes_128_gcm_sha256 |
-      | ${zeta_base_url} | ecdhe_rsa_aes_256_gcm_sha384 |
+      | host             | ciphersuite_profil             |
+      | ${zeta_base_url} | ecdhe_ecdsa_aes_128_gcm_sha256 |
+      | ${zeta_base_url} | ecdhe_ecdsa_aes_256_gcm_sha384 |
 
   @Zertifikat
   Szenariogrundriss: Zur Authentifizierung MUSS eine X.509-Identität gemäß [gemSpec_Krypt#GS-A_4359-*] verwendet werden.
