@@ -23,7 +23,9 @@ ReleaseChecklist.internal.md
 /test/vsdm-testsuite/src/test/resources/drafts
 /test/vsdm-testsuite/src/test/resources/scripts
 /test/vsdm-testsuite/POLARION.md
+/test/zeta-testsuite/POLARION.md
 /doc/docker/backend/zeta/smcb-private/**
 /doc/docker/compose-ci-vsdm.yaml
+/doc/docker/env-private/**
 /no-publish/
 

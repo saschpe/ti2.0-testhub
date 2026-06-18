@@ -26,49 +26,46 @@ Anschließend stehen u. a. folgende relevanten Endpunkte zur Verfügung (Standar
 * ZETA-PEP (PoPP): `http://localhost:2101` (für HTTP) bzw. `ws://localhost:2101` (für WebSocket)
 * ZETA-PDP (PoPP): `http://localhost:2201`
 
-## Features
+## Testumgebung wählen
 
-| Feature                 | Beschreibung                        | Tag                     | Details                                                 |
-|-------------------------|-------------------------------------|-------------------------|---------------------------------------------------------|
-| Client Registrierung    | Registrierung zur PDP               | @client_registrierung   | src/test/resources/features/zeta-client-registrierung   |
-| Datenübertragung (REST) | REST-Anfrage Tests                  | @rest_pep_transfer      | src/test/resources/features/zeta-datatransfer-rest      |
-| Datenübertragung (WS)   | WebSocket-basierte Tests            | @websocket              | src/test/resources/features/zeta-datatransfer-websocket |
-| Header Management       | Headers weiterleitung und ergänzung | @pep_header_management  | src/test/resources/features/zeta-header-management      |
-| Smoketest               | Überprüfung Service-Stabilität      | @smoke                  | src/test/resources/features/smoketest                   |
-| TLS Guard               | TLS-Konformität ZETA Guard          | @TLS_Guard              | src/test/resources/features/zeta-tls                    |
+Gegen welche Umgebung die Testsuite läuft, wird an **genau einer Stelle** gesteuert: über die
+Variable **`zeta.env`** in `tiger/defaults.yaml`. Alle URLs (PDP-Token-/DCR-/Nonce-/JWKS-Endpunkt,
+PEP, PoPP-Client, Smoke-Endpoints, `zeta_base_url`) werden automatisch aus dem ausgewählten
+Umgebungs-Block `zeta.environments.<zeta.env>` abgeleitet — es sind **keine** URLs in Java-Klassen
+oder Feature-Dateien hardcodiert.
 
+Unterstützte Werte:
 
-## WebSocket-Tests (PoPP über ZETA-PEP)
+| `zeta.env` | Bedeutung                                                              |
+|------------|-----------------------------------------------------------------------|
+| `local`    | Lokaler Docker-Mock (PDP/Keycloak und PoPP-Server laufen lokal)       |
+| `rudev`    | Echter PoPP-Server `popp.dev.poppservice.de` (RU-DEV) — **Default**   |
 
-Ein zentraler Bestandteil der ZETA-Testsuite sind WebSocket-basierte Tests des PoPP-Backends über den ZETA-PEP.
-Die entsprechenden Szenarien sind in der Feature-Datei
-
-* `src/test/resources/features/popp_websocket_via_pep.feature`
-
-beschrieben und prüfen u. a. folgende Aspekte:
-
-* Aufbau einer WebSocket-Verbindung vom Client zum ZETA-PEP (Proxy-Rolle),
-* Übergabe eines gültigen bzw. ungültigen Authorization-Tokens im WebSocket-Handshake,
-* Weitergabe der ZETA-User-Info an das PoPP-Backend,
-* korrekte Generierung einer `TokenMessage` im Erfolgsfall statt einer Fehlerantwort,
-* Ablehnung des Handshakes bei falschem oder fehlendem Authorization-Header.
-
-Die WebSocket-Tests müssen vom **Projekt-Root-Verzeichnis** (`ti2.0-testhub/`) ausgeführt werden:
+Umschalten (höchste Priorität zuerst):
 
 ```bash
-# Vom Root-Verzeichnis aus:
-./mvnw -pl test/zeta-testsuite clean verify -Dskip.inttests=false -Dcucumber.filter.tags="@websocket"
+# 1. System-Property beim Testlauf
+./mvnw -pl test/zeta-testsuite clean verify -Dskip.inttests=false -Dzeta.env=local
+
+# 2. Umgebungsvariable
+export ZETA_ENV=local
+
+# 3. Default in tiger/defaults.yaml (Schlüssel: zeta.env)
 ```
 
-> [!IMPORTANT]
-> Die Integrationstests sind standardmäßig deaktiviert (`skip.inttests=true`), damit der Build auch ohne
-> laufende Docker-Container erfolgreich ist. Um die Tests auszuführen, muss `-Dskip.inttests=false` gesetzt werden.
+**Neue Umgebung ergänzen:** einen weiteren Block unter `zeta.environments` in `tiger/defaults.yaml`
+anlegen (z. B. `tu`, `staging`) und `zeta.env` auf dessen Namen setzen. Code muss dafür nicht
+angepasst werden. Aus dem Java-Code werden die abgeleiteten Werte über
+`de.gematik.zeta.config.PoPpConfig` gelesen.
 
 > [!NOTE]
-> Die WebSocket-Tests werden **direkt** gegen den ZETA-PEP unter `ws://127.0.0.1:2101/...` ausgeführt.
-> WebSocket-Traffic kann **nicht** über den Tiger-Proxy geroutet werden.
+> Die lokale PEP-/nginx-Infrastruktur in Docker wird **nicht** über `zeta.env` gesteuert, sondern
+> über `POPP_SERVER_HOST` in `doc/docker/backend/compose-popp-services.yaml`. Beim Test gegen den
+> echten PoPP-Server müssen diese Docker-Variablen zusätzlich gesetzt werden. Details und das
+> vollständige RU-DEV-Setup: siehe [`README-real-popp.md`](README-real-popp.md).
 
-## Smoke-Tests
+<<<<<<< HEAD
+### Smoke-Tests
 
 Die Smoke-Tests prüfen die grundlegende Erreichbarkeit der ZETA-Komponenten. Die Szenarien sind in der
 Feature-Datei `src/test/resources/features/smoke.feature` definiert.
@@ -84,7 +81,7 @@ Geprüfte Komponenten (`@smoke`):
 ./mvnw -pl test/zeta-testsuite clean verify -Dskip.inttests=false -Dcucumber.filter.tags="@smoke"
 ```
 
-## REST-Datenübertragungs-Tests (via ZETA-PEP)
+### REST-Datenübertragungs-Tests (via ZETA-PEP)
 
 Die REST-Datenübertragungs-Tests prüfen die HTTP-basierte Kommunikation zwischen Client und Backend über den ZETA-PEP
 Proxy.
@@ -107,7 +104,7 @@ Die Tests nutzen den Endpunkt `/openapi.yaml` des PoPP-Servers, da dieser sowohl
   -Dcucumber.filter.tags="@rest_pep_transfer"
 ```
 
-## Client-Registrierungs-Tests
+### Client-Registrierungs-Tests
 
 Die Client-Registrierungs-Tests prüfen den Token-Exchange-Flow über den ZETA-PDP. Die Szenarien sind in der
 Feature-Datei
@@ -128,8 +125,10 @@ Feature-Datei
 ./mvnw -pl test/zeta-testsuite clean verify -Dskip.inttests=false \
   -Dcucumber.filter.tags="@client_registrierung and not @Ignore"
 ```
+=======
+>>>>>>> d58a8f46 (ZTI-4519: Refactor ZETA tests for local setup and RUDEV)
 
-## Alle Tests ausführen
+## Testausführung
 
 Alle ZETA-Tests können über den gemeinsamen Tag `@PRODUKT:ZETA` ausgeführt werden, der in jeder Feature-Datei vorhanden
 ist:
@@ -137,7 +136,7 @@ ist:
 ```bash
 # Vom Root-Verzeichnis (ti2.0-testhub/) aus:
 ./mvnw -pl test/zeta-testsuite clean verify -Dskip.inttests=false \
-  -Dcucumber.filter.tags="@PRODUKT:ZETA and not @Ignore"
+  -Dcucumber.filter.tags="@PRODUKT:ZETA and not @Ignore" -Dzeta.env=local
 ```
 
 Alternativ kann der Befehl ohne Tag-Filter ausgeführt werden, um alle Tests der Testsuite zu starten:
@@ -145,25 +144,8 @@ Alternativ kann der Befehl ohne Tag-Filter ausgeführt werden, um alle Tests der
 ```bash
 # Vom Root-Verzeichnis (ti2.0-testhub/) aus:
 ./mvnw -pl test/zeta-testsuite clean verify -Dskip.inttests=false \
-  -Dcucumber.filter.tags="not @Ignore"
+  -Dcucumber.filter.tags="not @Ignore" -Dzeta.env=local
 ```
-
-## Struktur der Testsuite
-
-Die wichtigsten Verzeichnisse der ZETA-Testsuite sind:
-
-* `src/test/resources/features` – Gherkin-Feature-Dateien:
-    * `popp_websocket_via_pep.feature` – WebSocket-Tests über ZETA-PEP
-    * `rest_data_transfer_via_pep.feature` – REST-Datenübertragungs-Tests über ZETA-PEP
-    * `client_registrierung.feature` – Client-Registrierungs-/Token-Exchange-Tests
-    * `smoke.feature` – Smoke-Tests für alle Komponenten
-    * `zeta-tls/tls_guard.feature` – TLS-Konformitätstests für den ZETA Guard
-* `src/test/java/de/gematik/zeta/steps` – Cucumber-Step-Definitions (u. a. WebSocket- und REST-Schritte)
-* `src/test/java/de/gematik/zeta/services` – Hilfs-Services (z. B. `PlainWebSocketSessionManager` für WS-Verbindungen)
-* `src/test/resources` – Konfigurationen, ggf. Testdaten und Bilder für die Dokumentation
-
-Die WebSocket-spezifischen Schritte sind in den Klassen unter `de.gematik.zeta.steps` implementiert und nutzen den
-`PlainWebSocketSessionManager`, um eine schlanke, nicht STOMP-basierte WebSocket-Kommunikation zu ermöglichen.
 
 ## Hinweise zur Anpassung
 

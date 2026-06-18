@@ -15,6 +15,7 @@ services:
     env_file:
       - path: ../.env
         required: true
+    profiles: [ "full", "perf" ]
     platform: linux/amd64
     ports:
       - "${PORT_VSDM_ZETA_INGRESS:?PORT_VSDM_ZETA_INGRESS missing – set it in doc/docker/.env}:443"
@@ -32,6 +33,7 @@ services:
     env_file:
       - path: ../.env
         required: true
+    profiles: [ "full", "perf" ]
     ports:
       - "${PORT_VSDM_SERVER:?PORT_VSDM_SERVER missing – set it in doc/docker/.env}:80"
       - "${PORT_VSDM_SERVER_DEBUG:?PORT_VSDM_SERVER_DEBUG missing – set it in doc/docker/.env}:5012"
@@ -53,12 +55,13 @@ services:
     env_file:
       - path: ../.env
         required: true
+    profiles: [ "full", "perf" ]
     platform: linux/amd64
     container_name: vsdm-zeta-pep
     environment: *vsdm-no-proxy-env
     ports:
       - "${PORT_VSDM_ZETA_PEP:?PORT_VSDM_ZETA_PEP missing – set it in doc/docker/.env}:80"
-    command: ["nginx", "-g", "daemon off;", "-c", "/ci_nginx/nginx.conf"]
+    command: [ "nginx", "-g", "daemon off;", "-c", "/ci_nginx/nginx.conf" ]
     volumes:
       - ./zeta/vsdm-pep-conf:/ci_nginx:ro
       - ./zeta/well-known/:/srv/.well-known/:ro
@@ -76,6 +79,7 @@ services:
     env_file:
       - path: ../.env
         required: true
+    profiles: [ "full", "perf" ]
     platform: linux/amd64
     container_name: vsdm-zeta-pdp
     environment:
@@ -139,6 +143,7 @@ services:
     env_file:
       - path: ../.env
         required: true
+    profiles: [ "full", "perf" ]
     platform: linux/amd64
     volumes:
       - postgres_data:/var/lib/postgresql/data
@@ -154,6 +159,7 @@ services:
     env_file:
       - path: ../.env
         required: true
+    profiles: [ "full", "perf" ]
     platform: linux/amd64
     environment: *vsdm-no-proxy-env
     ports:

@@ -1,26 +1,35 @@
 #language:de
 # Befehl zum Ausführen der Tests:
-# ./mvnw -pl test/zeta-testsuite clean verify -Dskip.inttests=false -Dcucumber.filter.tags='@client_registrierung and not @Ignore'
+# ./mvnw -pl test/zeta-testsuite clean verify -Dskip.inttests=false -Dcucumber.filter.tags='@client_registrierung and not @Ignore' -Dzeta.env=local
+@PRODUKT:ZT_Cluster
+@PRODUKT:PoPP_Service
+@PRODUKT:Anb_PoPP_Service
+@PRODUKT:VSDM_2_FD
+@PRODUKT:Anb_FD_VSDM
 @PRODUKT:ZETA
 
-Funktionalität: Client-Registrierung und ZETA Service Discovery (DB-Integrationsprüfung)
+Funktionalität: Client-Registrierung und ZETA Service Discovery gegen echte RU-DEV-Komponenten
 
   Grundlage:
     Gegeben sei TGR lösche aufgezeichnete Nachrichten
     Und TGR lösche alle default headers
-    Und TGR setze lokale Variable "proxy" auf "http://${zeta_proxy_url}"
-    Und TGR setze lokale Variable "pepBaseUrl" auf "${zeta.paths.vsdm.pep.baseUrl}"
-    Und TGR setze lokale Variable "pdpBaseUrl" auf "${zeta.paths.vsdm.pdp.baseUrl}"
+    Und TGR setze lokale Variable "pepBaseUrl" auf "${zeta.server.pep.url}"
+    Und TGR setze lokale Variable "pdpBaseUrl" auf "${zeta.server.pdp.issuer}"
     Und TGR setze lokale Variable "tigerProxyUrl" auf "http://localhost:${tiger.tigerProxy.proxyPort}"
 
   # ===========================================================================
   # Service Discovery: Protected Resource Metadata (RFC 9728) via echten PEP
   # ===========================================================================
 
+  @TCID:ZETA_DISCOVERY_PROTECTED_RESSOURCE_METADATA
+  @STATUS:Implementiert
+  @MODUS:Automatisch
+  @TESTSTUFE:3
+  @PRIO:1
   @client_registrierung @service_discovery
   Szenario: Service Discovery - Protected Resource Metadata vom echten PEP abrufen (RFC 9728)
     # Testet den ersten Schritt der initialen Client-Registrierung:
-    # Der ZETA Client ruft den well-known Endpunkt des echten PEP (ngx_pep) auf
+    # Der ZETA Client ruft den well-known Endpunkt des echten PEP auf
     # und erhält ein RFC-9728 Protected Resource Metadata Dokument.
 
     Wenn TGR sende eine leere GET Anfrage an "${pepBaseUrl}/.well-known/oauth-protected-resource"
@@ -37,35 +46,54 @@ Funktionalität: Client-Registrierung und ZETA Service Discovery (DB-Integration
     Und TGR prüfe aktuelle Antwort enthält Knoten "$.body.authorization_servers"
 
   # ===========================================================================
-  # Service Discovery: OAuth Authorization Server Metadata via PEP → Keycloak
+  # Service Discovery: OAuth Authorization Server Metadata vom echten PDP
   # ===========================================================================
 
+  @TCID:ZETA_DISCOVERY_OAUTH_SERVER_METADATA
+  @STATUS:Implementiert
+  @MODUS:Automatisch
+  @TESTSTUFE:3
+  @PRIO:1
   @client_registrierung @service_discovery
   Szenario: well-known OAuth Authorization Server liefert valides Dokument (200)
-    # PEP proxiert diesen Endpunkt zu Keycloak: /auth/realms/zeta-guard/.well-known/zeta-guard-well-known
-    Wenn TGR sende eine leere GET Anfrage an "${zeta.paths.vsdm.ingress.baseUrl}${zeta.paths.vsdm.wellKnownOAuthServerPath}"
-    Dann TGR finde die letzte Anfrage mit dem Pfad ".*${zeta.paths.vsdm.wellKnownOAuthServerPath}$"
+    # Ruft das OpenID/OAuth Metadata-Dokument direkt vom echten PDP/Authorization Server ab.
+
+    Wenn TGR sende eine leere GET Anfrage an "${pdpBaseUrl}/.well-known/openid-configuration"
+
+    Dann TGR finde die letzte Anfrage mit dem Pfad ".*/.well-known/openid-configuration$"
     Und TGR prüfe aktuelle Antwort stimmt im Knoten "$.responseCode" überein mit "200"
-    Und TGR speichere Wert des Knotens "$.body" der aktuellen Antwort in der Variable "AS_WELL_KNOWN"
-    # Schema-Validierung: issuer, token_endpoint, jwks_uri, ... müssen vorhanden sein
-    Und validiere "${AS_WELL_KNOWN}" gegen Schema "schemas/v_1_0/as-well-known.yaml"
-    # jwks_uri muss ein gültiger HTTP(S)-URI sein
+
+    # Basisfelder des echten OIDC Discovery Dokuments prüfen
+    Und TGR prüfe aktuelle Antwort enthält Knoten "$.body.issuer"
+    Und TGR prüfe aktuelle Antwort enthält Knoten "$.body.authorization_endpoint"
+    Und TGR prüfe aktuelle Antwort enthält Knoten "$.body.token_endpoint"
     Und TGR prüfe aktuelle Antwort enthält Knoten "$.body.jwks_uri"
+    Und TGR prüfe aktuelle Antwort enthält Knoten "$.body.registration_endpoint"
+
+    # Unterstützte Fähigkeiten prüfen
+    Und TGR prüfe aktuelle Antwort enthält Knoten "$.body.grant_types_supported"
+    Und TGR prüfe aktuelle Antwort enthält Knoten "$.body.response_types_supported"
+    Und TGR prüfe aktuelle Antwort enthält Knoten "$.body.token_endpoint_auth_methods_supported"
+
+    # jwks_uri muss ein gültiger HTTP(S)-URI sein
     Und TGR speichere Wert des Knotens "$.body.jwks_uri" der aktuellen Antwort in der Variable "jwksUri"
     Und TGR prüfe Variable "jwksUri" stimmt überein mit "^https?://[^/]+/.*$"
 
   # ===========================================================================
-  # Dynamic Client Registration gegen echten Keycloak (DB-Integrationsprüfung)
+  # Dynamic Client Registration gegen echten PDP / Authorization Server
   # ===========================================================================
 
+  @TCID:ZETA_CLIENT_REGISTRATION_MAIN
+  @STATUS:Implementiert
+  @MODUS:Automatisch
+  @TESTSTUFE:3
+  @PRIO:1
   @client_registrierung @dcr
   Szenario: Dynamic Client Registration - Client erfolgreich registrieren (POST /register)
-    # Testet die Dynamic Client Registration (RFC 7591):
-    # Der ZETA Client sendet einen DCR-Request an den PDP Authorization Server.
-    # Der Server erzeugt eine client_id und legt einen Client Placeholder an.
+    # Testet die Dynamic Client Registration (RFC 7591) gegen den echten PDP.
+    # ACHTUNG: Dieser Test registriert tatsächlich einen Client auf der Zielumgebung.
 
-    # DCR-Request an den PDP (Keycloak) senden
-    Wenn TGR sende eine POST Anfrage an "${pdpBaseUrl}/auth/realms/zeta-guard/clients-registrations/openid-connect" mit ContentType "application/json" und folgenden mehrzeiligen Daten:
+    Wenn TGR sende eine POST Anfrage an "${pdpBaseUrl}/clients-registrations/openid-connect" mit ContentType "application/json" und folgenden mehrzeiligen Daten:
       """
       !{file('test/zeta-testsuite/src/test/resources/mocks/register-request.json')}
       """
@@ -82,8 +110,6 @@ Funktionalität: Client-Registrierung und ZETA Service Discovery (DB-Integration
     Und TGR prüfe aktuelle Antwort enthält Knoten "$.body.registration_client_uri"
     Und TGR prüfe aktuelle Antwort enthält Knoten "$.body.registration_access_token"
 
-
-
     # --- Anfrage-Validierung ---
     Und TGR prüfe aktueller Request stimmt im Knoten "$.method" überein mit "POST"
     Und TGR prüfe aktueller Request stimmt im Knoten "$.header.Content-Type" überein mit "application/json"
@@ -92,14 +118,17 @@ Funktionalität: Client-Registrierung und ZETA Service Discovery (DB-Integration
     Und TGR prüfe aktueller Request enthält Knoten "$.body.grant_types"
     Und TGR prüfe aktueller Request enthält Knoten "$.body.jwks"
 
-  # Hinweis: Token-Exchange- (Auth/DPoP/PoP) und Policy-Ablehnungs-Szenarien
-  # wurden in separate Feature-Dateien ausgelagert, um Registrierung (DCR)
-  # von Laufzeit-Authentifizierungs-Tests zu trennen.
-  #
-  # Neue Dateien:
-  # - test/zeta-testsuite/src/test/resources/features/zeta-client-authentifizierung/client_authentifizierung.feature
-  # - test/zeta-testsuite/src/test/resources/features/zeta-client-policy/client_policy.feature
-  #
-  # Die originalen Szenarien wurden dort eins zu eins übernommen (ggf. ohne @Ignore),
-  # damit CI/Jobs verschiedene Gruppen (mocked vs. integration) gezielt ausführen können.
+  # ===========================================================================
+  # Token Exchange: DCR + PoPP-Token + client_assertion gegen PDP
+  # ===========================================================================
 
+  @client_registrierung @token_exchange
+  Szenario: Keycloak-Token-Exchange mit SMC-B client_assertion und PoPP-Token (Gutfall)
+    # Token-Request über Tiger-Proxy an ZETA-PDP senden.
+
+    Wenn sende Token-Exchange-Request für Client "zeta-client" an "${zeta.server.pdp.tokenUrl}" über Tiger-Proxy "http://localhost:${tiger.tigerProxy.proxyPort}"
+
+    # Token-Request muss erfolgreich sein (2xx)
+    Dann TGR finde die letzte Anfrage mit dem Pfad "/auth/realms/zeta-guard/protocol/openid-connect/token"
+    Und TGR prüfe aktuelle Antwort stimmt im Knoten "$.responseCode" überein mit "2.."
+    Und TGR prüfe aktuelle Antwort stimmt im Knoten "$.body.access_token" überein mit ".*"

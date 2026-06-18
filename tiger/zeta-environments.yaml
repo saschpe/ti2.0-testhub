@@ -1,0 +1,102 @@
+# ============================================================================
+#  ZETA-TESTSUITE KONFIGURATION UND UMGEBUNGEN
+# ============================================================================
+#  Zentrale Konfiguration für die ZeTA-Tests mit allen Umgebungs-Profilen.
+#
+#  Umschalten der Umgebung – eine der folgenden Möglichkeiten (höchste Priorität zuerst):
+#     1. System-Property:        -Dzeta.env=local
+#     2. Umgebungsvariable:      export ZETA_ENV=local
+#     3. Default unten in dieser Datei (zeta.env)
+#
+#  Verfügbare Umgebungen:
+#     local  = lokaler Docker-Mock (popp-zeta-pdp / lokaler PoPP-Server)
+#     rudev  = echter PoPP-Server popp.dev.poppservice.de (RU-DEV)
+# ============================================================================
+zeta:
+  # ---- Zentraler Umgebungs-Schalter ----------------------------------------
+  env: "${ZETA_ENV|rudev}"
+  # ---- Umgebungs-Profile (hier neue Umgebungen ergänzen) -------------------
+  environments:
+    local:
+      # Lokaler Docker-Mock. Die PEP-/OPA-/Proxy-Infrastruktur läuft immer
+      # lokal; im local-Modus ist zusätzlich der PDP (Keycloak) lokal gemockt.
+      pepUrl: "http://127.0.0.1:${ports.poppPepPort}"
+      poppClientUrl: "http://127.0.0.1:18081"
+      pdpRealmUrl: "http://127.0.0.1:${ports.poppPdpPort}/auth/realms/zeta-guard"
+      pdpIssuer: "https://localhost:9119/auth/realms/zeta-guard"
+      # Audiences müssen gegen den von Keycloak veröffentlichten Frontend-Hostnamen
+      # (KC_HOSTNAME=https://popp-zeta-ingress/auth/) geprüft werden, NICHT gegen die
+      # lokale Request-URL (127.0.0.1) — sonst lehnt Keycloak mit invalid_client /
+      # "Invalid token audience" ab.
+      smcbAudience: "https://popp-zeta-ingress/auth/"
+      clientAssertionAud: "https://popp-zeta-ingress/auth/realms/zeta-guard/protocol/openid-connect/token"
+      opaBaseUrl: "http://127.0.0.1:2401"
+      tlsHost: "localhost:9119"
+      discoveryPdpUrl: "http://127.0.0.1:${ports.poppPdpPort}/auth/realms/zeta-guard/.well-known/openid-configuration"
+      discoveryPepUrl: "http://127.0.0.1:${ports.poppPepPort}/.well-known/oauth-protected-resource"
+    rudev:
+      # Echter PoPP-Server (RU-DEV). PEP/OPA/Proxy bleiben lokal, PoPP und PDP
+      # zeigen auf popp.dev.poppservice.de.
+      pepUrl: "https://popp.dev.poppservice.de"
+      poppClientUrl: "http://127.0.0.1:18081"
+      pdpRealmUrl: "https://popp.dev.poppservice.de/auth/realms/zeta-guard"
+      pdpIssuer: "https://popp.dev.poppservice.de/auth/realms/zeta-guard"
+      smcbAudience: "https://popp.dev.poppservice.de/auth/"
+      clientAssertionAud: "https://popp.dev.poppservice.de/auth/realms/zeta-guard/protocol/openid-connect/token"
+      opaBaseUrl: "http://127.0.0.1:2401"
+      tlsHost: "popp.dev.poppservice.de"
+      discoveryPdpUrl: "https://popp.dev.poppservice.de:443/auth/realms/zeta-guard/.well-known/openid-configuration"
+      discoveryPepUrl: "https://popp.dev.poppservice.de:443/.well-known/oauth-protected-resource"
+  # ---- Abgeleitete Werte (basierend auf zeta.env) --------------------------
+  # Diese Werte werden automatisch aus dem aktiven env-Block aufgelöst.
+  server:
+    popp:
+      url: "${zeta.environments.${zeta.env}.poppClientUrl}"
+    poppClient:
+      url: "${zeta.environments.${zeta.env}.poppClientUrl}"
+    poppTokenGenerator:
+      url: "http://127.0.0.1:9500"
+    pdp:
+      tokenUrl: "${zeta.environments.${zeta.env}.pdpRealmUrl}/protocol/openid-connect/token"
+      issuer: "${zeta.environments.${zeta.env}.pdpIssuer}"
+      realmUrl: "${zeta.environments.${zeta.env}.pdpRealmUrl}"
+      dcrUrl: "${zeta.environments.${zeta.env}.pdpRealmUrl}/clients-registrations/openid-connect"
+      jwksUrl: "${zeta.environments.${zeta.env}.pdpRealmUrl}/protocol/openid-connect/certs"
+      nonceUrl: "${zeta.environments.${zeta.env}.pdpRealmUrl}/zeta-guard-nonce"
+      smcbAudience: "${zeta.environments.${zeta.env}.smcbAudience}"
+      clientAssertionAud: "${zeta.environments.${zeta.env}.clientAssertionAud}"
+    pep:
+      url: "${zeta.environments.${zeta.env}.pepUrl}"
+    opa:
+      baseUrl: "${zeta.environments.${zeta.env}.opaBaseUrl}"
+  timeouts:
+    httpRequestSeconds: 10
+    healthCheckSeconds: 20
+    healthCheckPollIntervalMs: 250
+    wsConnectionSeconds: 10
+    wsMessageSeconds: 10
+# ---- Smoke-Test-Endpoints (abgeleitet aus dem aktiven env-Block) ----------
+smoke:
+  endpoints:
+    poppZetaPdp:
+      url: "${zeta.environments.${zeta.env}.discoveryPdpUrl}"
+      path: /auth/realms/zeta-guard/.well-known/openid-configuration
+      name: PoPP ZeTA PDP
+    poppZetaPep:
+      url: "${zeta.environments.${zeta.env}.discoveryPepUrl}"
+      path: /.well-known/oauth-protected-resource
+      name: PoPP ZeTA PEP
+    vsdmZetaIngress:
+      url: "${zeta.environments.${zeta.env}.discoveryPepUrl}"
+      path: /.well-known/oauth-protected-resource
+      name: VSDM ZeTA Ingress
+    vsdmZetaPep:
+      url: "${zeta.environments.${zeta.env}.discoveryPepUrl}"
+      path: /.well-known/oauth-protected-resource
+      name: VSDM ZeTA PEP
+    vsdmZetaPdp:
+      url: "${zeta.environments.${zeta.env}.discoveryPdpUrl}"
+      path: /auth/realms/zeta-guard/.well-known/openid-configuration
+      name: VSDM ZeTA PDP
+# ZETA Guard Ingress base URL (ohne Schema – wird von Tests mit https:// ergänzt)
+zeta_base_url: "${zeta.environments.${zeta.env}.tlsHost}"

@@ -88,7 +88,7 @@ public class VsdmControllerV1 {
       @RequestHeader(value = "zeta-popp-token-content", required = false)
           final String poppTokenContentCoded,
       @RequestHeader(value = "zeta-user-info", required = false) final String userInfo,
-      @RequestHeader(value = "if-none-match", required = false, defaultValue = "0")
+      @RequestHeader(value = "if-none-match", required = false, defaultValue = "\"0\"")
           final String ifNoneMatch,
       @RequestParam(value = "profileVersion", required = false) final String profileVersion,
       final HttpServletRequest request) {
@@ -145,6 +145,14 @@ public class VsdmControllerV1 {
           HttpStatus.PRECONDITION_REQUIRED,
           ErrorCase.VSDSERVICE_MISSING_PATIENT_RECORD_VERSION.getBdeReference());
     }
+    if (!isQuoted(request.getHeader("if-none-match"))) {
+      throw new ResponseStatusException(
+          HttpStatus.BAD_REQUEST, ErrorCase.SERVICE_MISSING_OR_INVALID_HEADER.getBdeReference());
+    }
+  }
+
+  private boolean isQuoted(final String s) {
+    return s != null && s.length() >= 2 && s.startsWith("\"") && s.endsWith("\"");
   }
 
   private String checkAndGetKvnr(final JsonNode claims) {

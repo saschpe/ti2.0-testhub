@@ -1,6 +1,11 @@
 #language:de
 # Befehl zum Ausführen der Tests:
-# ./mvnw -pl test/zeta-testsuite clean verify -Dskip.inttests=false -Dcucumber.filter.tags='@client_registrierung and not @Ignore'
+# ./mvnw -pl test/zeta-testsuite clean verify -Dskip.inttests=false -Dcucumber.filter.tags='@client_registrierung and not @Ignore' -Dzeta.env=local
+@PRODUKT:ZT_Cluster
+@PRODUKT:PoPP_Service
+@PRODUKT:Anb_PoPP_Service
+@PRODUKT:VSDM_2_FD
+@PRODUKT:Anb_FD_VSDM
 @PRODUKT:ZETA
 
 Funktionalität: Client-Authentifizierung, Token-Exchange und DPoP/PoP (Integrationstests)
@@ -16,7 +21,11 @@ Funktionalität: Client-Authentifizierung, Token-Exchange und DPoP/PoP (Integrat
   # ===========================================================================
   # Token Exchange: DCR + PoPP-Token + client_assertion gegen echten Keycloak
   # ===========================================================================
-
+  @TCID:ZETA_REGISTRATION_AND_AUTH_WITH_POPP_DCR_CLIENT_ASSERTION
+  @STATUS:Implementiert
+  @MODUS:Automatisch
+  @TESTSTUFE:3
+  @PRIO:1
   @client_registrierung
   Szenario: Keycloak-Token-Exchange mit SMC-B client_assertion und PoPP-Token (Gutfall)
     # Voraussetzungen: echte Keycloak-Instanz mit ZeTA-Extension, PoPP-Token-Generator und

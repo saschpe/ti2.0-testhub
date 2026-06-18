@@ -33,6 +33,8 @@ import com.nimbusds.jose.jwk.ECKey;
 import com.nimbusds.jwt.JWTClaimsSet;
 import com.nimbusds.jwt.SignedJWT;
 import de.gematik.test.tiger.common.config.TigerGlobalConfiguration;
+import de.gematik.zeta.config.PoPpConfig;
+import de.gematik.zeta.services.ZetaPepJwtTestFactory;
 import io.cucumber.java.de.Dann;
 import io.cucumber.java.de.Wenn;
 import io.cucumber.java.en.When;
@@ -62,6 +64,7 @@ import org.springframework.http.MediaType;
 import org.springframework.http.client.SimpleClientHttpRequestFactory;
 import org.springframework.util.LinkedMultiValueMap;
 import org.springframework.util.MultiValueMap;
+import org.springframework.web.client.HttpClientErrorException;
 import org.springframework.web.client.RestTemplate;
 
 /**
@@ -79,6 +82,11 @@ import org.springframework.web.client.RestTemplate;
 @Slf4j
 public class SmcbTokenExchangeSteps {
 
+  static {
+    // Remove BouncyCastle JSSE so SunJSSE handles TLS with standard root CAs (e.g. DigiCert).
+    Security.removeProvider("BCJSSE");
+  }
+
   // SMC-B keystore (brainpoolP256r1)
   private static final String SMCB_KEYSTORE_PATH =
       "doc/docker/backend/zeta/smcb-private/smcb_private.p12";
@@ -91,7 +99,13 @@ public class SmcbTokenExchangeSteps {
   private static final String CLIENT_KEY_ALIAS = "zetamock";
   private static final String CLIENT_KEY_PASSWORD = "testpassword";
 
-  static final String CLIENT_ID = "f00561bc-a975-47aa-b87e-5d0f97265e10";
+  static final String CLIENT_ID_FALLBACK = "f00561bc-a975-47aa-b87e-5d0f97265e10";
+
+  private String getClientId() {
+    ZetaPepJwtTestFactory.ensureRegistered();
+    String id = ZetaPepJwtTestFactory.getClientId();
+    return id != null ? id : CLIENT_ID_FALLBACK;
+  }
 
   @Wenn("sende SMC-B Token-Exchange-Request an {string} über Tiger-Proxy {string}")
   @When("send SMC-B token exchange request to {string} via Tiger proxy {string}")
@@ -102,54 +116,125 @@ public class SmcbTokenExchangeSteps {
     URI proxyUri = URI.create(resolvedProxy);
 
     try {
-      // 0. Fetch a nonce from the ZETA Guard Keycloak
-      String nonceUrl =
-          resolvedTarget.replaceAll("/protocol/openid-connect/token$", "/zeta-guard-nonce");
-      RestTemplate nonceRt = new RestTemplate();
-      String nonceBody = nonceRt.getForEntity(URI.create(nonceUrl), String.class).getBody();
-      if (nonceBody == null) {
-        throw new IllegalStateException("Nonce endpoint returned null body: " + nonceUrl);
+      // BouncyCastle's CertPathBuilder doesn't include public root CAs.
+      // Use a trust-all TrustManager since TLS verification isn't what we're testing.
+      Security.removeProvider("BCJSSE");
+      javax.net.ssl.TrustManager[] trustAll = {
+        new javax.net.ssl.X509TrustManager() {
+          public void checkClientTrusted(java.security.cert.X509Certificate[] c, String a) {}
+
+          public void checkServerTrusted(java.security.cert.X509Certificate[] c, String a) {}
+
+          public java.security.cert.X509Certificate[] getAcceptedIssuers() {
+            return new java.security.cert.X509Certificate[0];
+          }
+        }
+      };
+      javax.net.ssl.SSLContext sslCtx = javax.net.ssl.SSLContext.getInstance("TLS");
+      sslCtx.init(null, trustAll, null);
+      javax.net.ssl.HttpsURLConnection.setDefaultSSLSocketFactory(sslCtx.getSocketFactory());
+      javax.net.ssl.HttpsURLConnection.setDefaultHostnameVerifier((h, s) -> true);
+
+      // The ZETA Guard nonce is single-use and short-lived. On rapid successive token-exchange
+      // calls the real PDP occasionally rejects an otherwise valid nonce with
+      // "Invalid nonce value". In that case we fetch a fresh nonce and retry the whole exchange.
+      // Any other (non-nonce) error response is forwarded immediately.
+      HttpClientErrorException lastNonceError = null;
+      for (int attempt = 1; attempt <= NONCE_MAX_ATTEMPTS; attempt++) {
+        try {
+          sendOnce(resolvedTarget, resolvedProxy, proxyUri);
+          return;
+        } catch (HttpClientErrorException e) {
+          if (!isInvalidNonceError(e)) {
+            throw e;
+          }
+          lastNonceError = e;
+          log.warn(
+              "Token-Exchange rejected with 'Invalid nonce value' (attempt {}/{}). "
+                  + "Retrying with a fresh nonce.",
+              attempt,
+              NONCE_MAX_ATTEMPTS);
+          Thread.sleep(NONCE_RETRY_BACKOFF_MS);
+        }
       }
-      String nonce = nonceBody.trim();
-      log.info("Fetched ZETA nonce: {}", nonce);
-
-      // 1. Create subject_token (signed with SMC-B brainpoolP256r1)
-      String subjectToken = createSmcbSubjectToken(nonce);
-
-      // 2. Create client_assertion (signed with P-256)
-      String clientAssertion = createClientAssertion(resolvedTarget, nonce);
-
-      // 2b. Create DPoP proof JWT (required by Keycloak when dpop.bound.access.tokens=true)
-      String dpopProof = createDpopProof(resolvedTarget);
-
-      // 3. Build form body
-      MultiValueMap<String, String> form = new LinkedMultiValueMap<>();
-      form.add("grant_type", "urn:ietf:params:oauth:grant-type:token-exchange");
-      form.add("subject_token", subjectToken);
-      form.add("subject_token_type", "urn:ietf:params:oauth:token-type:jwt");
-      form.add("requested_token_type", "urn:ietf:params:oauth:token-type:access_token");
-      form.add("client_assertion_type", "urn:ietf:params:oauth:client-assertion-type:jwt-bearer");
-      form.add("client_assertion", clientAssertion);
-      form.add("client_id", CLIENT_ID);
-
-      // 4. Send through Tiger proxy
-      SimpleClientHttpRequestFactory factory = new SimpleClientHttpRequestFactory();
-      factory.setProxy(
-          new Proxy(
-              Proxy.Type.HTTP, new InetSocketAddress(proxyUri.getHost(), proxyUri.getPort())));
-
-      RestTemplate rt = new RestTemplate(factory);
-      HttpHeaders headers = new HttpHeaders();
-      headers.setContentType(MediaType.APPLICATION_FORM_URLENCODED);
-      headers.set("DPoP", dpopProof);
-      HttpEntity<MultiValueMap<String, String>> request = new HttpEntity<>(form, headers);
-
-      log.info("Sending SMC-B Token-Exchange to {} via proxy {}", resolvedTarget, resolvedProxy);
-      rt.postForEntity(resolvedTarget, request, String.class);
+      // Exhausted retries — surface the last nonce error.
+      throw lastNonceError;
 
     } catch (Exception e) {
       throw new AssertionError("Failed to send SMC-B Token-Exchange request: " + e.getMessage(), e);
     }
+  }
+
+  /** Maximum number of token-exchange attempts when the PDP rejects the nonce. */
+  private static final int NONCE_MAX_ATTEMPTS = 4;
+
+  /** Backoff between nonce retries (ms). */
+  private static final long NONCE_RETRY_BACKOFF_MS = 500L;
+
+  /** Returns {@code true} if the error is the ZETA Guard "Invalid nonce value" rejection. */
+  private static boolean isInvalidNonceError(HttpClientErrorException e) {
+    return e.getResponseBodyAsString().contains("Invalid nonce value");
+  }
+
+  /**
+   * Performs a single SMC-B token-exchange: fetches a fresh nonce, builds the subject_token,
+   * client_assertion and DPoP proof, and sends the request through the Tiger proxy.
+   */
+  private void sendOnce(String resolvedTarget, String resolvedProxy, URI proxyUri)
+      throws Exception {
+    // Proxy-aware request factory — used for BOTH the nonce fetch and the token-exchange so that
+    // both requests traverse the same Tiger-Proxy upstream connection. The real PoPP/PDP cluster
+    // pins the (single-use) nonce to the backend replica that issued it; routing the nonce fetch
+    // and the token exchange through the same proxy connection ensures they hit the same replica,
+    // otherwise the PDP rejects the request with "Invalid nonce value".
+    SimpleClientHttpRequestFactory factory = new SimpleClientHttpRequestFactory();
+    factory.setProxy(
+        new Proxy(Proxy.Type.HTTP, new InetSocketAddress(proxyUri.getHost(), proxyUri.getPort())));
+
+    // 0. Fetch a nonce from the ZETA Guard Keycloak (through the Tiger proxy)
+    String nonceUrl =
+        resolvedTarget.replaceAll("/protocol/openid-connect/token$", "/zeta-guard-nonce");
+    RestTemplate nonceRt = new RestTemplate(factory);
+    String nonceBody = nonceRt.getForEntity(URI.create(nonceUrl), String.class).getBody();
+    if (nonceBody == null) {
+      throw new IllegalStateException("Nonce endpoint returned null body: " + nonceUrl);
+    }
+    String nonce = nonceBody.trim();
+    log.info("Fetched ZETA nonce: {}", nonce);
+
+    // 1. Create subject_token (signed with SMC-B brainpoolP256r1)
+    String subjectToken = createSmcbSubjectToken(nonce);
+
+    // 2. Create client_assertion (signed with P-256)
+    String clientAssertion = createClientAssertion(nonce);
+
+    // 2b. Create DPoP proof JWT (required by Keycloak when dpop.bound.access.tokens=true)
+    String dpopProof = createDpopProof(resolvedTarget);
+
+    // 3. Build form body
+    MultiValueMap<String, String> form = new LinkedMultiValueMap<>();
+    form.add("grant_type", "urn:ietf:params:oauth:grant-type:token-exchange");
+    form.add("subject_token", subjectToken);
+    form.add("subject_token_type", "urn:ietf:params:oauth:token-type:jwt");
+    form.add("requested_token_type", "urn:ietf:params:oauth:token-type:access_token");
+    form.add("client_assertion_type", "urn:ietf:params:oauth:client-assertion-type:jwt-bearer");
+    form.add("client_assertion", clientAssertion);
+    form.add("client_id", getClientId());
+    // scope is evaluated by the RU-DEV OPA policy (authorization_request.scopes[]).
+    // Value taken from RU-DEV .well-known metadata (scopes_supported contains "popp").
+    // NOTE: an explicit "audience" param makes Keycloak reject earlier with
+    // exchange_client/invalid_client (target not resolvable), so we omit it.
+    form.add("scope", "popp");
+
+    // 4. Send through the same Tiger proxy
+    RestTemplate rt = new RestTemplate(factory);
+    HttpHeaders headers = new HttpHeaders();
+    headers.setContentType(MediaType.APPLICATION_FORM_URLENCODED);
+    headers.set("DPoP", dpopProof);
+    HttpEntity<MultiValueMap<String, String>> request = new HttpEntity<>(form, headers);
+
+    log.info("Sending SMC-B Token-Exchange to {} via proxy {}", resolvedTarget, resolvedProxy);
+    rt.postForEntity(resolvedTarget, request, String.class);
   }
 
   /**
@@ -161,8 +246,8 @@ public class SmcbTokenExchangeSteps {
       Security.addProvider(new BouncyCastleProvider());
     }
 
-    // Keycloak expects the issuer URL as audience, not the local HTTP URL
-    String smcbAudience = "https://popp-zeta-ingress/auth/";
+    // Audience must match the PDP server (aus zentraler Umgebungs-Konfiguration)
+    String smcbAudience = PoPpConfig.smcbAudience();
 
     // Load SMC-B keystore from project root
     String rootFolder = TigerGlobalConfiguration.resolvePlaceholders("${tiger.rootFolder|.}");
@@ -198,7 +283,7 @@ public class SmcbTokenExchangeSteps {
     String payloadJson =
         String.format(
             "{\"iss\":\"%s\",\"sub\":\"%s\",\"aud\":\"%s\",\"typ\":\"Bearer\",\"iat\":%d,\"exp\":%d,\"jti\":\"%s\",\"nonce\":\"%s\",\"professionOid\":\"%s\"}",
-            CLIENT_ID,
+            getClientId(),
             telematikId,
             smcbAudience,
             now.getEpochSecond(),
@@ -232,7 +317,7 @@ public class SmcbTokenExchangeSteps {
    * Creates a client_assertion JWT signed with ES256 (P-256) from zetakeystore.p12. Includes JWK in
    * header and client_statement in payload.
    */
-  private String createClientAssertion(String tokenEndpoint, String nonce) throws Exception {
+  private String createClientAssertion(String nonce) throws Exception {
     KeyStore ks = KeyStore.getInstance("PKCS12");
     try (InputStream is =
         getClass().getClassLoader().getResourceAsStream(CLIENT_KEYSTORE_CLASSPATH)) {
@@ -252,6 +337,13 @@ public class SmcbTokenExchangeSteps {
         new ECKey.Builder(Curve.P_256, publicKey)
             .keyUse(com.nimbusds.jose.jwk.KeyUse.SIGNATURE)
             .build();
+
+    // KID = RFC 7638 JWK thumbprint. This is the same value the client was registered with via
+    // DCR (see ZetaPepJwtTestFactory#registerClientViaDcr), so the real PDP can resolve the
+    // client's registered key by 'kid'. The PDP binds the issued nonce to this key via the
+    // attestation_challenge; referencing the registered key by 'kid' (instead of embedding the
+    // JWK) is required, otherwise the PDP rejects the request with "Invalid nonce value".
+    String kid = jwk.computeThumbprint().toString();
 
     Instant now = Instant.now();
 
@@ -287,14 +379,16 @@ public class SmcbTokenExchangeSteps {
     // posture_type is an external type id (Jackson EXTERNAL_PROPERTY), must be sibling of posture
     Map<String, Object> clientStatement = new java.util.LinkedHashMap<>();
     clientStatement.put("platform", "linux");
-    clientStatement.put("sub", CLIENT_ID);
+    clientStatement.put("sub", getClientId());
     clientStatement.put("attestation_timestamp", now.minusSeconds(10).getEpochSecond());
     clientStatement.put("posture_type", "software");
     clientStatement.put("posture", posture);
 
-    // Keycloak expects the issuer URL as audience, not the local HTTP URL
-    String keycloakAudience =
-        "https://popp-zeta-ingress/auth/realms/zeta-guard/protocol/openid-connect/token";
+    // Audience muss den von Keycloak veröffentlichten Frontend-Token-Endpoint (aus KC_HOSTNAME)
+    // enthalten, nicht die tatsächlich aufgerufene Request-URL — sonst lehnt Keycloak mit
+    // invalid_client / "Invalid token audience" ab (relevant im local-Mode, wo Request-URL
+    // 127.0.0.1 vom Frontend-Hostnamen popp-zeta-ingress abweicht).
+    String keycloakAudience = PoPpConfig.clientAssertionAudience();
 
     // Build urn:telematik:client-self-assessment (ClientInstanceData structure with name etc.)
     Map<String, Object> platformProductId = new java.util.LinkedHashMap<>();
@@ -304,7 +398,7 @@ public class SmcbTokenExchangeSteps {
 
     Map<String, Object> selfAssessment = new java.util.LinkedHashMap<>();
     selfAssessment.put("name", "ZeTA Test Client");
-    selfAssessment.put("client_id", CLIENT_ID);
+    selfAssessment.put("client_id", getClientId());
     selfAssessment.put("manufacturer_id", "gematik");
     selfAssessment.put("manufacturer_name", "gematik GmbH");
     selfAssessment.put("owner_mail", "test@gematik.de");
@@ -313,8 +407,8 @@ public class SmcbTokenExchangeSteps {
 
     JWTClaimsSet claims =
         new JWTClaimsSet.Builder()
-            .issuer(CLIENT_ID)
-            .subject(CLIENT_ID)
+            .issuer(getClientId())
+            .subject(getClientId())
             .audience(keycloakAudience)
             .issueTime(Date.from(now))
             .expirationTime(Date.from(now.plusSeconds(300)))
@@ -326,13 +420,23 @@ public class SmcbTokenExchangeSteps {
     JWSHeader header =
         new JWSHeader.Builder(JWSAlgorithm.ES256)
             .type(JOSEObjectType.JWT)
+            .keyID(kid)
+            // Embed the public JWK (use=sig, kty=EC, crv=P-256, x, y) as required by the
+            // client-assertion-jwt schema. The 'kid' is kept so the PDP still resolves the
+            // DCR-registered key for nonce binding (embedding the JWK alone caused
+            // "Invalid nonce value"); both together are safe because the JWK equals the
+            // registered key.
             .jwk(jwk.toPublicJWK())
             .build();
 
     SignedJWT signedJwt = new SignedJWT(header, claims);
     signedJwt.sign(new ECDSASigner(privateKey));
 
-    log.info("Created client_assertion (ES256/P-256), iss={}, aud={}", CLIENT_ID, tokenEndpoint);
+    log.info(
+        "Created client_assertion (ES256/P-256), iss={}, kid={}, aud={}",
+        getClientId(),
+        kid,
+        keycloakAudience);
     return signedJwt.serialize();
   }
 

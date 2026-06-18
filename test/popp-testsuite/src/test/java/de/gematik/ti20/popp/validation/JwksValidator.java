@@ -27,6 +27,8 @@ package de.gematik.ti20.popp.validation;
 import static de.gematik.ti20.popp.data.TestConstants.POPP_SERVICE_BASE_URL_RU;
 import static de.gematik.ti20.popp.data.TestConstants.VALDID_JWKS_FILE;
 
+import de.gematik.test.tiger.common.config.TigerGlobalConfiguration;
+
 public class JwksValidator extends BaseValidator {
   public JwksValidator() {
     super();
@@ -39,5 +41,8 @@ public class JwksValidator extends BaseValidator {
     currentResponseAtMatches("$.body.body.iss", POPP_SERVICE_BASE_URL_RU.getValueOrDefault());
     currentResponseAtMatches("$.body.body.sub", POPP_SERVICE_BASE_URL_RU.getValueOrDefault());
     currentResponseAtMatches("$.body.signature.isValid", "true");
+    currentResponseAtMatches(
+        "$.body.body.keys.0.kid",
+        TigerGlobalConfiguration.resolvePlaceholders("${tiger.kidTokenKey}"));
   }
 }

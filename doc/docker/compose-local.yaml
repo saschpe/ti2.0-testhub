@@ -72,15 +72,14 @@ services:
       - "${PORT_VSDM_CLIENT:?PORT_VSDM_CLIENT missing – set it in doc/docker/.env}:80"
       - "${PORT_VSDM_CLIENT_DEBUG:?PORT_VSDM_CLIENT_DEBUG missing – set it in doc/docker/.env}:5006"
     volumes:
-      - ./backend/zeta/smcb-private/smcb_private_1.p12:/tmp/zeta/smcb_private.p12:ro
+      - ./backend/zeta/smcb-private/${SMCB_FILE:-smcb_private_1.p12}:/tmp/zeta/smcb_private.p12:ro
     environment:
       <<: *no-proxy-env
-      VSDM_USE_MOCK_POPP_TOKEN: "true"
-      INTERCEPT_STORAGE: "false"
+      VSDM_USE_MOCK_POPP_TOKEN: ${VSDM_USE_MOCK_POPP_TOKEN:-true}
+      INTERCEPT_STORAGE: false
       POPP_HTTP_URL: http://popp-client:8081/token
       POPP_TOKEN_GENERATOR_URL: http://popp-token-generator:80
-      VSDM_RESOURCE_SERVER_URL: https://vsdm-zeta-ingress
-      # VSDM_RESOURCE_SERVER_URL: https://vsdm-dev.tk.de
+      VSDM_RESOURCE_SERVER_URL: ${VSDM_RESOURCE_SERVER_URL:-https://vsdm-zeta-ingress}
       OTEL_SERVICE_NAME: vsdm-client
       OTEL_EXPORTER_OTLP_ENDPOINT: http://otel-collector:4318
       JAVA_TOOL_OPTIONS: -agentlib:jdwp=transport=dt_socket,server=y,suspend=n,address=*:5006
@@ -138,14 +137,14 @@ services:
   card-terminal-client:
     extends:
       service: card-terminal-client-base
-    profiles: [ "full" ]
+    profiles: [ "full", "ps-only" ]
     networks:
       - testhub_client
 
   vsdm-client:
     extends:
       service: vsdm-client-base
-    profiles: [ "full" ]
+    profiles: [ "full", "ps-only" ]
     environment:
       - VSDM_USE_MOCK_POPP_TOKEN=false
     networks:

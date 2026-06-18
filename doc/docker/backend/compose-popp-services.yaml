@@ -14,7 +14,7 @@ services:
       - testhub_backend
 
   popp-client:
-    profiles: [ "full" ]
+    profiles: [ "full", "ps-only" ]
     image: gematik1/popp-client:2.5.1
     env_file:
       - path: ../.env
@@ -24,23 +24,19 @@ services:
     environment:
       - SPRING_PROFILES_ACTIVE=dev
       - ZETA_AUTHENTICATION_SMB_KEYFILE=/app/smcb_private.p12
-      - POPP_SERVER_URL=wss://popp-zeta-ingress:443/ws
-      # URL für lokalen Test PoPP-Server: POPP_SERVER_URL=wss://popp-zeta-ingress:443/ws
-      # URL für echten PoPP-Server: POPP_SERVER_URL=wss://popp.dev.poppservice.de/popp/practitioner/api/v1/token-generation-ehc
+      - POPP_SERVER_URL=${POPP_SERVER_URL:-wss://popp-zeta-ingress:443/ws}
       - OTEL_EXPORTER_OTLP_ENDPOINT=http://otel-collector:4318
       # - JAVA_TOOL_OPTIONS="-agentlib:jdwp=transport=dt_socket,server=y,suspend=n,address=*:5013"
-      - VIRTUAL_CARD_IMAGE_FILE=/data/cards/egkCardImage.xml
-      # - VIRTUAL_CARD_IMAGE_FILE=/data/cards/egkCardImageTK.xml
+      - VIRTUAL_CARD_IMAGE_FILE=${VIRTUAL_CARD_IMAGE_FILE:-/data/cards/egkCardImage.xml}
     networks:
       - testhub_client
     ports:
       - "${PORT_POPP_CLIENT:?PORT_POPP_CLIENT missing – set it in doc/docker/.env}:8081"
       - "${PORT_POPP_CLIENT_MGMT:?PORT_POPP_CLIENT_MGMT missing – set it in doc/docker/.env}:9001"
     volumes:
-      - ./zeta/smcb-private/smcb_private_1.p12:/app/smcb_private.p12:ro
+      - ./zeta/smcb-private/${SMCB_FILE:-smcb_private_1.p12}:/app/smcb_private.p12:ro
       - ../../../test/vsdm-testsuite/src/test/resources/data/cards:/data/cards:ro
     depends_on:
-      - popp-server
       - otel-collector
 
   popp-server:
@@ -120,7 +116,7 @@ services:
       - no_proxy=localhost,127.0.0.1,popp-zeta-ingress,popp-zeta-pep,popp-zeta-pdp,popp-zeta-pdp-opa,popp-server
     ports:
       - "${PORT_POPP_ZETA_PEP:?PORT_POPP_ZETA_PEP missing – set it in doc/docker/.env}:80"
-    command: ["nginx", "-g", "daemon off;", "-c", "/ci_nginx/nginx.conf"]
+    command: [ "nginx", "-g", "daemon off;", "-c", "/ci_nginx/nginx.conf" ]
     volumes:
       - ./zeta-popp/pep/conf/:/etc/nginx/templates/:ro
       - ./zeta-popp/pep:/ci_nginx:ro
@@ -249,4 +245,3 @@ services:
       - ./zeta-popp/policies:/policies:ro
     networks:
       - testhub_backend
-

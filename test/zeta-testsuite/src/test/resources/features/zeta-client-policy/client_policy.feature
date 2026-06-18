@@ -1,6 +1,11 @@
 #language:de
 # Befehl zum Ausführen der Tests:
-# ./mvnw -pl test/zeta-testsuite clean verify -Dskip.inttests=false -Dcucumber.filter.tags='@policy_ablehnungen and not @Ignore'
+# ./mvnw -pl test/zeta-testsuite clean verify -Dskip.inttests=false -Dcucumber.filter.tags='@policy_ablehnungen and not @Ignore' -Dzeta.env=local
+@PRODUKT:ZT_Cluster
+@PRODUKT:PoPP_Service
+@PRODUKT:Anb_PoPP_Service
+@PRODUKT:VSDM_2_FD
+@PRODUKT:Anb_FD_VSDM
 @PRODUKT:ZETA
 
 Funktionalität: Client-Registrierungs-Policy und OPA-Integration (Policy-Ablehnungen)
@@ -14,6 +19,11 @@ Funktionalität: Client-Registrierungs-Policy und OPA-Integration (Policy-Ablehn
   # Policy-Ablehnungen (OPA) - diese Tests benötigen spezielle Netzwerk-Topologie
   # ===========================================================================
 
+  @TCID:ZETA_REGISTRATION_POLICY_DENIES
+  @STATUS:Implementiert
+  @MODUS:Automatisch
+  @TESTSTUFE:3
+  @PRIO:1
   @Ignore @client_registrierung @policy_ablehnungen
   Szenariogrundriss: Client-Registrierung wird wegen Client Policy abgelehnt und begründet
     # STATUS: @Ignore – zwei Voraussetzungen fehlen noch:

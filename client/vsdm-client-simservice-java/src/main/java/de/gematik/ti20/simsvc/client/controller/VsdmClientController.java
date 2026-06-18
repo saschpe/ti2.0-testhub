@@ -61,15 +61,33 @@ public class VsdmClientController {
 
     final ResponseEntity<String> responseEntity =
         vsdmClientService.read(
-            terminalId, egkSlotId, smcBSlotId, isFhirXml, poppToken, ifNoneMatch, profileVersion);
+            terminalId,
+            egkSlotId,
+            smcBSlotId,
+            isFhirXml,
+            poppToken,
+            quoteIfNotQuoted(ifNoneMatch),
+            profileVersion);
 
     // content-length must be recalculated bc. charset header is not set correctly
-    if (responseEntity.getBody() != null) {
+    if (responseEntity != null && responseEntity.getBody() != null) {
       responseEntity
           .getHeaders()
           .setContentLength(responseEntity.getBody().getBytes(StandardCharsets.UTF_8).length);
     }
 
     return responseEntity;
+  }
+
+  private static String quoteIfNotQuoted(String input) {
+    if (input == null) {
+      return null; // alternativ: throw new IllegalArgumentException("input must not be null");
+    }
+
+    if (input.length() >= 2 && input.startsWith("\"") && input.endsWith("\"")) {
+      return input; // bereits korrekt gequoted
+    }
+
+    return "\"" + input + "\"";
   }
 }
