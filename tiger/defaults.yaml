@@ -8,6 +8,10 @@ smoke:
       url: http://127.0.0.1:${ports.poppPepPort}/.well-known/oauth-protected-resource
       path: /.well-known/oauth-protected-resource
       name: PoPP ZeTA PEP
+    poppZetaIngress:
+      url: https://localhost:11443/.well-known/oauth-protected-resource
+      path: /.well-known/oauth-protected-resource
+      name: PoPP ZETA Ingress
     vsdmZetaIngress:
       url: https://127.0.0.1:9119/.well-known/oauth-protected-resource
       path: /.well-known/oauth-protected-resource
@@ -17,8 +21,8 @@ smoke:
       path: /
       name: VSDM ZeTA PEP
     vsdmZetaPdp:
-      url: http://127.0.0.1:9122/auth/health/live
-      path: /auth/health/live
+      url: http://127.0.0.1:9122
+      path: /
       name: VSDM ZeTA PDP
 
 zeta:

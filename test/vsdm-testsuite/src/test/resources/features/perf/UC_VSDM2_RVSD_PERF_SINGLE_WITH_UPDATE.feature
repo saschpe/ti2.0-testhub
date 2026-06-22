@@ -3,24 +3,22 @@
 
 @PRODUKT:VSDM_2_FD
 @AFO-ID:A_26991-01
-@TYPE:LOAD
+@TYPE:PERF
 Funktionalität: Abfrage der Versichertenstammdaten vom Fachdienst VSDM 2.0 unter Last
 
-  @TCID:UC_VSDM2_RVSD_LOAD_MULTI_WITH_UPDATE
+  @TCID:UC_VSDM2_RVSD_PERF_SINGLE_WITH_UPDATE
   @STATUS:Implementiert
   @MODUS:Halbautomatisch
   @TESTFALL:Positiv
   @TESTSTUFE:3
   @PRIO:2
   @DESCRIPTION
-  Szenariogrundriss: Mehrfache Abfrage der VSD mit eGK und mit VSD Update unter Last
+  Szenariogrundriss: Einmalige Abfrage der VSD mit eGK und mit VSD Update unter Last
 
-  Dieser Testfall ermittelt die Antwortzeiten für die Abfrage der VSD vom Fachdienst VSDM 2.0 unter Lastbedingungen.
+  Dieser Testfall ermittelt die Antwortzeit für eine Abfrage der VSD vom Fachdienst VSDM 2.0 unter Lastbedingungen.
   Der VSDM Ressource Server antwortet mit HTTP Code 200 und sendet die VSD als FHIR-Datensatz an das Primärsystem.
   Der Parameter 'Load-Level' steuert die Hintergrundlast und bezieht sich auf das spezifizierte Maximum von 1.000
-  Aufrufen pro Sekunde. Der Parameter 'Number-Calls' definiert die Anzahl der VSD Abfragen, die ausgeführt werden und
-  in die Berechnung einfließen. Der Parameter 'Max-Answer-Time' definiert die maximal erlaubte Antwortzeit in der
-  Einheit Millisekunden.
+  Aufrufen pro Sekunde. Der Parameter 'Max-Answer-Time' definiert die maximal erlaubte Antwortzeit in Millisekunden.
 
   Die Hintergrundlast kann durch die Gatling-Simulation 'VsdmLoadSimulation' erzeugt werden, welche in Abhängigkeit
   von der Systemvariablen 'randomReadVsd' einen linearen oder nicht-linearen Lastverlauf simuliert. Ohne Angabe der
@@ -31,9 +29,11 @@ Funktionalität: Abfrage der Versichertenstammdaten vom Fachdienst VSDM 2.0 unte
     Angenommen der Versicherte in der LEI verwendet eine eGK <Egk-Card> im Slot <Egk-Slot>
     Angenommen das Primärsystem hat den Versorgungskontext als PoPP-Token gespeichert
     Angenommen der Fachdienst VSDM 2.0 wird mit <Calls-Per-Sec> Aufrufen pro Sekunde unter Last gesetzt
-    Wenn das Primärsystem <Number-Calls> Anfragen mit VSD Update an den Fachdienst VSDM 2.0 sendet
-    Dann überschreiten die Antworten des Fachdienstes VSDM 2.0 nicht den Maximalwert von <Max-Answer-Time> ms
+    Wenn das Primärsystem die VSD mittels PoPP- und Access-Token vom VSDM Ressource Server abfragt
+    Und der VSDM Ressource Server beim E-Tag-Vergleich einen Unterschied feststellt
+    Dann sendet der VSDM Ressource Server die aktualisierten VSD mit dem Statuscode <Http-Code> zum Primärsystem
+    Und die Antwortzeit des Fachdienstes VSDM 2.0 überschreitet nicht den Maximalwert von <Max-Answer-Time> ms
 
     Beispiele:
-      | Smcb-Card           | Smcb-Slot | Egk-Card           | Egk-Slot | Calls-Per-Sec | Number-Calls | Max-Answer-Time |
-      | "smcbCardImage.xml" | 2005      | "egkCardData.json" | 2006     | 100           | 100          | 1000            |
+      | Smcb-Card           | Smcb-Slot | Egk-Card           | Egk-Slot | Calls-Per-Sec | Max-Answer-Time | Http-Code |
+      | "smcbCardImage.xml" | 2001      | "egkCardData.json" | 2002     | 100           | 1000            | 200       |

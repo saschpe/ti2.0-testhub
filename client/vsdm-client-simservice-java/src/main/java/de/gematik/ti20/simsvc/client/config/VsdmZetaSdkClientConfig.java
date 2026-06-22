@@ -100,7 +100,7 @@ public class VsdmZetaSdkClientConfig {
                 ""),
             new PlatformProductId.LinuxProductId(
                 PlatformProductId.PLATFORM_LINUX, "jar", "testhub", "latest"),
-            new ZetaHttpClientBuilder("")
+            new ZetaHttpClientBuilder()
                 .disableServerValidation(disableServerValidation)
                 .logging(LogLevel.ALL),
             null,

@@ -41,12 +41,12 @@ den folgenden Komponenten:
 Sämtliche Tests der VSDM-Testsuite setzen diese simulierten Dienste voraus. Diese können mit folgenden Befehlen als
 Docker-Container gestartet werden: (Die Befehle sollten im Projekt-Root-Verzeichnis ausgeführt werden.)
 
+### Bauen der Docker-Images
 ```
-# Build Docker images
 ./mvnw clean install -Pdocker -DskipTests
 ```
+### Start der Docker-Container
 ```
-# Start containers
 docker compose -f ./doc/docker/compose-local.yaml --profile full up -d --remove-orphans
 ```
 
@@ -102,7 +102,7 @@ Die E2E-Tests können mit folgender Kommandozeile im Projekt-Root-Verzeichnis ge
 ./mvnw -pl test/vsdm-testsuite/ clean verify -Dcucumber.filter.tags="@TYPE:E2E" -Dskip.inttests=false
 ```
 
-## E2E-Tests
+## ERROR-Tests
 
 Die Testsuite beinhaltet aktuell sieben ERROR-Testfälle, welche bestimmte Fehlersituationen durch die Verwendung von
 manipulierten Popp-Token auslösen. Hierzu ist es erforderlich, dass der Popp-Token-Generator (kurz: PTG) gestartet ist.
@@ -122,19 +122,19 @@ Die ERROR-Tests können mit folgender Kommandozeile im Projekt-Root-Verzeichnis 
 ./mvnw -pl test/vsdm-testsuite/ clean verify -Dcucumber.filter.tags="@TYPE:ERROR" -Dskip.inttests=false
 ```
 
-## Lasttests (Tiger)
+## PERF-Tests
 
 Die VSDM 2.0 Testsuite enthält aktuell vier Lasttests, welche die Antwortzeiten der VSDM 2.0 Server Simulation prüfen.
 Hierbei werden die beiden Varianten Antwort HTTP Code 200 mit VSD und HTTP Code 304 ohne VSD sowie einzelne und
 mehrfache Anfragen getestet. Die Antwortzeit des Servers darf in allen Fällen nicht größer als 1.000 msecs sein.
 Testfälle:
 
-* UC_VSDM2_RVSD_LOAD_SINGLE_WITH_UPDATE.feature
-* UC_VSDM2_RVSD_LOAD_SINGLE_WITHOUT_UPDATE.feature
-* UC_VSDM2_RVSD_LOAD_MULTI_WITH_UPDATE.feature
-* UC_VSDM2_RVSD_LOAD_MULTI_WITHOUT_UPDATE.feature
+* UC_VSDM2_RVSD_PERF_SINGLE_WITH_UPDATE.feature
+* UC_VSDM2_RVSD_PERF_SINGLE_WITHOUT_UPDATE.feature
+* UC_VSDM2_RVSD_PERF_MULTI_WITH_UPDATE.feature
+* UC_VSDM2_RVSD_PERF_MULTI_WITHOUT_UPDATE.feature
 
-> [!TIP]
+> **HINWEIS**
 > Die Lasttests erwarten eine geeignete Hintergrundlast, welche mit der Gatling-Simulation 'VsdmBackgroundLoadSimulation'
 > erzeugt werden kann. Wenn die Umgebungsvariable 'vsdm.loadtesting.active=true' gesetzt ist, wird die Ausführung der
 > Lasttests pausiert und der Anwender zum Starten der Hintergrundlast aufgefordert. D.h. die automatische wird zu einer
@@ -143,41 +143,21 @@ Testfälle:
 Die Lasttests können mit folgender Kommandozeile im Projekt-Root-Verzeichnis gestartet werden:
 
 ```
-./mvnw -pl test/vsdm-testsuite/ clean verify -Dcucumber.filter.tags="@TYPE:LOAD" -Dvsdm.loadtesting.active=true -Dskip.inttests=false
+./mvnw -pl test/vsdm-testsuite/ clean verify -Dcucumber.filter.tags="@TYPE:PERF" -Dvsdm.loadtesting.active=true -Dskip.inttests=false
 ```
 
-## Lasttests (Gatling)
+## Lasttest-Simulationen
 
 Die VSDM 2.0 Testsuite enthält mehrere Lasttest-Simulationen basierend auf Gatling, welche sich im Ablauf unterscheiden
 und für unterschiedliche Zwecke einsetzbar sind.
 
-> [!TIP]
+> **HINWEIS**
 > Für Performance-Tests empfiehlt sich das `perf` Profil, da hierbei die Clients direkt mit dem Backend kommunizieren
-> und der Tiger-Proxy umgangen wird:
+> und sämtliche Tiger-Proxies umgangen werden:
 
 > ```
 > docker compose -f doc/docker/compose-local.yaml --profile perf up -d
 > ```
-
-### GeneratePoppTokenSimulation.java
-
-Diese Simulation liest eine Liste von IK- und KVNR ein und generiert dann mithilfe des PoppTokenGenerators eine Liste
-aus Popp-Token. Diese Liste kann dann später als Feeder für die Simulation der Hintergrundlast verwendet werden. Die
-Simulation kann mittels Maven und folgender Kommandozeile im Projekt-Root-Verzeichnis gestartet werden:
-
-```
-./mvnw -pl test/vsdm-testsuite/ gatling:test -Dgatling.simulationClass=de.gematik.ti20.vsdm.test.load.GeneratePoppTokenSimulation
-```
-
-### PoppVsdmServerSimulation.java
-
-Diese Simulation ruft zuerst den PoppTokenGenerator mit einer Kombination aus IK- und KVNR auf, welcher einen gültigen
-Popp-Token zurückliefert. Danach wird dieser Popp-Token während der Abfrage der VSD vom VsdmServerSimulator verwendet.
-Die Simulation kann mittels Maven und folgender Kommandozeile im Projekt-Root-Verzeichnis gestartet werden:
-
-```
-./mvnw -pl test/vsdm-testsuite/ gatling:test -Dgatling.simulationClass=de.gematik.ti20.vsdm.test.load.PoppVsdmServerSimulation
-```
 
 ### VsdmClientJourneySimulation.java
 
@@ -188,7 +168,7 @@ bis hin zur Abfrage der VSD vom Fachdienst VSDM 2.0 und kann im Projekt-Root-Ver
 ./mvnw -pl test/vsdm-testsuite/ gatling:test -Dgatling.simulationClass=de.gematik.ti20.vsdm.test.load.VsdmClientJourneySimulation
 ```
 
-> [!NOTE]
+> **HINWEIS**
 > Durch die aktuelle Integration weiterer Tiger-Komponenten, welche die Client-Simulationen starten und mehrere
 > Proxies in den Datenverkehr einschleusen, ist die Lauffähigkeit der Lastsimulation "VsdmClientJourneySimulation"
 > beeinträchtigt. Es wird empfohlen, die Last entsprechend zu reduzieren. Siehe "Konfiguration der Simulation".
@@ -203,7 +183,7 @@ Die Simulation kann mittels Maven und folgender Kommandozeile im Projekt-Root-Ve
 ./mvnw -pl test/vsdm-testsuite/ gatling:test -Dgatling.simulationClass=de.gematik.ti20.vsdm.test.load.VsdmBackgroundLoadSimulation
 ```
 
-> [!TIP]
+> **HINWEIS**
 > Der Standardwert für den Access-Token beträgt 300 Sekunden, sodass der ZETA Guard nach dieser Zeitspanne nicht mit 200
 > OK, sondern mit 401 UNAUTHORIZED antworten würde. Die Gültigkeitsdauer (TTL) des Access-Tokens lässt sich in der Datei
 > "doc/docker/backend/zeta/policies/authz.rego" jedoch erhöhen.

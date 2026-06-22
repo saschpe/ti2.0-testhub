@@ -2,10 +2,26 @@
 
 # Release Notes TI 2.0 TestHub
 
+## Release 3.4.0
+
+### Update Notes
+
+#### ZETA-Guard changes regarding certificate validation
+
+With the version 1.2.0 ZETA-Guard is configured to validate the SMCB certificate
+that is used. In case you want to disable the validation refer to the user
+manual. Error messages regarding invalid certificates can be found in the logs
+of the VSDM PDP container.
+
+### Changes
+
+- TESTHUB-156: Upgrade to ZETA 1.2.0 (VSDM)
+
 ## Release 3.3.0
 
 ### Changes
 
+- TESTHUB-147: simplify setup of performance profile
 - TESTHUB-152: simplify feature test parametrization and component startup
 - TESTHUB-154: ensure if-none-match header is quoted
 

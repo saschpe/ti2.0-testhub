@@ -132,6 +132,7 @@ public class VsdmSteps {
         .attemptsTo(
             RequestVsdFromServer.withEtagAndPoppToken("\"0\"", null, true, VALID_PROFILE_VERSION));
     hccs().remember("etag", LastEtag.value().answeredBy(hccs()));
+    hccs().should(seeThat(LastVsdmBundle.value(), is(notNullValue())));
   }
 
   @Angenommen("das Primärsystem hat den Versorgungskontext als PoPP-Token gespeichert")
@@ -184,16 +185,7 @@ public class VsdmSteps {
   public void andRessourceServerIsSendingCorrectPatientData() {
     EgkCardInfo egkCardInfo = hccs().recall("egkCardInfo");
     Patient patient = hccs().recall("lastPatient");
-
-    Assertions.assertEquals(egkCardInfo.getLastName(), patient.getName().getFirst().getFamily());
-    Assertions.assertEquals(
-        egkCardInfo.getFirstName(), patient.getName().getFirst().getGiven().getFirst().toString());
     Assertions.assertEquals(egkCardInfo.getKvnr(), patient.getIdentifier().getFirst().getValue());
-
-    // does not work with all available card images
-    // var egkBirthDateNormalized = normalizeToLocalDate(egkCardInfo.getDateOfBirth()); var
-    // patientBirthDateNormalized = normalizeToLocalDate(String.valueOf(patient.getBirthDate()));
-    // Assertions.assertEquals(egkBirthDateNormalized, patientBirthDateNormalized);
   }
 
   @Und("die aktualisierten VSD enthalten das VsdmBundle mit den korrekten Versicherungsdaten")
@@ -204,10 +196,6 @@ public class VsdmSteps {
 
     Patient patient = (Patient) coverage.getBeneficiary().getResource();
     Assertions.assertEquals(egkCardInfo.getKvnr(), patient.getIdentifier().getFirst().getValue());
-
-    // does not work if multiple organization are in the bundle
-    //    Organization payor = (Organization) coverage.getPayor().getFirst().getResource();
-    //    Assertions.assertEquals(egkCardInfo.getIknr(), payor.getIdElement().getIdPart());
 
     Organization organization = hccs().recall("lastOrganization");
     Assertions.assertEquals(

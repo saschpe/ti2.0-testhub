@@ -119,7 +119,7 @@ public class BaseSimulation extends Simulation {
                     "insurerId",
                     iknr,
                     "actorId",
-                    "1-20014060625",
+                    "1-SMC-B-Testkarte--883110000168765",
                     "actorProfessionOid",
                     OID_PRAXIS_ARZT)));
 
@@ -150,7 +150,7 @@ public class BaseSimulation extends Simulation {
             {
               "subject": "subject",
               "commonName": "commonName",
-              "identifier": "1-20014060625",
+              "identifier": "1-SMC-B-Testkarte--883110000168765",
               "professionOID": "%s"
             }
                \s"""

@@ -24,7 +24,7 @@
  */
 package de.gematik.ti20.popp.data;
 
-import de.gematik.test.tiger.common.config.TigerTypedConfigurationKey;
+import de.gematik.test.tiger.common.config.TigerGlobalConfiguration;
 
 public class TestConstants {
   private static final String BLUEPRINT_FOLDER =
@@ -59,12 +59,8 @@ public class TestConstants {
   public static final String FOLDER_FOR_SIGNED_HASHDB_PAYLOADS =
       "src/test/resources/hashDbPayloads/";
 
-  public static final TigerTypedConfigurationKey<String> POPP_SERVICE_BASE_URL_RU =
-      new TigerTypedConfigurationKey<>(
-          "POPP.SERVICE.SERVER.URL", String.class, "https://popp.dev.poppservice.de");
-
-  public static final String URL_HASH_DB_IMPORT_RU =
-      POPP_SERVICE_BASE_URL_RU.getValueOrDefault() + HASH_DB_IMPORT_PATH;
-  public static final String POPP_ENTITY_STATEMENT =
-      POPP_SERVICE_BASE_URL_RU.getValueOrDefault() + ENTITY_STATEMENT_PATH;
+  public static final String POPP_SERVICE_BASE_URL =
+      TigerGlobalConfiguration.resolvePlaceholders("${tiger.poppServiceServerUrl}");
+  public static final String URL_HASH_DB_IMPORT_RU = POPP_SERVICE_BASE_URL + HASH_DB_IMPORT_PATH;
+  public static final String POPP_ENTITY_STATEMENT = POPP_SERVICE_BASE_URL + ENTITY_STATEMENT_PATH;
 }

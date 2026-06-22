@@ -89,7 +89,7 @@ class VsdmServerIT {
         String.format(
             """
                                       {
-                                          "actorId": "1-20014060625",
+                                          "actorId": "1-SMC-B-Testkarte--883110000168765",
                                           "actorProfessionOid": "1.2.276.0.76.4.32",
                                           "at": 1773397230,
                                           "insurerId": "%1$s",
@@ -110,7 +110,7 @@ class VsdmServerIT {
                         {
                           "subject": "subject",
                           "commonName": "commonName",
-                          "identifier": "1-20014060625",
+                          "identifier": "1-SMC-B-Testkarte--883110000168765",
                           "professionOID": "1.2.276.0.76.4.50"
                         }
                            \s""";

@@ -176,8 +176,8 @@ Key characteristics of the `perf` profile:
 | Lower (direct)
 
 | Recommended for
-| Feature tests, debugging, Pact verification
-| Performance tests, load tests, benchmarks
+| All test types are technically possible (feature, debugging, Pact, performance, load), but additional proxy hops add overhead and make this profile unsuitable for load-test measurements.
+| Performance and load tests. Feature tests do *not* work in this profile.
 |===
 
 ==== Starting with Profiles

@@ -96,7 +96,7 @@ public class GeneratePoppTokenList implements Task {
         "insurerId",
         iknr,
         "actorId",
-        "1-20014060625",
+        "1-SMC-B-Testkarte--883110000168765",
         "actorProfessionOid",
         smcbCardInfo.getProfessionOid());
   }

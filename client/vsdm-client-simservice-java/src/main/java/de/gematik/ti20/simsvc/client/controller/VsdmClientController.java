@@ -25,7 +25,6 @@
 package de.gematik.ti20.simsvc.client.controller;
 
 import de.gematik.ti20.simsvc.client.service.VsdmClientService;
-import java.nio.charset.StandardCharsets;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
@@ -59,24 +58,14 @@ public class VsdmClientController {
         ifNoneMatch,
         profileVersion);
 
-    final ResponseEntity<String> responseEntity =
-        vsdmClientService.read(
-            terminalId,
-            egkSlotId,
-            smcBSlotId,
-            isFhirXml,
-            poppToken,
-            quoteIfNotQuoted(ifNoneMatch),
-            profileVersion);
-
-    // content-length must be recalculated bc. charset header is not set correctly
-    if (responseEntity != null && responseEntity.getBody() != null) {
-      responseEntity
-          .getHeaders()
-          .setContentLength(responseEntity.getBody().getBytes(StandardCharsets.UTF_8).length);
-    }
-
-    return responseEntity;
+    return vsdmClientService.read(
+        terminalId,
+        egkSlotId,
+        smcBSlotId,
+        isFhirXml,
+        poppToken,
+        quoteIfNotQuoted(ifNoneMatch),
+        profileVersion);
   }
 
   private static String quoteIfNotQuoted(String input) {
