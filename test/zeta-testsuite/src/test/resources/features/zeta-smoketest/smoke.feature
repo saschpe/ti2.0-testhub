@@ -6,7 +6,7 @@
 @PRODUKT:Anb_PoPP_Service
 @PRODUKT:ZETA
 
-@DESCRIPTION
+@smoke
 Funktionalität: Smoke Tests mit PoPP und VSDM2
 
   @TCID:ZETA_SMOKE_CLUSTER_AVAILABILITY_POPP
@@ -26,4 +26,7 @@ Funktionalität: Smoke Tests mit PoPP und VSDM2
     | Ressource                              | Pfad                                    | #Ressource         |
     | ${smoke.endpoints.poppZetaPdp.url}     | ${smoke.endpoints.poppZetaPdp.path}     | #PoPP ZeTA PDP     |
     | ${smoke.endpoints.poppZetaPep.url}     | ${smoke.endpoints.poppZetaPep.path}     | #PoPP ZeTA PEP     |
+    | ${smoke.endpoints.poppZetaIngress.url} | ${smoke.endpoints.poppZetaIngress.path} | #PoPP ZETA Ingress |
+    | ${smoke.endpoints.vsdmZetaPdp.url}     | ${smoke.endpoints.vsdmZetaPdp.path}     | #VSDM ZETA PDP     |
+    | ${smoke.endpoints.vsdmZetaPep.url}     | ${smoke.endpoints.vsdmZetaPep.path}     | #VSDM ZETA PEP     |
     | ${smoke.endpoints.vsdmZetaIngress.url} | ${smoke.endpoints.vsdmZetaIngress.path} | #VSDM ZeTA Ingress |

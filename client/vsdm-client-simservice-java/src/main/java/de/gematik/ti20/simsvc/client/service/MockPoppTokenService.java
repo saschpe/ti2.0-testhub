@@ -82,7 +82,7 @@ public class MockPoppTokenService {
                     "insurerId",
                     iknr,
                     "actorId",
-                    "1-20014060625",
+                    "1-SMC-B-Testkarte--883110000168765",
                     "actorProfessionOid",
                     "1.2.276.0.76.4.32")));
 

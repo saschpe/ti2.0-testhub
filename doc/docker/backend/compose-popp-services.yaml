@@ -34,7 +34,7 @@ services:
       - "${PORT_POPP_CLIENT:?PORT_POPP_CLIENT missing – set it in doc/docker/.env}:8081"
       - "${PORT_POPP_CLIENT_MGMT:?PORT_POPP_CLIENT_MGMT missing – set it in doc/docker/.env}:9001"
     volumes:
-      - ./zeta/smcb-private/${SMCB_FILE:-smcb_private_1.p12}:/app/smcb_private.p12:ro
+      - ./zeta/smcb-private/${SMCB_FILE:-smcb_private.p12}:/app/smcb_private.p12:ro
       - ../../../test/vsdm-testsuite/src/test/resources/data/cards:/data/cards:ro
     depends_on:
       - otel-collector

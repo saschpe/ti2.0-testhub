@@ -4,10 +4,10 @@ tigerProxy:
     - 443
   proxyRoutes:
     - from: /
-      to: https://213.95.83.151
+      to: https://213.95.83.149
       matchForProxyType: false
       hosts:
-        - popp.dev.poppservice.de
+        - popp.ref.poppservice.de
   activateRbelParsingFor:
     - websocket
     - x509
@@ -15,3 +15,4 @@ tigerProxy:
     - asn1
 
 kidTokenKey: 0012005900010001
+poppServiceServerUrl: https://popp.ref.poppservice.de

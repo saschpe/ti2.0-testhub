@@ -24,7 +24,7 @@
  */
 package de.gematik.ti20.popp.validation;
 
-import static de.gematik.ti20.popp.data.TestConstants.POPP_SERVICE_BASE_URL_RU;
+import static de.gematik.ti20.popp.data.TestConstants.POPP_SERVICE_BASE_URL;
 import static de.gematik.ti20.popp.data.TestConstants.VALDID_JWKS_FILE;
 
 import de.gematik.test.tiger.common.config.TigerGlobalConfiguration;
@@ -38,8 +38,8 @@ public class JwksValidator extends BaseValidator {
     findRequestForPath("/.well-known/signed-jwks");
     currentResponseAtMatchesAsJsonTheFile("$.body.body", VALDID_JWKS_FILE);
     currentResponseAtMatches("$..x5c.0.content.issuer.CN", "GEM.KOMP-CA.*");
-    currentResponseAtMatches("$.body.body.iss", POPP_SERVICE_BASE_URL_RU.getValueOrDefault());
-    currentResponseAtMatches("$.body.body.sub", POPP_SERVICE_BASE_URL_RU.getValueOrDefault());
+    currentResponseAtMatches("$.body.body.iss", POPP_SERVICE_BASE_URL);
+    currentResponseAtMatches("$.body.body.sub", POPP_SERVICE_BASE_URL);
     currentResponseAtMatches("$.body.signature.isValid", "true");
     currentResponseAtMatches(
         "$.body.body.keys.0.kid",

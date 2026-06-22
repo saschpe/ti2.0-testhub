@@ -72,7 +72,7 @@ services:
       - "${PORT_VSDM_CLIENT:?PORT_VSDM_CLIENT missing – set it in doc/docker/.env}:80"
       - "${PORT_VSDM_CLIENT_DEBUG:?PORT_VSDM_CLIENT_DEBUG missing – set it in doc/docker/.env}:5006"
     volumes:
-      - ./backend/zeta/smcb-private/${SMCB_FILE:-smcb_private_1.p12}:/tmp/zeta/smcb_private.p12:ro
+      - ./backend/zeta/smcb-private/${SMCB_FILE:-smcb_private.p12}:/tmp/zeta/smcb_private.p12:ro
     environment:
       <<: *no-proxy-env
       VSDM_USE_MOCK_POPP_TOKEN: ${VSDM_USE_MOCK_POPP_TOKEN:-true}
@@ -92,6 +92,7 @@ services:
     env_file:
       - path: .env
         required: true
+    profiles: [ "full", "ps-only" ]
     platform: linux/amd64
     container_name: docker-tiger-proxy
     environment:
@@ -118,7 +119,7 @@ services:
     env_file:
       - path: .env
         required: true
-    profiles: [ "full" ]
+    profiles: [ "full", "ps-only" ]
     platform: linux/amd64
     container_name: ti-connect-tiger-proxy
     environment:

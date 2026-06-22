@@ -258,18 +258,12 @@ class VsdmClientServiceTest {
 
         when(mockZetaSdkAdapter.httpGet(anyString(), any())).thenReturn(mockResponse);
 
-        VsdmBundle mockBundle = mock(VsdmBundle.class);
-        when(mockFhirService.parseString(anyString(), eq("json"), eq(VsdmBundle.class)))
-            .thenReturn(mockBundle);
-        when(mockFhirService.encodeResponse(mockBundle, EncodingType.JSON))
-            .thenReturn("encoded response");
-
         ResponseEntity<String> response =
             vsdmClientService.requestVsd(
                 terminalId, egkSlotId, mockEgkCard, poppToken, null, false, profileVersion);
 
         assertEquals(HttpStatus.OK, response.getStatusCode());
-        assertEquals("encoded response", response.getBody());
+        assertEquals("{\"resourceType\":\"Bundle\"}", response.getBody());
         verify(mockVsdmDataRepository)
             .put(eq(terminalId), eq(egkSlotId), eq(cardId), any(VsdmCachedValue.class));
         verify(mockCardTerminalService, never()).getAttachedCards();
@@ -285,22 +279,15 @@ class VsdmClientServiceTest {
                 HttpStatus.OK,
                 new HashMap<>(),
                 """
-            <Bundle xmlns="http://hl7.org/fhir"></Bundle>
-            """);
+            <Bundle xmlns="http://hl7.org/fhir"></Bundle>""");
         when(mockZetaSdkAdapter.httpGet(anyString(), any())).thenReturn(mockResponse);
-
-        VsdmBundle mockBundle = mock(VsdmBundle.class);
-        when(mockFhirService.parseString(anyString(), eq("xml"), eq(VsdmBundle.class)))
-            .thenReturn(mockBundle);
-        when(mockFhirService.encodeResponse(mockBundle, EncodingType.XML))
-            .thenReturn("encoded xml response");
 
         ResponseEntity<String> response =
             vsdmClientService.requestVsd(
                 terminalId, egkSlotId, mockEgkCard, poppToken, null, true, profileVersion);
 
         assertEquals(HttpStatus.OK, response.getStatusCode());
-        assertEquals("encoded xml response", response.getBody());
+        assertEquals("<Bundle xmlns=\"http://hl7.org/fhir\"></Bundle>", response.getBody());
 
         ArgumentCaptor<ZetaSdkClientAdapter.RequestParameters> requestCaptor =
             ArgumentCaptor.forClass(ZetaSdkClientAdapter.RequestParameters.class);
@@ -357,19 +344,13 @@ class VsdmClientServiceTest {
             """);
         when(mockZetaSdkAdapter.httpGet(anyString(), any())).thenReturn(mockResponse);
 
-        VsdmBundle mockBundle = mock(VsdmBundle.class);
-        when(mockFhirService.parseString(anyString(), eq("json"), eq(VsdmBundle.class)))
-            .thenReturn(mockBundle);
-        when(mockFhirService.encodeResponse(mockBundle, EncodingType.JSON))
-            .thenReturn("encoded response");
-
         ResponseEntity<String> response =
             vsdmClientService.requestVsd(
                 terminalId, egkSlotId, mockEgkCard, "token123", "etag123", false, profileVersion);
 
         assertNotNull(response);
         assertEquals(HttpStatus.OK, response.getStatusCode());
-        assertEquals("encoded response", response.getBody());
+        assertEquals("{\"resourceType\":\"Bundle\"}", response.getBody());
       }
 
       @Test

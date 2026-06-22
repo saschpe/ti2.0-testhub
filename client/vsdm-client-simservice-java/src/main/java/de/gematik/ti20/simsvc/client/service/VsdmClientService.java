@@ -26,7 +26,6 @@ package de.gematik.ti20.simsvc.client.service;
 
 import com.google.common.base.Strings;
 import de.gematik.bbriccs.fhir.EncodingType;
-import de.gematik.bbriccs.rest.fd.MediaType;
 import de.gematik.ti20.client.card.card.AttachedCard;
 import de.gematik.ti20.client.card.config.CardTerminalConnectionConfig;
 import de.gematik.ti20.client.card.terminal.CardTerminalException;
@@ -277,6 +276,10 @@ public class VsdmClientService {
           vsdmZetaClient.httpGet(
               "vsdservice/v1/vsdmbundle?profileVersion=" + profileVersion, requestParameters);
 
+      responseFromServer
+          .headers()
+          .forEach((key, value) -> log.debug("Header from VSDM response: {}: {}", key, value));
+
       final boolean isNotModified =
           responseFromServer.statusCode().isSameCodeAs(HttpStatus.NOT_MODIFIED);
       if (!responseFromServer.statusCode().is2xxSuccessful() && !isNotModified) {
@@ -290,13 +293,12 @@ public class VsdmClientService {
       }
 
       final HttpHeaders responseHeaders = copyApplicableHeaders(responseFromServer);
-      final String responseToCaller = encodeVsdmBundle(isFhirXml, responseFromServer.body());
+      final String responseToCaller = responseFromServer.body();
 
       if (responseToCaller == null) {
         throw new ResponseStatusException(
             HttpStatus.INTERNAL_SERVER_ERROR, "Could not parse valid FHIR response");
       }
-      responseHeaders.put("Content-Type", List.of(MediaType.FHIR_JSON.asString()));
 
       // Only cache if attachedCard is available
       if (attachedCard != null) {
@@ -375,16 +377,6 @@ public class VsdmClientService {
     }
 
     return ResponseEntity.status(HttpStatus.NOT_MODIFIED).headers(responseHeaders).build();
-  }
-
-  private String encodeVsdmBundle(final boolean isFhirXml, final String body) {
-    if (Strings.isNullOrEmpty(body)) {
-      return null;
-    }
-
-    final VsdmBundle vsdmBundle =
-        fhirService.parseString(body, isFhirXml ? "xml" : "json", VsdmBundle.class);
-    return fhirService.encodeResponse(vsdmBundle, isFhirXml ? EncodingType.XML : EncodingType.JSON);
   }
 
   public String loadTruncatedDataFromCard(final AttachedCard attachedCard)

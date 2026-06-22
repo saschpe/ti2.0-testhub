@@ -51,7 +51,7 @@ services:
       - testhub_backend
 
   vsdm-zeta-pep:
-    image: europe-west3-docker.pkg.dev/gematik-pt-zeta-prod/zeta-dcr/ngx_pep:1.0.1
+    image: europe-west3-docker.pkg.dev/gematik-pt-zeta-prod/zeta-dcr/ngx_pep:1.2.0
     env_file:
       - path: ../.env
         required: true
@@ -75,7 +75,7 @@ services:
       - testhub_backend
 
   vsdm-zeta-pdp:
-    image: europe-west3-docker.pkg.dev/gematik-pt-zeta-prod/zeta-dcr/keycloak-zeta:1.0.1
+    image: europe-west3-docker.pkg.dev/gematik-pt-zeta-prod/zeta-dcr/keycloak-zeta:1.2.1
     env_file:
       - path: ../.env
         required: true
@@ -84,39 +84,41 @@ services:
     container_name: vsdm-zeta-pdp
     environment:
       <<: *vsdm-no-proxy-env
-      KC_BOOTSTRAP_ADMIN_USERNAME: admin
-      KC_BOOTSTRAP_ADMIN_PASSWORD: admin
-      KEYCLOAK_ADMIN: admin
-      KEYCLOAK_ADMIN_PASSWORD: admin
-      KC_HTTP_ENABLED: true
-      GENESIS_HASH: "4841c2142fef441daa6ee6c57db65c011935964b14e94a6c8f5ec0447b83526c"
-      KC_DB: "postgres"
-      KC_DB_URL: "jdbc:postgresql://vsdm-zeta-pdp-db:5432/keycloak?sslmode=disable"
-      KC_DB_USERNAME: "keycloak_db_user"
-      KC_DB_PASSWORD: "keycloak_db_user_password"
-      KC_DB_SCHEMA: "public"
-      KC_HTTP_PORT: 80
-      KC_HOSTNAME_STRICT: false
-      KC_HOSTNAME: https://vsdm-zeta-ingress/auth/
-      # KC_HOSTNAME: https://127.0.0.1:9119/auth
-      PROXY_ADDRESS_FORWARDING: true
-      # KEYCLOAK_FRONTEND_URL: https://vsdm-zeta-ingress/auth
-      # KEYCLOAK_FRONTEND_URL: https://127.0.0.1:9119/auth
-      KC_HEALTH_ENABLED: true
-      KC_HTTP_RELATIVE_PATH: /auth
-      KC_PROXY_HEADERS: xforwarded
-      KC_LOG_LEVEL: INFO
-      SMCB_KEYSTORE_LOCATION: /opt/keycloak/conf/smcb/truststore.p12
-      SMCB_KEYSTORE_PASSWORD: "changeit"
-      SMCB_HASHING_PEPPER: "-085c1245-dc0d-4d39-95b4-97496bec6182"
-      TPM_KEYSTORE_LOCATION: /opt/keycloak/conf/tpm/tpm-certificates.p12
-      TPM_KEYSTORE_PASSWORD: "O3Bdel9P5+cOgzIGANkOPEzBQM3V"
-      KC_SPI_TOKEN_EXCHANGE_PROVIDER_ZETA_SMC_B_TOKEN_EXCHANGE_OPA_ENABLED: true
-      KC_SPI_TOKEN_EXCHANGE_PROVIDER_ZETA_SMC_B_TOKEN_EXCHANGE_OPA_BASE_URL: http://vsdm-zeta-pdp-opa:8181
-      KC_SPI_TOKEN_EXCHANGE_PROVIDER_ZETA_SMC_B_TOKEN_EXCHANGE_DECISION_PATH: "/v1/data/zeta/authz/decision"
       CHECK_CLIENT_ATTESTATION_ENABLED: true
       DEBUG: "false"
       DEBUG_PORT: "*:5022"
+      GENESIS_HASH: "4841c2142fef441daa6ee6c57db65c011935964b14e94a6c8f5ec0447b83526c"
+      KC_BOOTSTRAP_ADMIN_PASSWORD: admin
+      KC_BOOTSTRAP_ADMIN_USERNAME: admin
+      KC_DB_PASSWORD: "keycloak_db_user_password"
+      KC_DB: "postgres"
+      KC_DB_SCHEMA: "public"
+      KC_DB_URL: "jdbc:postgresql://vsdm-zeta-pdp-db:5432/keycloak?sslmode=disable"
+      KC_DB_USERNAME: "keycloak_db_user"
+      KC_HEALTH_ENABLED: true
+      # KC_HOSTNAME: https://127.0.0.1:9119/auth
+      KC_HOSTNAME: https://vsdm-zeta-ingress/auth/
+      KC_HOSTNAME_STRICT: false
+      KC_HTTP_ENABLED: true
+      KC_HTTP_PORT: 80
+      KC_HTTP_RELATIVE_PATH: /auth
+      KC_LOG_LEVEL: INFO
+      KC_PROXY_HEADERS: xforwarded
+      KC_SPI_TOKEN_EXCHANGE_PROVIDER_ZETA_SMC_B_TOKEN_EXCHANGE_DECISION_PATH: "/v1/data/zeta/authz/decision"
+      KC_SPI_TOKEN_EXCHANGE_PROVIDER_ZETA_SMC_B_TOKEN_EXCHANGE_OPA_BASE_URL: http://vsdm-zeta-pdp-opa:8181
+      KC_SPI_TOKEN_EXCHANGE_PROVIDER_ZETA_SMC_B_TOKEN_EXCHANGE_OPA_ENABLED: true
+      KEYCLOAK_ADMIN: admin
+      KEYCLOAK_ADMIN_PASSWORD: admin
+      # KEYCLOAK_FRONTEND_URL: https://127.0.0.1:9119/auth
+      # KEYCLOAK_FRONTEND_URL: https://vsdm-zeta-ingress/auth
+      OCSP_KEYSTORE_LOCATION: /var/trust-data/ocsp-signers.p12
+      OCSP_KEYSTORE_PASSWORD: no_secret_for_trust_only
+      PROXY_ADDRESS_FORWARDING: true
+      SMCB_HASHING_PEPPER: "-085c1245-dc0d-4d39-95b4-97496bec6182"
+      SMCB_KEYSTORE_LOCATION: /opt/keycloak/conf/smcb/truststore.p12
+      SMCB_KEYSTORE_PASSWORD: "changeit"
+      TPM_KEYSTORE_LOCATION: /opt/keycloak/conf/tpm/tpm-certificates.p12
+      TPM_KEYSTORE_PASSWORD: "O3Bdel9P5+cOgzIGANkOPEzBQM3V"
     ports:
       - "${PORT_VSDM_ZETA_PDP:?PORT_VSDM_ZETA_PDP missing – set it in doc/docker/.env}:80"
       - "${PORT_VSDM_ZETA_PDP_HEALTH:?PORT_VSDM_ZETA_PDP_HEALTH missing – set it in doc/docker/.env}:9000"
@@ -125,6 +127,7 @@ services:
       - ./zeta/realm:/opt/keycloak/data/import
       - ./zeta/smcb:/opt/keycloak/conf/smcb
       - ./zeta/tpm/:/opt/keycloak/conf/tpm
+      - ./zeta/ocsp-signers.p12:/var/trust-data/ocsp-signers.p12
     healthcheck:
       test: [ "CMD-SHELL", "exec 3<>/dev/tcp/127.0.0.1/9000;echo -e \"GET /auth/health/live HTTP/1.1\r\nhost: localhost:9000\r\nConnection: close\r\n\r\n\" >&3;grep \"status.*UP\" <&3" ]
       start_period: 120s
@@ -155,7 +158,7 @@ services:
       - testhub_backend
 
   vsdm-zeta-pdp-opa:
-    image: europe-west3-docker.pkg.dev/gematik-pt-zeta-prod/zeta-dcr/opa:1.14.1-static
+    image: europe-west3-docker.pkg.dev/gematik-pt-zeta-prod/zeta-dcr/opa:1.16.2-static
     env_file:
       - path: ../.env
         required: true

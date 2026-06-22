@@ -1,6 +1,6 @@
 {
-  "iss": "http.*",
-  "sub": "http.*",
+  "iss": '${tiger.poppServiceServerUrl}',
+  "sub": '${tiger.poppServiceServerUrl}',
   "iat": "[0-9]+",
   "exp": "[0-9]+",
   "keys": [

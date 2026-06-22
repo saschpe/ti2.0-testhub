@@ -7,7 +7,7 @@
     <parent>
         <groupId>de.gematik</groupId>
         <artifactId>testhub</artifactId>
-        <version>3.3.0</version>
+        <version>3.4.0</version>
         <relativePath>../../pom.xml</relativePath>
     </parent>
 
@@ -20,6 +20,7 @@
     <properties>
         <skip.inttests>true</skip.inttests>
         <vsdm.testsuite.path>${maven.multiModuleProjectDirectory}/test/vsdm-testsuite</vsdm.testsuite.path>
+        <polarion.testrun>VSDM2_GEMATIK</polarion.testrun>
     </properties>
 
     <!-- Tiger 4.2.x is built against Spring Boot 3.x; keep the testsuite on that baseline. -->
@@ -337,7 +338,7 @@
                                     <username>${polarion.username}</username>
                                     <password>${polarion.pat}</password>
                                     <project>Mainline_OPB1</project>
-                                    <testRun>VSDM2_GEMATIK</testRun>
+                                    <testRun>${polarion.testrun}</testRun>
                                     <serenityReportsFolderPath>${vsdm.testsuite.path}/target/site/serenity</serenityReportsFolderPath>
                                 </configuration>
                                 <goals>

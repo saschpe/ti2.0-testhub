@@ -25,7 +25,7 @@
 package de.gematik.ti20.popp.validation;
 
 import static de.gematik.ti20.popp.data.TestConstants.ENTITY_STATEMENT_PATH;
-import static de.gematik.ti20.popp.data.TestConstants.POPP_SERVICE_BASE_URL_RU;
+import static de.gematik.ti20.popp.data.TestConstants.POPP_SERVICE_BASE_URL;
 import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
 
 import de.gematik.rbellogger.data.RbelElement;
@@ -42,8 +42,8 @@ public class EntityStatementValidator extends BaseValidator {
 
   public void validateEntityStatement() {
     findRequestForPath(ENTITY_STATEMENT_PATH);
-    currentResponseAtMatches("$.body.body.iss", POPP_SERVICE_BASE_URL_RU.getValueOrDefault());
-    currentResponseAtMatches("$.body.body.sub", POPP_SERVICE_BASE_URL_RU.getValueOrDefault());
+    currentResponseAtMatches("$.body.body.iss", POPP_SERVICE_BASE_URL);
+    currentResponseAtMatches("$.body.body.sub", POPP_SERVICE_BASE_URL);
     currentResponseAtMatches("$.body.signature.isValid", "true");
     currentResponseAtMatches("$.body.body.metadata.oauth_resource.signed_jwks_uri", "https.*");
     assertThat(this.rbelMessageRetriever.findElementInCurrentResponse("$.body.body.iat"))

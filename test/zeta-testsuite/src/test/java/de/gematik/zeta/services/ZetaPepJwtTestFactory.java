@@ -154,7 +154,7 @@ public class ZetaPepJwtTestFactory {
   private static final String SMCB_KEY_ALIAS = "alias";
 
   /** TelematikID extracted from the SMC-B certificate (registrationNumber). */
-  private static final String SMCB_TELEMATIK_ID = "1-20014060625";
+  private static final String SMCB_TELEMATIK_ID = "1-SMC-B-Testkarte--883110000168765";
 
   /** ProfessionOID from the SMC-B certificate. */
   private static final String SMCB_PROFESSION_OID = "1.2.276.0.76.4.50";
