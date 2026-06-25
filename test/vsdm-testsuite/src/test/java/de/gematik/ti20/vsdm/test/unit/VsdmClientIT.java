@@ -29,8 +29,10 @@ import static de.gematik.ti20.vsdm.test.util.ClasspathUtils.loadClasspathRessour
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.*;
 
+import de.gematik.bbriccs.fhir.codec.EmptyResource;
 import de.gematik.bbriccs.fhir.codec.FhirCodec;
 import de.gematik.ti20.vsdm.fhir.def.VsdmBundle;
+import de.gematik.ti20.vsdm.fhir.def.VsdmOperationOutcome;
 import java.util.Base64;
 import java.util.List;
 import java.util.Objects;
@@ -87,12 +89,37 @@ class VsdmClientIT {
     insertSmcbCard();
 
     configureTerminal();
+
+    // delete cached popp tokens and vsdm data
+    final Request deletePoppToken =
+        new Request.Builder()
+            .url(resolvePlaceholders(VSDM_CLIENT_URL) + "/client/test/poppToken")
+            .delete()
+            .build();
+    final Response deletePoppTokenResponse = httpClient.newCall(deletePoppToken).execute();
+    assertThat(deletePoppTokenResponse.isSuccessful()).isTrue();
+
+    final Request deleteVsdmData =
+        new Request.Builder()
+            .url(resolvePlaceholders(VSDM_CLIENT_URL) + "/client/test/vsdmData")
+            .delete()
+            .build();
+    final Response deleteVsdmDataResponse = httpClient.newCall(deleteVsdmData).execute();
+    assertThat(deleteVsdmDataResponse.isSuccessful()).isTrue();
   }
 
   @Test
   @Order(1)
   void testReadVsdReturnsExpectedDataJson() throws Exception {
-    final Result result = readVsdOnce("0", false, PROFILE_VERSION);
+    final Result result =
+        readVsdOnce(
+            VsdmBundle.class,
+            new RequestBuilder()
+                .ifNoneMatch("0")
+                .isFhirXml(false)
+                .profileVersion(PROFILE_VERSION)
+                .virtualCard("/data/cards/egkCardImage.xml")
+                .build());
     assertEquals(200, result.response.code());
     assertNotNull(result.resource);
 
@@ -142,8 +169,55 @@ class VsdmClientIT {
 
   @Test
   @Order(2)
+  void testReadVsdReturnsExpectedDataJsonForVirtualCard() throws Exception {
+    removeCardFromSlot(EGK_SLOT);
+    insertCard("data/cards/EGK_80276883110000168584_gema5.xml", EGK_SLOT);
+
+    final Result result =
+        readVsdOnce(
+            VsdmBundle.class,
+            new RequestBuilder()
+                .ifNoneMatch("0")
+                .isFhirXml(false)
+                .profileVersion(PROFILE_VERSION)
+                .virtualCard("/data/cards/EGK_80276883110000168584_gema5.xml")
+                .build());
+    assertEquals(200, result.response.code());
+    assertNotNull(result.resource);
+
+    assertTrue(result.responseBody.startsWith("{\"resourceType\":\"Bundle\","));
+
+    final VsdmBundle vsdmBundle = (VsdmBundle) result.resource;
+    assertNotNull(vsdmBundle);
+    final List<Resource> resources =
+        vsdmBundle.getEntry().stream().map(Bundle.BundleEntryComponent::getResource).toList();
+
+    final Patient patient =
+        resources.stream()
+            .filter(r -> r.getResourceType() == ResourceType.Patient)
+            .map(r -> (Patient) r)
+            .findFirst()
+            .orElse(null);
+    assertNotNull(patient);
+    final HumanName name = patient.getName().getFirst();
+    assertEquals("family-name-X110630769", name.getFamily());
+    assertEquals("given-name-X110630769", name.getGiven().getFirst().getValue());
+
+    assertEquals("X110630769", patient.getIdentifierFirstRep().getValue());
+  }
+
+  @Test
+  @Order(3)
   void testReadVsdReturnsExpectedDataXML() throws Exception {
-    final Result result = readVsdOnce("0", true, PROFILE_VERSION);
+    final Result result =
+        readVsdOnce(
+            VsdmBundle.class,
+            new RequestBuilder()
+                .ifNoneMatch("0")
+                .isFhirXml(true)
+                .profileVersion(PROFILE_VERSION)
+                .virtualCard("/data/cards/egkCardImage.xml")
+                .build());
     assertEquals(200, result.response.code());
     assertNotNull(result.resource);
 
@@ -192,9 +266,16 @@ class VsdmClientIT {
   }
 
   @Test
-  @Order(3)
+  @Order(4)
   void testPruefzifferHasCorrectLength() throws Exception {
-    final Result result = readVsdOnce("0", false, PROFILE_VERSION);
+    final Result result =
+        readVsdOnce(
+            VsdmBundle.class,
+            new RequestBuilder()
+                .ifNoneMatch("0")
+                .isFhirXml(false)
+                .profileVersion(PROFILE_VERSION)
+                .build());
     assertEquals(200, result.response.code());
 
     final String pruefzifferEncoded = result.response.header("vsdm-pz");
@@ -210,9 +291,16 @@ class VsdmClientIT {
   }
 
   @Test
-  @Order(4)
+  @Order(5)
   void testEtagIsConsistent() throws Exception {
-    final Result result1 = readVsdOnce("0", false, PROFILE_VERSION);
+    final Result result1 =
+        readVsdOnce(
+            VsdmBundle.class,
+            new RequestBuilder()
+                .ifNoneMatch("0")
+                .isFhirXml(false)
+                .profileVersion(PROFILE_VERSION)
+                .build());
     assertEquals(200, result1.response.code());
     assertNotNull(result1.resource);
 
@@ -220,9 +308,16 @@ class VsdmClientIT {
     log.info("ETag1: " + etag1);
     assertNotNull(etag1);
 
-    final Result result2 = readVsdOnce(etag1, false, PROFILE_VERSION);
+    final Result result2 =
+        readVsdOnce(
+            EmptyResource.class,
+            new RequestBuilder()
+                .ifNoneMatch(etag1)
+                .isFhirXml(false)
+                .profileVersion(PROFILE_VERSION)
+                .build());
     assertEquals(304, result2.response.code());
-    assertNull(result2.resource);
+    assertEquals("", result2.responseBody);
 
     final String etag2 = result2.response.header("etag");
     log.info("ETag2: " + etag2);
@@ -231,30 +326,51 @@ class VsdmClientIT {
   }
 
   @Test
-  @Order(5)
+  @Order(6)
   void testResponseContentType() throws Exception {
-    final Result result1 = readVsdOnce("0", false, PROFILE_VERSION);
-    assertTrue(result1.response.isSuccessful());
+    final Result result =
+        readVsdOnce(
+            VsdmBundle.class,
+            new RequestBuilder()
+                .ifNoneMatch("0")
+                .isFhirXml(false)
+                .profileVersion(PROFILE_VERSION)
+                .build());
+    assertTrue(result.response.isSuccessful());
 
     assertTrue(
-        Objects.requireNonNull(result1.response.header("Content-Type"))
+        Objects.requireNonNull(result.response.header("Content-Type"))
             .contains("application/fhir+json"));
   }
 
   @Test
-  @Order(6)
+  @Order(7)
   void testHttpVersion() throws Exception {
-    final Result result1 = readVsdOnce("0", false, PROFILE_VERSION);
-    assertTrue(result1.response.isSuccessful());
+    final Result result =
+        readVsdOnce(
+            VsdmBundle.class,
+            new RequestBuilder()
+                .ifNoneMatch("0")
+                .isFhirXml(false)
+                .profileVersion(PROFILE_VERSION)
+                .build());
+    assertTrue(result.response.isSuccessful());
 
-    assertEquals("http/1.1", result1.response.protocol().toString());
+    assertEquals("http/1.1", result.response.protocol().toString());
   }
 
   @Test
-  @Order(7)
+  @Order(8)
   void testPoppTokenIsCached() throws Exception {
-    final Result result1 = readVsdOnce("0", false, PROFILE_VERSION);
-    assertTrue(result1.response.isSuccessful());
+    final Result result =
+        readVsdOnce(
+            VsdmBundle.class,
+            new RequestBuilder()
+                .ifNoneMatch("0")
+                .isFhirXml(false)
+                .profileVersion(PROFILE_VERSION)
+                .build());
+    assertTrue(result.response.isSuccessful());
 
     final String CARD_HANDLE_URL = resolvePlaceholders(CARD_CLIENT_URL + "/slots/" + EGK_SLOT);
     final Request cardHandleRequest = new Request.Builder().url(CARD_HANDLE_URL).get().build();
@@ -285,10 +401,17 @@ class VsdmClientIT {
   }
 
   @Test
-  @Order(8)
+  @Order(9)
   void testVsdmDataIsCached() throws Exception {
-    final Result result1 = readVsdOnce("0", false, PROFILE_VERSION);
-    assertTrue(result1.response.isSuccessful());
+    final Result result =
+        readVsdOnce(
+            VsdmBundle.class,
+            new RequestBuilder()
+                .ifNoneMatch("0")
+                .isFhirXml(false)
+                .profileVersion(PROFILE_VERSION)
+                .build());
+    assertTrue(result.response.isSuccessful());
 
     final String CARD_HANDLE_URL = CARD_CLIENT_URL + "/slots/" + EGK_SLOT;
     final Request cardHandleRequest =
@@ -325,7 +448,7 @@ class VsdmClientIT {
   }
 
   @Test
-  @Order(9)
+  @Order(10)
   void testLoadTruncatedData() throws Exception {
     final String VSDM_TEST_LOAD_TRUNCATED_DATA_URL =
         VSDM_CLIENT_URL
@@ -348,6 +471,17 @@ class VsdmClientIT {
     assertNotNull(readTruncatedDataBody);
     System.out.println(readTruncatedDataBody);
     assertFalse(readTruncatedDataBody.isEmpty());
+  }
+
+  @Test
+  @Order(10)
+  void testMissingProfileVersion() throws Exception {
+    final Result result =
+        readVsdOnce(
+            VsdmOperationOutcome.class,
+            new RequestBuilder().ifNoneMatch("0").isFhirXml(false).profileVersion(null).build());
+    assertEquals(400, result.response.code());
+    assertTrue(result.responseBody.contains("VSDSERVICE_MISSING_PROFILE_VERSION"));
   }
 
   private static void removeCardFromSlot(final int slot) throws Exception {
@@ -424,27 +558,57 @@ class VsdmClientIT {
     }
   }
 
-  private static Result readVsdOnce(
-      final String ifNoneMatch, final Boolean isFhirXml, final String profileVersion)
-      throws Exception {
-    final Request readVsd =
-        new Request.Builder()
-            .url(
-                resolvePlaceholders(VSDM_ENDPOINT)
-                    + "&isFhirXml="
-                    + isFhirXml
-                    + "&profileVersion="
-                    + profileVersion)
-            .header("If-None-Match", ifNoneMatch)
-            // For some reason, VSDM client produces the error
-            // 'o.a.coyote.http11.Http11Processor - Error state [CLOSE_CONNECTION_NOW] reported
-            // while processing request'
-            // if connection is kept alive, so we close it via the following header.
-            // Further analysis is needed.
-            .header("Connection", "close")
-            .get()
-            .build();
+  private static class RequestBuilder {
+    private String ifNoneMatch;
+    private Boolean isFhirXml;
+    private String profileVersion;
+    private String virtualCard;
 
+    public RequestBuilder ifNoneMatch(String ifNoneMatch) {
+      this.ifNoneMatch = ifNoneMatch;
+      return this;
+    }
+
+    public RequestBuilder isFhirXml(Boolean isFhirXml) {
+      this.isFhirXml = isFhirXml;
+      return this;
+    }
+
+    public RequestBuilder profileVersion(String profileVersion) {
+      this.profileVersion = profileVersion;
+      return this;
+    }
+
+    public RequestBuilder virtualCard(String virtualCard) {
+      this.virtualCard = virtualCard;
+      return this;
+    }
+
+    public Request build() {
+      String url = resolvePlaceholders(VSDM_ENDPOINT);
+      url += "&isFhirXml=" + isFhirXml;
+      if (profileVersion != null) {
+        url += "&profileVersion=" + profileVersion;
+      }
+      if (virtualCard != null) {
+        url += "&virtualCard=" + virtualCard;
+      }
+      return new Request.Builder()
+          .url(url)
+          .header("If-None-Match", ifNoneMatch)
+          // For some reason, VSDM client produces the error
+          // 'o.a.coyote.http11.Http11Processor - Error state [CLOSE_CONNECTION_NOW] reported
+          // while processing request'
+          // if connection is kept alive, so we close it via the following header.
+          // Further analysis is needed.
+          .header("Connection", "close")
+          .get()
+          .build();
+    }
+  }
+
+  private static Result readVsdOnce(Class<? extends Resource> expectedClazz, Request readVsd)
+      throws Exception {
     final Response readVsdResponse = httpClient.newCall(readVsd).execute();
 
     final String readVsdBody = readVsdResponse.body().string();
@@ -452,13 +616,8 @@ class VsdmClientIT {
     log.info("readVsd: " + readVsdResponse.code());
     log.info(readVsdBody);
 
-    VsdmBundle vsdmBundle = null;
-    try {
-      vsdmBundle = fhirCodec.decode(VsdmBundle.class, readVsdBody);
-    } catch (final Exception e) {
-      log.debug("Response body is not a valid VsdmBundle", e);
-    }
+    final Resource resource = fhirCodec.decode(expectedClazz, readVsdBody);
 
-    return new Result(vsdmBundle, readVsdResponse, readVsdBody);
+    return new Result(resource, readVsdResponse, readVsdBody);
   }
 }

@@ -39,7 +39,7 @@ class VsdmClientControllerTest {
 
   private final String terminalId = "terminalId";
   private final Integer egkSlotId = 1;
-  private final Integer smcbSlotId = 2;
+  private final String virtualCard = "virtualCard";
   private final String profileVersion = "1.0";
 
   @BeforeEach
@@ -57,7 +57,7 @@ class VsdmClientControllerTest {
     when(mockVsdmClientService.read(
             eq(terminalId),
             eq(egkSlotId),
-            eq(smcbSlotId),
+            eq(null),
             eq(isFhirXml),
             eq(null),
             eq(ifNoneMatch),
@@ -66,7 +66,32 @@ class VsdmClientControllerTest {
 
     ResponseEntity<?> response =
         vsdmClientController.readVsd(
-            terminalId, egkSlotId, smcbSlotId, isFhirXml, profileVersion, null, ifNoneMatch);
+            terminalId, egkSlotId, null, isFhirXml, profileVersion, null, ifNoneMatch);
+
+    assertNotNull(response);
+    assertEquals(200, response.getStatusCode().value());
+    assertEquals("Success", response.getBody());
+  }
+
+  @Test
+  void testVirtualCardSet() {
+    String ifNoneMatch = "\"etag123\"";
+    boolean isFhirXml = true;
+
+    ResponseEntity<String> mockResponse = ResponseEntity.ok("Success");
+    when(mockVsdmClientService.read(
+            eq(terminalId),
+            eq(egkSlotId),
+            eq(virtualCard),
+            eq(isFhirXml),
+            eq(null),
+            eq(ifNoneMatch),
+            eq(profileVersion)))
+        .thenReturn(mockResponse);
+
+    ResponseEntity<?> response =
+        vsdmClientController.readVsd(
+            terminalId, egkSlotId, virtualCard, isFhirXml, profileVersion, null, ifNoneMatch);
 
     assertNotNull(response);
     assertEquals(200, response.getStatusCode().value());
@@ -82,7 +107,7 @@ class VsdmClientControllerTest {
     when(mockVsdmClientService.read(
             eq(terminalId),
             eq(egkSlotId),
-            eq(smcbSlotId),
+            eq(null),
             eq(false),
             eq(null),
             eq(ifNoneMatch),
@@ -91,7 +116,7 @@ class VsdmClientControllerTest {
 
     ResponseEntity<?> response =
         vsdmClientController.readVsd(
-            terminalId, egkSlotId, smcbSlotId, false, profileVersion, null, ifNoneMatch);
+            terminalId, egkSlotId, null, false, profileVersion, null, ifNoneMatch);
 
     assertNotNull(response);
     assertEquals(200, response.getStatusCode().value());

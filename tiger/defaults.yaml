@@ -1,11 +1,11 @@
 smoke:
   endpoints:
     poppZetaPdp:
-      url: http://127.0.0.1:${ports.poppPdpPort}/auth/realms/zeta-guard/.well-known/openid-configuration
+      url: http://${ports.host}:${ports.poppPdpPort}/auth/realms/zeta-guard/.well-known/openid-configuration
       path: /auth/realms/zeta-guard/.well-known/openid-configuration
       name: PoPP ZeTA PDP
     poppZetaPep:
-      url: http://127.0.0.1:${ports.poppPepPort}/.well-known/oauth-protected-resource
+      url: http://${ports.host}:${ports.poppPepPort}/.well-known/oauth-protected-resource
       path: /.well-known/oauth-protected-resource
       name: PoPP ZeTA PEP
     poppZetaIngress:
@@ -13,30 +13,40 @@ smoke:
       path: /.well-known/oauth-protected-resource
       name: PoPP ZETA Ingress
     vsdmZetaIngress:
-      url: https://127.0.0.1:9119/.well-known/oauth-protected-resource
+      url: https://${ports.host}:${ports.vsdmIngressPort}/.well-known/oauth-protected-resource
       path: /.well-known/oauth-protected-resource
       name: VSDM ZeTA Ingress
     vsdmZetaPep:
-      url: http://127.0.0.1:9120/
+      url: http://${ports.host}:${ports.vsdmPepPort}/
       path: /
       name: VSDM ZeTA PEP
     vsdmZetaPdp:
-      url: http://127.0.0.1:9122
+      url: http://${ports.host}:${ports.vsdmPdpPort}
       path: /
       name: VSDM ZeTA PDP
 
 zeta:
+  env: "local"
   server:
     popp:
-      url: http://127.0.0.1:9500
+      url: http://${ports.host}:9500
+    poppClient:
+      url: http://${ports.host}:8081
     poppTokenGenerator:
-      url: http://127.0.0.1:9500
+      url: http://${ports.host}:9500
     pdp:
-      tokenUrl: http://127.0.0.1:${ports.poppPdpPort}/auth/realms/zeta-guard/protocol/openid-connect/token
-      # Keycloak issuer – used as 'aud' in client_assertion JWTs (must match KC_HOSTNAME + realm)
-      issuer: https://vsdm-zeta-ingress/auth/realms/zeta-guard
+      tokenUrl: http://${ports.host}:${ports.poppPdpPort}/auth/realms/zeta-guard/protocol/openid-connect/token
+      issuer: https://popp-zeta-ingress/auth/realms/zeta-guard
+      realmUrl: http://${ports.host}:${ports.poppPdpPort}/auth/realms/zeta-guard
+      dcrUrl: http://${ports.host}:${ports.poppPdpPort}/auth/realms/zeta-guard/clients-registrations/openid-connect
+      jwksUrl: http://${ports.host}:${ports.poppPdpPort}/auth/realms/zeta-guard/protocol/openid-connect/certs
+      nonceUrl: http://${ports.host}:${ports.poppPdpPort}/auth/realms/zeta-guard/zeta-guard-nonce
+      smcbAudience: https://popp-zeta-ingress/auth/
+      clientAssertionAud: https://popp-zeta-ingress/auth/realms/zeta-guard/protocol/openid-connect/token
+    pep:
+      url: http://${ports.host}:${ports.poppPepPort}
     opa:
-      baseUrl: http://127.0.0.1:2401
+      baseUrl: http://${ports.host}:2401
   timeouts:
     httpRequestSeconds: 10
     healthCheckSeconds: 20
@@ -45,6 +55,4 @@ zeta:
     wsMessageSeconds: 10
 
 # ZETA Guard Ingress base URL (ohne Schema – wird von Tests mit https:// ergänzt)
-zeta_base_url: "localhost:9119"
-
-
+zeta_base_url: "${ports.host}:${ports.vsdmIngressPort}"

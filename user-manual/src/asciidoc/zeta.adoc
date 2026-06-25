@@ -26,7 +26,7 @@ ASL is enabled by default for the VSDM components. You can reference their confi
 
 === OCSP
 
-ZETA Guard uses OCSP to verify that the client's SMCP certificate is valid. This is enabled by default.
+ZETA Guard uses OCSP to verify that the client's SMCB certificate is valid. This is enabled by default.
 
 ==== Disabling OCSP for the SMCB certificate
 

@@ -27,4 +27,5 @@ package de.gematik.ti20.simsvc.client.service.dto;
 import com.fasterxml.jackson.annotation.JsonInclude;
 
 @JsonInclude(JsonInclude.Include.NON_EMPTY)
-public record PoppClientRequest(String communicationType, String clientSessionId) {}
+public record PoppClientRequest(
+    String communicationType, String clientSessionId, String virtualCard) {}

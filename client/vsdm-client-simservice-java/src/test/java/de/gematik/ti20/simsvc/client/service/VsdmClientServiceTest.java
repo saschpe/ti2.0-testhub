@@ -75,7 +75,8 @@ class VsdmClientServiceTest {
 
   private final String terminalId = "terminal1";
   private final int egkSlotId = 1;
-  private final int smcBSlotId = 2;
+  private final String virtualCard = "virtualCard";
+
   private final String cardId = "card1";
   private final String poppToken = "token123";
   private final String profileVersion = "1.0";
@@ -137,11 +138,11 @@ class VsdmClientServiceTest {
       String expectedToken = "cached-token";
       when(mockPoppTokenRepository.get(terminalId, egkSlotId, "card1")).thenReturn(expectedToken);
 
-      String result = vsdmClientService.requestPoppToken(terminalId, egkSlotId, mockEgkCard);
+      String result = vsdmClientService.requestPoppToken(terminalId, egkSlotId, mockEgkCard, null);
 
       assertEquals(expectedToken, result);
       verify(mockPoppTokenRepository).get(terminalId, egkSlotId, "card1");
-      verify(mockPoppClientAdapter, never()).getPoppToken(any());
+      verify(mockPoppClientAdapter, never()).getPoppToken(any(), any());
     }
 
     @Test
@@ -150,41 +151,42 @@ class VsdmClientServiceTest {
 
       when(mockPoppTokenRepository.get(terminalId, egkSlotId, "card1")).thenReturn(null);
 
-      when(mockPoppClientAdapter.getPoppToken(any())).thenReturn(expectedToken);
+      when(mockPoppClientAdapter.getPoppToken(any(), any())).thenReturn(expectedToken);
 
-      String result = vsdmClientService.requestPoppToken(terminalId, egkSlotId, mockEgkCard);
+      String result = vsdmClientService.requestPoppToken(terminalId, egkSlotId, mockEgkCard, null);
 
       assertEquals(expectedToken, result);
-      verify(mockPoppClientAdapter).getPoppToken(eq(mockEgkCard));
+      verify(mockPoppClientAdapter).getPoppToken(eq(mockEgkCard), eq(null));
       verify(mockPoppTokenRepository).put(terminalId, egkSlotId, "card1", expectedToken);
     }
 
     @Test
     void testRequestPoppToken_RetriesTransientPoppFailure() {
       when(mockPoppTokenRepository.get(terminalId, egkSlotId, "card1")).thenReturn(null);
-      when(mockPoppClientAdapter.getPoppToken(any()))
+      when(mockPoppClientAdapter.getPoppToken(any(), any()))
           .thenThrow(new RuntimeException("Websocket client is not connected"))
           .thenReturn("service-token");
 
-      String result = vsdmClientService.requestPoppToken(terminalId, egkSlotId, mockEgkCard);
+      String result = vsdmClientService.requestPoppToken(terminalId, egkSlotId, mockEgkCard, null);
 
       assertEquals("service-token", result);
-      verify(mockPoppClientAdapter, times(2)).getPoppToken(eq(mockEgkCard));
+      verify(mockPoppClientAdapter, times(2)).getPoppToken(eq(mockEgkCard), eq(null));
       verify(mockPoppTokenRepository).put(terminalId, egkSlotId, "card1", "service-token");
     }
 
     @Test
     void testRequestPoppToken_DoesNotRetryNonTransientPoppFailure() {
       when(mockPoppTokenRepository.get(terminalId, egkSlotId, "card1")).thenReturn(null);
-      when(mockPoppClientAdapter.getPoppToken(any())).thenThrow(new RuntimeException("boom"));
+      when(mockPoppClientAdapter.getPoppToken(any(), any()))
+          .thenThrow(new RuntimeException("boom"));
 
       ResponseStatusException exception =
           assertThrows(
               ResponseStatusException.class,
-              () -> vsdmClientService.requestPoppToken(terminalId, egkSlotId, mockEgkCard));
+              () -> vsdmClientService.requestPoppToken(terminalId, egkSlotId, mockEgkCard, null));
 
       assertEquals(HttpStatus.INTERNAL_SERVER_ERROR, exception.getStatusCode());
-      verify(mockPoppClientAdapter, times(1)).getPoppToken(eq(mockEgkCard));
+      verify(mockPoppClientAdapter, times(1)).getPoppToken(eq(mockEgkCard), eq(null));
       verify(mockPoppTokenRepository, never()).put(anyString(), anyInt(), anyString(), anyString());
     }
 
@@ -228,7 +230,8 @@ class VsdmClientServiceTest {
         when(mockPoppTokenService.requestPoppToken(vsdmClientConfig, "iknr", "kvnr"))
             .thenReturn(expectedToken);
 
-        String result = vsdmClientService.requestPoppToken(terminalId, egkSlotId, mockEgkCard);
+        String result =
+            vsdmClientService.requestPoppToken(terminalId, egkSlotId, mockEgkCard, null);
 
         assertEquals(expectedToken, result);
 

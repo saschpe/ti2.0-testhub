@@ -5,7 +5,7 @@
 
     <groupId>de.gematik</groupId>
     <artifactId>testhub</artifactId>
-    <version>3.4.0</version>
+    <version>3.5.0</version>
     <packaging>pom</packaging>
     <name>Parent Project for the gematik TI 2.0 Testhub</name>
     <inceptionYear>2025</inceptionYear>
@@ -34,12 +34,12 @@
         <version.maven.surefire>3.5.5</version.maven.surefire>
         <version.maven.failsafe>3.5.5</version.maven.failsafe>
         <version.maven.jacoco>0.8.14</version.maven.jacoco>
-        <version.tiger>4.3.0</version.tiger>
+        <version.tiger>4.3.1</version.tiger>
         <version.tiger-cloud-extension>10.0.18</version.tiger-cloud-extension>
         <version.serenity>5.3.10</version.serenity>
         <version.gem.testdata>1.0.10</version.gem.testdata>
         <version.springdoc>3.0.3</version.springdoc>
-        <version.spring-boot>4.0.6</version.spring-boot>
+        <version.spring-boot>4.1.0</version.spring-boot>
         <version.spring-boot-testsuite>3.5.7</version.spring-boot-testsuite>
         <version.springdoc-testsuite>2.8.13</version.springdoc-testsuite>
         <version.gem.bbriccs>0.10.0</version.gem.bbriccs>

@@ -727,7 +727,7 @@
         "zero:manage",
         "zero:read",
         "zero:update",
-        "zero:audience",
+        "vsdservice",
         "zero:write"
       ]
     },
@@ -938,7 +938,7 @@
     },
     {
       "id": "1ab06f51-5b7d-4551-b9a6-fb6d7a7c66e5",
-      "name": "zero:audience",
+      "name": "vsdservice",
       "description": "Zero Trust scope for audience mapper",
       "protocol": "openid-connect",
       "attributes": {
@@ -1668,7 +1668,7 @@
   "defaultOptionalClientScopes": [
     "zero:manage",
     "zero:write",
-    "zero:audience",
+    "vsdservice",
     "zero:update",
     "zero:read",
     "zero:register"

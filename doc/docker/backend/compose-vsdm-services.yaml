@@ -2,11 +2,7 @@ x-vsdm-no-proxy-env: &vsdm-no-proxy-env
   HTTP_PROXY: ""
   HTTPS_PROXY: ""
   ALL_PROXY: ""
-  http_proxy: ""
-  https_proxy: ""
-  all_proxy: ""
   NO_PROXY: "localhost,127.0.0.1,vsdm-zeta-ingress,vsdm-zeta-pep,vsdm-zeta-pdp,vsdm-zeta-pdp-opa,vsdm-server"
-  no_proxy: "localhost,127.0.0.1,vsdm-zeta-ingress,vsdm-zeta-pep,vsdm-zeta-pdp,vsdm-zeta-pdp-opa,vsdm-server"
 
 services:
   vsdm-zeta-ingress:
@@ -127,7 +123,7 @@ services:
       - ./zeta/realm:/opt/keycloak/data/import
       - ./zeta/smcb:/opt/keycloak/conf/smcb
       - ./zeta/tpm/:/opt/keycloak/conf/tpm
-      - ./zeta/ocsp-signers.p12:/var/trust-data/ocsp-signers.p12
+      - ./zeta/ocsp-signers.p12:/var/trust-data/ocsp-signers.p12:ro
     healthcheck:
       test: [ "CMD-SHELL", "exec 3<>/dev/tcp/127.0.0.1/9000;echo -e \"GET /auth/health/live HTTP/1.1\r\nhost: localhost:9000\r\nConnection: close\r\n\r\n\" >&3;grep \"status.*UP\" <&3" ]
       start_period: 120s

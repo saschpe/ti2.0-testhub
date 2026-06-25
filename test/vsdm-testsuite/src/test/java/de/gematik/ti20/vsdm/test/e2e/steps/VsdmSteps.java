@@ -106,9 +106,13 @@ public class VsdmSteps {
   public void setTheStage() {
     OnStage.setTheStage(new OnlineCast());
     OnStage.theActorCalled("Primärsystem")
-        .can(CallCardClient.at(resolvePlaceholders("http://127.0.0.1:${ports.cardTerminalPort}")))
-        .can(CallVsdmClient.at(resolvePlaceholders("http://127.0.0.1:${ports.vsdmClientPort}")))
-        .can(CallPoppTokenGenerator.at(resolvePlaceholders("http://127.0.0.1:9500")));
+        .can(
+            CallCardClient.at(
+                resolvePlaceholders("http://${ports.host}:${ports.cardTerminalPort}")))
+        .can(CallVsdmClient.at(resolvePlaceholders("http://${ports.host}:${ports.vsdmClientPort}")))
+        .can(
+            CallPoppTokenGenerator.at(
+                resolvePlaceholders("http://${ports.host}:${ports.poppTokenGeneratorPort}")));
   }
 
   @Angenommen("das Primärsystem in der LEI verwendet ein korrekt konfiguriertes Terminal")

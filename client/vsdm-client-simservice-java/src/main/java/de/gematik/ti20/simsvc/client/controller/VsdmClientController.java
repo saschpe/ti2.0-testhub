@@ -45,23 +45,22 @@ public class VsdmClientController {
   public ResponseEntity<?> readVsd(
       @RequestParam final String terminalId,
       @RequestParam final int egkSlotId,
-      @RequestParam final int smcBSlotId,
+      @RequestParam(required = false) final String virtualCard,
       @RequestParam(defaultValue = "false") final boolean isFhirXml,
-      @RequestParam final String profileVersion,
+      @RequestParam(required = false) final String profileVersion,
       @RequestHeader(name = "poppToken", required = false) final String poppToken,
       @RequestHeader(name = "If-None-Match", required = false) final String ifNoneMatch) {
     log.info(
-        "readVsd initiated with terminalId = {}, egkSlotId={}, smcBSlotId = {}, if-none-match={}, profileVersion={}",
+        "readVsd initiated with terminalId = {}, egkSlotId={}, if-none-match={}, profileVersion={}",
         terminalId,
         egkSlotId,
-        smcBSlotId,
         ifNoneMatch,
         profileVersion);
 
     return vsdmClientService.read(
         terminalId,
         egkSlotId,
-        smcBSlotId,
+        virtualCard,
         isFhirXml,
         poppToken,
         quoteIfNotQuoted(ifNoneMatch),

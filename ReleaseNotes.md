@@ -2,6 +2,28 @@
 
 # Release Notes TI 2.0 TestHub
 
+## Release 3.5.0
+
+### Update Notes
+
+#### Policy changes for VSDM service
+
+OPA is used to enforce authorization policies. In this version we have added a
+policy to verify that authorization tokens use the scope defined in the VSDM 2.0
+specification: `vsdservice`. Ensure you are updating custom code that uses the
+old `zero:audience` scope. Otherwise you will see error messages mentioning an
+invalid, unknown or forbidden scope.
+
+The PDP (Keycloak) configuration was adjusted too.
+
+### Changes
+
+- TESTHUB-99: simplify proxy env variable definition in Docker Compose
+- TESTHUB-164: add optional virtualCard parameter in request to popp-client
+- TESTHUB-166: remove unused smcSlotId parameter from vsdm-client interface
+- TESTHUB-172: update OPA policies for vsdm-server to validate scope in token
+- PTVSDM-1632: make profileVersion parameter optional in vsdm-client to allow for error condition
+
 ## Release 3.4.0
 
 ### Update Notes
