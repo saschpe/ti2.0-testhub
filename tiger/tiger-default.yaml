@@ -1,6 +1,6 @@
 tigerProxy:
   trafficEndpoints:
-    - "http://127.0.0.1:${ports.remoteTigerProxyAdminPort}"
+    - "http://${ports.host}:${ports.remoteTigerProxyAdminPort}"
   activateRbelParsingFor:
     - websocket
     - x509

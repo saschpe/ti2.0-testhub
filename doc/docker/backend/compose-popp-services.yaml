@@ -1,3 +1,9 @@
+x-popp-no-proxy-env: &popp-no-proxy-env
+  HTTP_PROXY: ""
+  HTTPS_PROXY: ""
+  ALL_PROXY: ""
+  NO_PROXY: "localhost,127.0.0.1,popp-zeta-ingress,popp-zeta-pep,popp-zeta-pdp,popp-zeta-pdp-opa,popp-server"
+
 services:
   popp-token-generator:
     container_name: popp-token-generator
@@ -22,12 +28,12 @@ services:
     platform: linux/amd64
     container_name: popp-client
     environment:
-      - SPRING_PROFILES_ACTIVE=dev
-      - ZETA_AUTHENTICATION_SMB_KEYFILE=/app/smcb_private.p12
-      - POPP_SERVER_URL=${POPP_SERVER_URL:-wss://popp-zeta-ingress:443/ws}
       - OTEL_EXPORTER_OTLP_ENDPOINT=http://otel-collector:4318
-      # - JAVA_TOOL_OPTIONS="-agentlib:jdwp=transport=dt_socket,server=y,suspend=n,address=*:5013"
+      - POPP_SERVER_URL=${POPP_SERVER_URL:-wss://popp-zeta-ingress:443/ws}
+      - SPRING_PROFILES_ACTIVE=dev
       - VIRTUAL_CARD_IMAGE_FILE=${VIRTUAL_CARD_IMAGE_FILE:-/data/cards/egkCardImage.xml}
+      - ZETA_AUTHENTICATION_SMB_KEYFILE=/app/smcb_private.p12
+      # - JAVA_TOOL_OPTIONS="-agentlib:jdwp=transport=dt_socket,server=y,suspend=n,address=*:5013"
     networks:
       - testhub_client
     ports:
@@ -50,8 +56,8 @@ services:
     ports:
       - "${PORT_POPP_SERVER:?PORT_POPP_SERVER missing – set it in doc/docker/.env}:8443"
     environment:
-      - IDENTITIES_LOCATION=classpath:identities
       - CERT_HASH_IMPORT_LOCATION=file:/app/import
+      - IDENTITIES_LOCATION=classpath:identities
       - SPRING_DATASOURCE_URL=jdbc:postgresql://popp-server-db:5432/egk_hash_db
     networks:
       - testhub_backend
@@ -68,9 +74,9 @@ services:
     platform: linux/amd64
     container_name: popp-server-db
     environment:
-      POSTGRES_USER: poppserver
-      POSTGRES_PASSWORD: verysafe
       POSTGRES_DB: egk_hash_db
+      POSTGRES_PASSWORD: verysafe
+      POSTGRES_USER: poppserver
     ports:
       - "${PORT_POPP_SERVER_DB:?PORT_POPP_SERVER_DB missing – set it in doc/docker/.env}:5432"
     tmpfs:
@@ -105,15 +111,8 @@ services:
         required: true
     platform: linux/amd64
     environment:
-      - POPP_SERVER_HOST=popp-server:8443
-      - HTTP_PROXY=
-      - HTTPS_PROXY=
-      - ALL_PROXY=
-      - http_proxy=
-      - https_proxy=
-      - all_proxy=
-      - NO_PROXY=localhost,127.0.0.1,popp-zeta-ingress,popp-zeta-pep,popp-zeta-pdp,popp-zeta-pdp-opa,popp-server
-      - no_proxy=localhost,127.0.0.1,popp-zeta-ingress,popp-zeta-pep,popp-zeta-pdp,popp-zeta-pdp-opa,popp-server
+      <<: *popp-no-proxy-env
+      POPP_SERVER_HOST: popp-server:8443
     ports:
       - "${PORT_POPP_ZETA_PEP:?PORT_POPP_ZETA_PEP missing – set it in doc/docker/.env}:80"
     command: [ "nginx", "-g", "daemon off;", "-c", "/ci_nginx/nginx.conf" ]
@@ -137,43 +136,36 @@ services:
         required: true
     platform: linux/amd64
     environment:
-      KC_BOOTSTRAP_ADMIN_USERNAME: admin
-      KC_BOOTSTRAP_ADMIN_PASSWORD: admin
-      KEYCLOAK_ADMIN: admin
-      KEYCLOAK_ADMIN_PASSWORD: admin
-      KC_HTTP_ENABLED: true
+      <<: *popp-no-proxy-env
+      DEBUG_PORT: "*:5022"
+      DEBUG: "true"
       GENESIS_HASH: "4841c2142fef441daa6ee6c57db65c011935964b14e94a6c8f5ec0447b83526c"
+      KC_BOOTSTRAP_ADMIN_PASSWORD: admin
+      KC_BOOTSTRAP_ADMIN_USERNAME: admin
+      KC_DB_PASSWORD: "keycloak_db_user_password"
       KC_DB: "postgres"
+      KC_DB_SCHEMA: "public"
       KC_DB_URL: "jdbc:postgresql://popp-zeta-pdp-db:5432/keycloak?sslmode=disable"
       KC_DB_USERNAME: "keycloak_db_user"
-      KC_DB_PASSWORD: "keycloak_db_user_password"
-      KC_DB_SCHEMA: "public"
-      SMCB_HASHING_PEPPER: "-085c1245-dc0d-4d39-95b4-97496bec6182"
-      TPM_KEYSTORE_LOCATION: /opt/keycloak/conf/tpm/tpm-certificates.p12
-      TPM_KEYSTORE_PASSWORD: "O3Bdel9P5+cOgzIGANkOPEzBQM3V"
-      KC_HTTP_PORT: 80
-      KC_HOSTNAME_STRICT: false
-      KC_HOSTNAME: https://popp-zeta-ingress/auth/
-      PROXY_ADDRESS_FORWARDING: true
       KC_HEALTH_ENABLED: true
+      KC_HOSTNAME: https://popp-zeta-ingress/auth/
+      KC_HOSTNAME_STRICT: false
+      KC_HTTP_ENABLED: true
+      KC_HTTP_PORT: 80
       KC_HTTP_RELATIVE_PATH: /auth
-      KC_PROXY_HEADERS: xforwarded
       KC_LOG_LEVEL: INFO
+      KC_PROXY_HEADERS: xforwarded
+      KC_SPI_TOKEN_EXCHANGE_PROVIDER_ZETA_SMC_B_TOKEN_EXCHANGE_DECISION_PATH: "/v1/data/zeta/authz/decision"
+      KC_SPI_TOKEN_EXCHANGE_PROVIDER_ZETA_SMC_B_TOKEN_EXCHANGE_OPA_BASE_URL: http://popp-zeta-pdp-opa:8181
+      KC_SPI_TOKEN_EXCHANGE_PROVIDER_ZETA_SMC_B_TOKEN_EXCHANGE_OPA_ENABLED: true
+      KEYCLOAK_ADMIN: admin
+      KEYCLOAK_ADMIN_PASSWORD: admin
+      PROXY_ADDRESS_FORWARDING: true
+      SMCB_HASHING_PEPPER: "-085c1245-dc0d-4d39-95b4-97496bec6182"
       SMCB_KEYSTORE_LOCATION: /opt/keycloak/conf/smcb/truststore.p12
       SMCB_KEYSTORE_PASSWORD: "changeit"
-      KC_SPI_TOKEN_EXCHANGE_PROVIDER_ZETA_SMC_B_TOKEN_EXCHANGE_OPA_ENABLED: true
-      KC_SPI_TOKEN_EXCHANGE_PROVIDER_ZETA_SMC_B_TOKEN_EXCHANGE_OPA_BASE_URL: http://popp-zeta-pdp-opa:8181
-      KC_SPI_TOKEN_EXCHANGE_PROVIDER_ZETA_SMC_B_TOKEN_EXCHANGE_DECISION_PATH: "/v1/data/zeta/authz/decision"
-      HTTP_PROXY: ""
-      HTTPS_PROXY: ""
-      ALL_PROXY: ""
-      http_proxy: ""
-      https_proxy: ""
-      all_proxy: ""
-      NO_PROXY: "localhost,127.0.0.1,popp-zeta-ingress,popp-zeta-pep,popp-zeta-pdp,popp-zeta-pdp-opa,popp-server"
-      no_proxy: "localhost,127.0.0.1,popp-zeta-ingress,popp-zeta-pep,popp-zeta-pdp,popp-zeta-pdp-opa,popp-server"
-      DEBUG: "true"
-      DEBUG_PORT: "*:5022"
+      TPM_KEYSTORE_LOCATION: /opt/keycloak/conf/tpm/tpm-certificates.p12
+      TPM_KEYSTORE_PASSWORD: "O3Bdel9P5+cOgzIGANkOPEzBQM3V"
     ports:
       - "${PORT_POPP_ZETA_PDP:?PORT_POPP_ZETA_PDP missing – set it in doc/docker/.env}:80"
       - "${PORT_POPP_ZETA_PDP_HEALTH:?PORT_POPP_ZETA_PDP_HEALTH missing – set it in doc/docker/.env}:9000"
@@ -210,11 +202,8 @@ services:
       - testhub_backend
     environment:
       POSTGRES_DB: keycloak
-      POSTGRES_USER: keycloak_db_user
       POSTGRES_PASSWORD: keycloak_db_user_password
-      # POSTGRES_DB: test1
-      # POSTGRES_USER: testuser1
-      # POSTGRES_PASSWORD: parr
+      POSTGRES_USER: keycloak_db_user
 
   popp-zeta-pdp-opa:
     profiles: [ "full" ]
@@ -225,14 +214,7 @@ services:
         required: true
     platform: linux/amd64
     environment:
-      HTTP_PROXY: ""
-      HTTPS_PROXY: ""
-      ALL_PROXY: ""
-      http_proxy: ""
-      https_proxy: ""
-      all_proxy: ""
-      NO_PROXY: "localhost,127.0.0.1,popp-zeta-pdp-opa,popp-zeta-pdp"
-      no_proxy: "localhost,127.0.0.1,popp-zeta-pdp-opa,popp-zeta-pdp"
+      <<: *popp-no-proxy-env
     ports:
       - "${PORT_POPP_ZETA_PDP_OPA:?PORT_POPP_ZETA_PDP_OPA missing – set it in doc/docker/.env}:8181"
     command:

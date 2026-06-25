@@ -9,12 +9,12 @@ zeta:
     opa:
       decisionPath: /v1/data/zeta/authz/decision
     client:
-      reset: http://localhost:${ports.vsdmClientPort}/client/config/terminal
+      reset: http://${ports.host}:${ports.vsdmClientPort}/client/config/terminal
       # VSD-Anfrage an VSDM Fachdienst über ZeTA Client (direkt ohne TigerProxy)
-      vsdRequest: http://localhost:${ports.vsdmClientPort}/client/vsdm/vsd?terminalId=1&egkSlotId=1&smcBSlotId=1
+      vsdRequest: http://${ports.host}:${ports.vsdmClientPort}/client/vsdm/vsd?terminalId=1&egkSlotId=1&smcBSlotId=1
       vsdRequestPath: /client/vsdm/vsd
       # Status-Anfrage geht direkt zum ZeTA Client (VSDM Client) ohne TigerProxy
-      status: http://127.0.0.1:${ports.vsdmClientPort}/service/status
+      status: http://${ports.host}:${ports.vsdmClientPort}/service/status
       statusPath: /service/status
     tigerProxy:
       # TigerProxy Admin API (siehe ports.yaml: localTigerProxyAdminPort)
@@ -30,11 +30,11 @@ zeta:
         pepPath: /achelos_testfachdienst/erezept
     vsdm:
       ingress:
-        baseUrl: https://localhost:9119
+        baseUrl: https://${ports.host}:${ports.vsdmIngressPort}
       pep:
-        baseUrl: http://localhost:9120
+        baseUrl: http://${ports.host}:${ports.vsdmPepPort}
       pdp:
-        baseUrl: http://localhost:9122
+        baseUrl: http://${ports.host}:${ports.vsdmPdpPort}
       wellKnownOAuthProtectedResourcePath: /.well-known/oauth-protected-resource
       wellKnownOAuthServerPath: /.well-known/oauth-authorization-server
       registerEndpointPath: /auth/realms/zeta-guard/clients-registrations/openid-connect

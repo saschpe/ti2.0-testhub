@@ -3,22 +3,15 @@
 # TI 2.0 Testhub
 
 > [!CAUTION]
-> This project is not meant to be run in production and we strongly
-> advise against!
+> This project is intended for testing and development purposes only.
 
-The **ti 2.0 testhub** provides a comprehensive test environment for the
-modernized german telematics infrastructure ( ti) version 2.0. As the healthcare
-telematics infrastructure undergoes significant architectural improvements, a
-core aspect is the implementation of **zero trust architecture (zeta)** security
-concepts.
+An environment to develop and test applications for the German Telematics
+Infrastructure 2.0 (TI 2.0).
 
-This project enables developers and testers to:
-
-- **simulate and validate** zero trust architecture (zeta) components
-- **test popp** (proof of possession) workflows for secure authentication
-- **validate vsdm2** (versichertenstammdatenmanagement 2.0) functionality
-- **develop and test** client applications against mock backend services
-- **understand integration patterns** for ti 2.0 ecosystem
+- Run core TI 2.0 services protected by ZETA Guard locally
+- Utilize E2E tests written to validate your custom service(VSDM, PoPP)
+- Verify your custom ZETA Client can work with the official ZETA Guard
+- Connect your application to a mock TI 2.0
 
 # Getting Started
 
@@ -55,6 +48,7 @@ ZETA requires an SMC-B certificate to work. Follow these steps:
 3. Start Docker containers:
     ```bash
     docker compose -f ./doc/docker/compose-local.yaml --profile full up -d --remove-orphans
+    ```
 
 ### Port Configuration
 
@@ -118,7 +112,7 @@ When requesting help or reporting issues please include the following informatio
 - Supply any applicable logs. You can use [docker
   logs](https://docs.docker.com/reference/cli/docker/container/logs/).
 
-You can request help or report issuse through [gematik
+You can request help or report an issue through [gematik
 Anfrageportal](https://service.gematik.de/servicedesk/customer/portal/37).
 
 # Contributing
@@ -127,7 +121,7 @@ If you want to contribute, please check our [CONTRIBUTING.md](./CONTRIBUTING.md)
 
 ## License
 
-Copyright 2025 gematik GmbH
+Copyright 2026 gematik GmbH
 
 Apache License, Version 2.0
 

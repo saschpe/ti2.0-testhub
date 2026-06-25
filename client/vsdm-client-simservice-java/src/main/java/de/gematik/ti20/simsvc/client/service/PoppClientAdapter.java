@@ -45,12 +45,17 @@ public class PoppClientAdapter {
   }
 
   public String getPoppToken(final AttachedCard attachedCard) {
+    return getPoppToken(attachedCard, null);
+  }
+
+  public String getPoppToken(final AttachedCard attachedCard, final String virtualCard) {
     log.info(
-        "============ Starting PoPP token session for card with tokentype={} and URL={}",
+        "============ Starting PoPP token session for card with tokentype={}, virtualCard={} and URL={}",
         poppClientConfig.getTokenType(),
+        virtualCard,
         poppClientConfig.getUrlPoppServerHttp(attachedCard));
     PoppClientRequest poppRequestPayload =
-        new PoppClientRequest(poppClientConfig.getTokenType().getType(), null);
+        new PoppClientRequest(poppClientConfig.getTokenType().getType(), null, virtualCard);
 
     PoppClientResponse response =
         webClient

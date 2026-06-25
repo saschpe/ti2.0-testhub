@@ -92,7 +92,7 @@ public class VsdmZetaSdkClientConfig {
             storageConfig,
             new TpmConfig() {},
             new AuthConfig(
-                List.of("zero:audience"),
+                List.of("vsdservice"),
                 30L,
                 false,
                 getTokenProvider(),
